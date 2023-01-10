@@ -19,16 +19,15 @@ requirements:
     - python >=3.6,<3.10
   run:
     - python >=3.6,<3.10
-    - requests >=2.27
+    - requests 
     - bioconda::blast-legacy
     - bioconda::wise2
     - bioconda::exonerate
     - bioconda::mafft
-    - bioconda::biopython
-    - biobuilds::obonet
+    - biopython
+#    - obonet
     - gawk
-    - networkx
-    - requests
+    - networkx 
     
 
 test:
@@ -43,7 +42,7 @@ about:
   license: MIT
   license_family: MIT
   license_file: 
-  summary: ""https://github.com/marco-mariotti/selenoprofiles4
+  summary: "https://github.com/marco-mariotti/{{name}}"
   doc_url: "https://github.com/marco-mariotti/{{name}}"
   dev_url: 
 

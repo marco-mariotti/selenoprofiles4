@@ -12,13 +12,14 @@ from types import MethodType
 from subprocess import *
 #sys.path.insert(0, "/home/mmariotti/software/selenoprofiles/libraries/")
 #sys.path.append('/home/mmariotti/software/selenoprofiles')
-from MMlib3 import *
+from .MMlib3 import *
 from sqlite3 import dbapi2 as sqlite, OperationalError, Connection, Cursor
 import time
 from ast import literal_eval
 from functools import cmp_to_key
 import networkx
-import obonet
+try: import obonet
+except: pass
 import requests
 
 selenoprofiles_install_dir = os.path.dirname(os.path.realpath(__file__))
