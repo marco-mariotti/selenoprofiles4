@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: selenoprofiles4
+Version: 4.0.1
+Summary: Gene finding pipeline for selenoprotein and selenocysteine machinery
+Home-page: https://github.com/marco-mariotti/selenoprofiles4
+Author: Marco Mariotti
+Author-email: marco.mariotti@ub.edu
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: <3.10,>=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# selenoprofiles4
+Gene finding pipeline for selenoprotein and selenocysteine machinery
