@@ -1,8 +1,10 @@
 #!/usr/bin/env python3 
 __author__  = "Marco Mariotti"
-__email__   = "marco.mariotti@crg.eu"
-__licence__ = "GPLv3"
-__version__ = "4.0"
+__email__   = "marco.mariotti@ub.edu"
+
+#__version__ = "4.0"
+from ._version import __version__
+
 global temp_folder; global split_folder
 from string import *
 import sys, os, traceback, shutil, gzip, tarfile
