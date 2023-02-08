@@ -834,7 +834,7 @@ def main():
     else:
       write(f"Selenoprofiles data directory found: {opt['selenoprofiles_data_dir']}", 1)
 
-    server_folder='http://161.116.70.109/selenoprofiles_data/'
+    server_folder='https://161.116.70.109/selenoprofiles_data/'
     write(f"\nPreparing to download selenoprofiles_data from {server_folder} to {opt['selenoprofiles_data_dir']}", 1)
     
     
