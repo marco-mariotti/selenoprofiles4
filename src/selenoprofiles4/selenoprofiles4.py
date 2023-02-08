@@ -21,9 +21,11 @@ from functools import cmp_to_key
 import networkx
 try: import obonet
 except: pass
-import requests
+import requests, urllib3
 
-selenoprofiles_install_dir = os.path.dirname(os.path.realpath(__file__))
+urllib3.disable_warnings() # necessary as long as the selenoprofiles_data is in a server without TLS certificates
+
+#selenoprofiles_install_dir = os.path.dirname(os.path.realpath(__file__))
 
 # 2022 : switched to networkx and obonet
 #try:
@@ -37,7 +39,7 @@ allowed_output_formats_descriptions={'fasta':'fasta file with the predicted prot
 'gtf':  'analog to gff, but with this syntax for the last field: gene_id "id_for_prediction"; transcript_id "id_for_prediction"; (...)',
 'three_prime': 'fasta file with the sequence downstream of the prediction. Its length is defined by the three_prime_length parameter in the main configuration file',
 'cds':'fasta file with the coding sequence of the prediction. If frameshifts are predicted, the frameshifts-causing nucleotides are excluded. If the prediction is complete at 3\', the stop codon is included',
-'secis':'file with the SECISes found downstream of the prediction (for selenoprotein search - requires SECISearch3)',
+#'secis':'file with the SECISes found downstream of the prediction (for selenoprotein search - requires SECISearch3)',
 'p2g':'selenoprofiles standard output. It contains all essential information for the prediction, including the query-target alignment, the genomic coordinates etc ',
 'dna':'fasta file with the full predicted gene sequence, including the intronic sequences (and frameshifts if any)',
 'introns':'fasta file with the sequence of the introns, split into different fasta headers',
@@ -227,6 +229,7 @@ def load(config_filename, args={}):
   for i in non_config_options: 
     if not i in def_opt:  def_opt[i]=0
   ## the "if args" construct is to allow running this "load" function from inside an external python script. Normally, options are read from command line
+  # untested use, honestly
   if args:   
     opt=options()
     for k in def_opt: 
@@ -235,11 +238,15 @@ def load(config_filename, args={}):
       else:
         opt[k]=def_opt[k]
   else:
+    # no args? then display help page
+    if len(sys.argv)<2:
+      sys.argv.append('-h')
+      
     opt=command_line(def_opt, help_msg, ['r','t'], synonyms=command_line_synonyms,
                      tolerated_regexp=['ACTION.*']+[p+'.*' for p in profile_alignment.parameters],
                      strict= notracebackException,
                      advanced={'full':full_help} );   #### reading options from command line
-    opt['selenoprofiles_install_dir']=selenoprofiles_install_dir
+    #opt['selenoprofiles_install_dir']=selenoprofiles_install_dir
     # 2023
     to_interpret=[k  for k in opt if type(opt[k]) is str and  '{' in opt[k]]
     while len(to_interpret):
@@ -302,84 +309,85 @@ def load(config_filename, args={}):
   #else: 
   #  for  k  in  keywords['genewise_options']:     keywords['genewise_options'][k]=keywords['genewise_options'][k].format(GENETIC_CODE=1)
 
-  ###############
-  ### test routine 
-  if opt['test']:
-    write('\n'); write('TEST', how=terminal_colors['routine']); write(' routine', 1)
-    write('Slave programs:', 1)
-    write(' blastall    (ncbi blast)     : ')
-    b=bash('blastall ')
-    if b[0]==256:    write('found', 1)
-    else:            write('NOT FOUND! blastall is compulsory in the selenoprofiles pipeline, please install it!', 1)
-    write(' blastpgp    (ncbi blast)     : ')
-    b=bash('blastpgp --help')
-    if b[0]==256:    write('found', 1)
-    else:            write('NOT FOUND! blastpgp is compulsory in the selenoprofiles pipeline, please install it!', 1)
-    write(' formatdb    (ncbi blast)     : ')
-    b=bash('formatdb --help')
-    if b[0]==256:    write('found', 1)
-    else:            write('NOT FOUND! formatdb is compulsory in the selenoprofiles pipeline, please install it!', 1)
-    write(' exonerate   (exonerate pkg)  : ')
-    b=bash('exonerate ')
-    if b[0]==256:    write('found', 1)
-    else:            write('NOT FOUND! you could still run using option -dont_exonerate' , 1)
-    write(' fastaindex  (exonerate pkg)  : ')
-    b=bash('fastaindex ')
-    if b[0]==256:    write('found', 1)
-    else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
-    write(' fastafetch  (exonerate pkg)  : ')
-    b=bash('fastafetch ')
-    if b[0]==256:    write('found', 1)
-    else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
-    write(' fastasubseq (exonerate pkg)  : ')
-    b=bash('fastasubseq ')
-    if b[0]==256:    write('found', 1)
-    else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
-    write(' genewise    (Wise2 package)  : ')
-    b=bash('genewise ')
-    if b[0]==16128:    write('found', 1)
-    else:            write('NOT FOUND! you could still run using option -dont_genewise' , 1)
-    write(' SECISearch3 (Seblastian)     : ')
-    b=bash('Seblastian.py ')
-    if b[0]==2048:    write('found', 1)
-    else:            write('NOT FOUND! SECISearch is recommended to search for selenoproteins; you can ignore this if you want to search your custom profiles' , 1)
-    ###     ##
+  # 2023
+  # ###############
+  # ### test routine 
+  # if opt['test']:
+  #   write('\n'); write('TEST', how=terminal_colors['routine']); write(' routine', 1)
+  #   write('Slave programs:', 1)
+  #   write(' blastall    (ncbi blast)     : ')
+  #   b=bash('blastall ')
+  #   if b[0]==256:    write('found', 1)
+  #   else:            write('NOT FOUND! blastall is compulsory in the selenoprofiles pipeline, please install it!', 1)
+  #   write(' blastpgp    (ncbi blast)     : ')
+  #   b=bash('blastpgp --help')
+  #   if b[0]==256:    write('found', 1)
+  #   else:            write('NOT FOUND! blastpgp is compulsory in the selenoprofiles pipeline, please install it!', 1)
+  #   write(' formatdb    (ncbi blast)     : ')
+  #   b=bash('formatdb --help')
+  #   if b[0]==256:    write('found', 1)
+  #   else:            write('NOT FOUND! formatdb is compulsory in the selenoprofiles pipeline, please install it!', 1)
+  #   write(' exonerate   (exonerate pkg)  : ')
+  #   b=bash('exonerate ')
+  #   if b[0]==256:    write('found', 1)
+  #   else:            write('NOT FOUND! you could still run using option -dont_exonerate' , 1)
+  #   write(' fastaindex  (exonerate pkg)  : ')
+  #   b=bash('fastaindex ')
+  #   if b[0]==256:    write('found', 1)
+  #   else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
+  #   write(' fastafetch  (exonerate pkg)  : ')
+  #   b=bash('fastafetch ')
+  #   if b[0]==256:    write('found', 1)
+  #   else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
+  #   write(' fastasubseq (exonerate pkg)  : ')
+  #   b=bash('fastasubseq ')
+  #   if b[0]==256:    write('found', 1)
+  #   else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
+  #   write(' genewise    (Wise2 package)  : ')
+  #   b=bash('genewise ')
+  #   if b[0]==16128:    write('found', 1)
+  #   else:            write('NOT FOUND! you could still run using option -dont_genewise' , 1)
+  #   write(' SECISearch3 (Seblastian)     : ')
+  #   b=bash('Seblastian.py ')
+  #   if b[0]==2048:    write('found', 1)
+  #   else:            write('NOT FOUND! SECISearch is recommended to search for selenoproteins; you can ignore this if you want to search your custom profiles' , 1)
+  #   ###     ##
 
-    write('\nPython modules and miscellaneous:', 1)    
-    write(' oboparser   (module for GO)  : ')
-    try:        
-      import annotations.GO.Parsers.oboparser as oboparser
-      write('found', 1)
-    except:     
-      write('NOT FOUND! you cannot use method go_score() for filtering. This precludes the use of the built-in selenoprotein profiles', 1)
-      #sys.exc_clear()  #2022 #traceback      
+  #   write('\nPython modules and miscellaneous:', 1)    
+  #   write(' oboparser   (module for GO)  : ')
+  #   try:        
+  #     import annotations.GO.Parsers.oboparser as oboparser
+  #     write('found', 1)
+  #   except:     
+  #     write('NOT FOUND! you cannot use method go_score() for filtering. This precludes the use of the built-in selenoprotein profiles', 1)
+  #     #sys.exc_clear()  #2022 #traceback      
 
-    write(' obofile     (GO structure)   : ')
-    if is_file(opt['GO_obo_file']):                 write('found', 1)
-    else:                                           write('NOT FOUND! you cannot use method go_score() for filtering. This precludes the use of the built-in selenoprotein profiles', 1)
-    write(' uniref2go db    (GO annotation)  : ')
-    if  is_file( keywords ['uniref2go_db']['DEFAULT'] ):  write('found', 1)
-    else:                                           write('NOT FOUND! You cannot use methods go_score(), unless you defined a different uniref2go_db attribute for that profile. This precludes the use of the built-in selenoprotein profiles', 1)
-    write(' uniref database (tag/GO blast)   : ')
-    if  is_file( keywords ['tag_db']['DEFAULT'] ):  write('found', 1)
-    else:                                           write('NOT FOUND! You cannot use methods tag_score() and go_score(), unless you defined a different tag_db attribute for that profile. This precludes the use of the built-in selenoprotein profiles', 1)
-    write(' Pylab  (interactive graphs)  : ')
-    try:
-      import Pylab
-      write('found', 1)
-    except:
-      write('NOT FOUND! you cannot use the graphical tools ( -d or -D ) of selenoprofiles_build_profile.py', 1)
-      #sys.exc_clear()  #2022 #traceback      
+  #   write(' obofile     (GO structure)   : ')
+  #   if is_file(opt['GO_obo_file']):                 write('found', 1)
+  #   else:                                           write('NOT FOUND! you cannot use method go_score() for filtering. This precludes the use of the built-in selenoprotein profiles', 1)
+  #   write(' uniref2go db    (GO annotation)  : ')
+  #   if  is_file( keywords ['uniref2go_db']['DEFAULT'] ):  write('found', 1)
+  #   else:                                           write('NOT FOUND! You cannot use methods go_score(), unless you defined a different uniref2go_db attribute for that profile. This precludes the use of the built-in selenoprotein profiles', 1)
+  #   write(' uniref database (tag/GO blast)   : ')
+  #   if  is_file( keywords ['tag_db']['DEFAULT'] ):  write('found', 1)
+  #   else:                                           write('NOT FOUND! You cannot use methods tag_score() and go_score(), unless you defined a different tag_db attribute for that profile. This precludes the use of the built-in selenoprotein profiles', 1)
+  #   write(' Pylab  (interactive graphs)  : ')
+  #   try:
+  #     import Pylab
+  #     write('found', 1)
+  #   except:
+  #     write('NOT FOUND! you cannot use the graphical tools ( -d or -D ) of selenoprofiles_build_profile.py', 1)
+  #     #sys.exc_clear()  #2022 #traceback      
 
-    write(' ete3   (interactive trees)   : ')
-    try:
-      import ete3
-      write('found', 1)
-    except:
-      write('NOT FOUND! you cannot use the results viewer program called selenoprofiles_tree_drawer.py', 1)
-      #sys.exc_clear()  #2022 #traceback 
+  #   write(' ete3   (interactive trees)   : ')
+  #   try:
+  #     import ete3
+  #     write('found', 1)
+  #   except:
+  #     write('NOT FOUND! you cannot use the results viewer program called selenoprofiles_tree_drawer.py', 1)
+  #     #sys.exc_clear()  #2022 #traceback 
 
-    sys.exit()
+  #   sys.exit()
 
     
   ###############
@@ -915,7 +923,8 @@ def main():
       if uniref_lets_format:
         write(f'-format   uniref50_seleno_sim.fasta', 1)
 
-      write('To force downloading/updating: delete or move the corresponding file/folder and re-run   selenoprofiles -download', 1)      
+      write('If you wish to force downloading/updating ', how='blue')
+      write('some files, delete or move them and re-run selenoprofiles -download', 1)      
 
       ## prompt
       write('', 1)
