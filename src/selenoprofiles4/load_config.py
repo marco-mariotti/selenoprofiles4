@@ -1,4 +1,5 @@
-##### selenoprofiles_4 configuration file. For a description of each options see selenoprofiles_4.py --help full 
+
+selenoprofiles_config_content="""##### selenoprofiles_4 configuration file. For a description of each options see selenoprofiles_4.py --help full 
 ### folders. r is the default result folder name 
 
 selenoprofiles_data_dir = ~/selenoprofiles_data/
@@ -97,3 +98,4 @@ families_set.eukarya   =  metazoa,protist
 
 families_set.all = machinery,metazoa,protist,prokarya
 
+"""

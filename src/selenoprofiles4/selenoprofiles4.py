@@ -4,6 +4,7 @@ __email__   = "marco.mariotti@ub.edu"
 
 #__version__ = "4.0"
 from ._version import __version__
+from .load_config import selenoprofiles_config_content
 
 global temp_folder; global split_folder
 from string import *
@@ -804,9 +805,12 @@ def main():
 
   if '-setup' in sys.argv:
     # create file if not present
-    if not is_file(config_filename):    
-      default_config_file=selenoprofiles_install_dir+'/selenoprofiles_config.txt'
-      shutil.copyfile(default_config_file, config_filename)
+    if not is_file(config_filename):
+      config_filename=os.path.expanduser('~') + '/.selenoprofiles_config.txt'
+      
+      #default_config_file=selenoprofiles_install_dir+'/selenoprofiles_config.txt'
+      write_to_file(selenoprofiles_config_content, config_filename)
+      #shutil.copyfile(default_config_file, config_filename)
       write(f'-setup: {config_filename} created. \n\nYou may edit it to modify the number of cpus used, the folder for temporary files, etc etc'
             f'\n\nYou are ready to search for user-provided profiles.\nTo use the built-in selenoprotein profiles, you must first run:\n selenoprofiles -download', 1)
       sys.exit()
