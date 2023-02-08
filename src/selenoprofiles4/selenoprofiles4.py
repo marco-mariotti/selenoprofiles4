@@ -616,6 +616,19 @@ def load(config_filename, args={}):
             opt[o] = 1
     if opt["print_commands"]:
         set_MMlib_var("print_commands", 1)
+
+    if is_file(str(opt["selenoprofiles_data_dir"]) + "/version.txt"):
+        profiles_version = (
+            open(str(opt["selenoprofiles_data_dir"]) + "/version.txt")
+            .readline()
+            .strip()
+        )
+    else:
+        profiles_version = None
+
+    write("|" + "-" * 119, 1)
+    write(f"|         selenoprotein_data version: {profiles_version}", 1)
+
     ## determining families
     if opt["fam_list"]:
         write("Reading families list from file: " + str(opt["fam_list"]), 1)
@@ -9969,7 +9982,11 @@ def myhook(errclass, errvalue, errtraceback):
             1,
             how="magenta",
         )
-        traceback.print_tb(errtraceback)
+        printerr(
+            "".join(traceback.format_exception(errclass, errvalue, errtraceback)),
+            1,
+            how="yellow",
+        )
         printerr(
             "\nPress Enter to continue; the temp folder will be deleted and the program will halt",
             1,
@@ -9984,7 +10001,9 @@ def myhook(errclass, errvalue, errtraceback):
     else:
         sys.__excepthook__(errclass, errvalue, errtraceback)
 
+
 sys.excepthook = myhook
+
 
 def close_program():
     """ Utility to perform operation at the end of the computation, even in case the pipeline crashes"""
