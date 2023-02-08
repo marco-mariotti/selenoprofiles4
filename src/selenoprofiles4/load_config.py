@@ -8,7 +8,7 @@ temp = /tmp/
 
 profiles_folder = {selenoprofiles_data_dir}/selenoprotein_profiles
 bin_folder =  
-r = selenoprofiles_results
+o = selenoprofiles_results
 
 # save extracted scaffolds in temp folder (1) or trash everything at each run (0)?
 save_chromosomes=0
