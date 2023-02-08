@@ -713,7 +713,7 @@ def load_chromosome_lengths(chromosome_length_file, max_chars=0):
 
 
 def get_remote_file_size(url):
-  response = requests.head(url)          
+  response = requests.head(url, verify=False)          
   fsize=response.headers['Content-Length'] if 'Content-Length' in response.headers  else 'unknown'
   try:
     fsize=human_readable_size(int(fsize))
@@ -740,7 +740,7 @@ def download_file(url, local_folder):
     tmp_filename=local_folder+'/'+local_filename+'.tmp'
     final_filename=local_folder+'/'+local_filename
     # NOTE the stream=True parameter below
-    with requests.get(url, stream=True) as r:
+    with requests.get(url, stream=True, verify=False) as r:
         r.raise_for_status()
         with open(tmp_filename, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192): 
