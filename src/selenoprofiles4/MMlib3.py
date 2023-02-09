@@ -123,7 +123,7 @@ def bash_pipe(cmnd, print_it=0, return_popen=0, stdin=None):
   if print_it: write(cmnd, 1)
   s=subprocess.Popen(cmnd.split(), stdout=subprocess.PIPE, stdin=stdin, env=os.environ,
                      universal_newlines=True) #2022
-
+  
   if return_popen: return s
   else:    return s.stdout
 

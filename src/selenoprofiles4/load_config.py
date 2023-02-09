@@ -79,15 +79,15 @@ genewise_options.SELENO     =   -m {selenoprofiles_install_dir}/wisecfg/BLOSUM62
 clustering_seqid.DEFAULT                  = 0.27
 max_column_gaps.DEFAULT                   = 0.55
 tags.DEFAULT                =    []
-tag_db.DEFAULT              =    {selenoprofiles_data_dir}/uniref50.fasta
-uniref2go_db.DEFAULT        =    {selenoprofiles_data_dir}/idmapping_uniref_GO.tab
-tag_blast_options.DEFAULT   =    -F "m S" -a {NCPUS} -f 999  -e 1e-10 -M BLOSUM80 -G 9 -E 2 
+tag_db.DEFAULT              =    {selenoprofiles_data_dir}/uniref50_seleno_sim.fasta
+uniref2go_db.DEFAULT        =    {selenoprofiles_data_dir}/gene_ontology/idmapping_uniref_GO.tab
+tag_blast_options.DEFAULT   =    -F "m S" -a {ncpus} -f 999  -e 1e-10 -M BLOSUM80 -G 9 -E 2 
 neutral_tags.DEFAULT        =    ["hypothet?ical","hypothet?ical conserved protein","PREDICTED","unnamed protein product","unknown","putative","(gi\|.*\| RIKEN cDNA .+ (gene)?(protein)? \[.+\].?)+$","(gi\|.*\| +([a-zA-Z0-9\-]+) \[Drosophila .+\].*)+","(gi\|.*\| +(AGAP[a-zA-Z0-9\-]+) \[Anopheles .+\].*)+","chromosome \w+ open reading frame \w+, isoform CRA","\wCG\d+(, isoform CRA_.+)? \[.+\]","(gi\|.*\| +SJ[a-zA-Z0-9\-]+ +(protein)? +\[Schistosoma japonicum].*)+","gi\|.*\| +MGC\d+ (protein )?\[Xenopus .+\]", "Uncharacterized protein"]
 #gene extensions for cyclic exonerate and genewise
 exonerate_extension = 200000
 genewise_extension  = 100
 genewise_tbs_extension = 10000
-GO_obo_file            = {selenoprofiles_data_dir}/gene_ontology_ext.obo
+GO_obo_file            = {selenoprofiles_data_dir}/gene_ontology/gene_ontology_ext.obo
 
 ## defining built-in sets of families. follow the syntax to create custom sets
 families_set.prokarya = ahpd,ahpf,ars_s,arsc,bbd,cytc,dsre,duf1858,fesor,fmdb,frha,ftrb,gpx_b,grx,gst,hesb_like,imp,merp,mert,msra_b,mucd,nadh_ox,pp_sp1,prx,prx_like,rhor,rnfb,rnfc,rsam,seld,soret,tdip,ugc,ugsc,uos_hp3,usha,yeee,di_b,dsba,dsbg,fdha,frhd,frx,grda,grdb,hdra,prdb

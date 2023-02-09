@@ -26,7 +26,7 @@ except:
 urllib3.disable_warnings()  # necessary as long as the selenoprofiles_data is in a server without TLS certificates
 home_config_filename = os.path.expanduser("~") + "/.selenoprofiles_config.txt"
 
-# selenoprofiles_install_dir = os.path.dirname(os.path.realpath(__file__))
+selenoprofiles_install_dir = os.path.dirname(os.path.realpath(__file__))
 
 # 2022 : switched to networkx and obonet
 # try:
@@ -399,14 +399,10 @@ def load(config_filename, args={}):
             strict=notracebackException,
             advanced={"full": full_help},
         )
+
         #### reading options from command line
-        # opt['selenoprofiles_install_dir']=selenoprofiles_install_dir
+        opt['selenoprofiles_install_dir']=selenoprofiles_install_dir
         # 2023
-        to_interpret = [k for k in opt if type(opt[k]) is str and "{" in opt[k]]
-        while len(to_interpret):
-            for k in to_interpret:
-                opt[k] = opt[k].format(**opt)
-            to_interpret = [k for k in opt if type(opt[k]) is str and "{" in opt[k]]
 
         ## allowing ~
         for k in opt:
@@ -416,13 +412,45 @@ def load(config_filename, args={}):
                 if "~" in opt[k]:
                     x = os.path.expanduser(opt[k])
                     opt[k] = x
+                if type(opt[k]) is dict:
+                    for kk,vv in opt[k].items():
+                        if "~" in vv:
+                            x = os.path.expanduser(vv)
+                            opt[k][kk] = x
 
+        ## allowing variables (one option used in the value of another one)
+        to_interpret = [k for k in opt if type(opt[k]) is str and "{" in opt[k]]
+        while len(to_interpret):
+            for k in to_interpret:
+                opt[k] = opt[k].format(**opt)
+            to_interpret = [k for k in opt if type(opt[k]) is str and "{" in opt[k]]
+
+        # dictionary opt, e.g. DEFAULT tags
+        to_interpret2=[(k,kk)  for k, v in opt.items() if type(v) is dict  for kk,vv in v.items() if type(vv) is str and "{" in vv]
+        while len(to_interpret2):            
+            for k, kk in to_interpret2:
+                opt[k][kk] = opt[k][kk].format(**opt)
+            to_interpret2=[(k,kk)  for k, v in opt.items() if type(v) is dict  for kk,vv in v.items() if type(vv) is str and "{" in vv]
+
+                    
     # allowing to specify profile parameters on the command line
     for x in opt:
+        kwords=[]
+        values=[]
         if "." in x:
             category = x[: x.find(".")]
-            kword = x[x.find(".") + 1 :]
-            value = opt[x]
+            kwords =[   x[x.find(".") + 1 :]  ]
+            values = [   opt[x]   ]
+        elif type(opt[x]) is dict and not (x.startswith('__') or x in ['ACTION', 'families_set']):
+            category=x
+            kwords=[]
+            values=[]
+            for tk, tv in opt[x].items():
+                kwords.append(tk)
+                values.append(tv)
+            
+        for kword,value in zip(kwords,values):
+        
             keywords_text[category][kword] = str(value)
             function_text = value
             if "filtering" in category:
@@ -430,6 +458,7 @@ def load(config_filename, args={}):
             elif "options" in category or "_db" in category:
                 function_text = '"""' + function_text + '"""'
             try:
+                #write(f'setting {category} {kword} = {function_text}', 1, how='reverse,magenta')                    
                 exec("keywords[category][kword]=" + str(function_text))
             except:
                 printerr(
@@ -443,6 +472,9 @@ def load(config_filename, args={}):
                 )
                 raise
 
+    #write(keywords_text, 1, how='green')
+    #write(keywords, 1, how='yellow')
+            
     set_MMlib_var("opt", opt)
     sleep_time = opt["sleep_time"]
     max_attempts_database = opt["max_attempts_database"]
@@ -3266,6 +3298,7 @@ def genewise(
 
     global chromosome_lengths
 
+    
     # replacing the input profile with a copy which change in all sequences all aminoacids in sec columns with U (in exonerate, it is *)
     profile = profile_ali.copy()
     for title in profile.titles():
@@ -3275,6 +3308,9 @@ def genewise(
     # determining genewise options: the ones specified for the profile override the ones specified as arguments of the genewise function
     genewise_options_used = genewise_options.copy()
     profile_genewise_options = profile.genewise_options_dict()
+    #write(profile_genewise_options, 1, how='reverse')
+
+    
     for option_name in profile_genewise_options:
         if profile_genewise_options[option_name] == "DEFAULT":
             del genewise_options_used[option_name]
@@ -3343,16 +3379,24 @@ def genewise(
         raise notracebackException(
             "ERROR genewise not found! Please install it or skip its execution with -dont_genewise"
         )
+    
     df_genewise = dereference(b[1])
-    add_wisecfg = ""
-    if df_genewise.endswith("src/bin/genewise"):
-        cfg_dir = df_genewise[:-16] + "wisecfg"
-        add_wisecfg = 'export WISECONFIGDIR="' + cfg_dir + '"; '
+    # 2023
+    #add_wisecfg = ""
+    #if df_genewise.endswith("src/bin/genewise"):
+    #cfg_dir = df_genewise[:-16] + "wisecfg"
+    
+    # works with conda: ## finds its wisecfg
+    cfg_dir = df_genewise[:-12] + "share/wise2/wisecfg"
+    
+    add_wisecfg = 'export WISECONFIGDIR="' + cfg_dir + '"; '
+        
     # b holds the exit status of genewise (in pos 0)
     b = bash(
         add_wisecfg
         + " "
-        + df_genewise
+        #+ df_genewise
+        +"genewise"
         + " -pretty -sum -gff "
         + join(
             [
@@ -8372,8 +8416,23 @@ class parse_blast(parser):
         if self["keep_lengths"]:
             add_option += " -v QLENGTH=1 -v TLENGTH=1 "
 
-        self.file = bash_pipe("blaster_parser.g " + add_option + " " + filename)
+        b_awk=bash('which awk')
+        if b_awk[0]: # exit code >0
+            b_gawk=bash('which gawk')
+            if b_gawk[0]:                
+                raise notracebackException("ERROR awk or gawk must be available to run selenoprofiles! Install it with: conda install -c anaconda gawk")
+            awk_exec=b_gawk[1]
+        else:
+            awk_exec=b_awk[1]
+
+        pipe_cmd=awk_exec+" -f "+selenoprofiles_install_dir+"/blaster_parser.awk " + add_option + " " + filename
+        #write(pipe_cmd, 1, how='magenta')
+        self.bash_pipe=bash_pipe(pipe_cmd,
+                                 return_popen=1)
+        self.file=self.bash_pipe.stdout
         self.last_line = self.file.readline()
+        if self.bash_pipe.poll(): # exit code
+            raise Exception("ERROR parsing blast output! check standard error message above")
 
     def parse_next(self):
         g = blasthit()
@@ -8388,6 +8447,9 @@ class parse_blast(parser):
         if self["full_target"]:
             g.chromosome = replace_chars(g.chromosome, "%", " ")
         self.last_line = self.file.readline()
+        if self.bash_pipe.poll(): # exit code
+            raise Exception("ERROR parsing blast output! check standard error message above")
+
         return g
 
 
