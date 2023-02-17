@@ -15,11 +15,6 @@ from functools import cmp_to_key
 import networkx, requests, urllib3, obonet
 
 from .MMlib3 import *
-from .selenoprofiles_join_alignments import (
-    main as run_join_alignments,
-    def_opt as def_opt_join_alignments,
-    help_msg as help_msg_join_alignments,
-)
 
 
 #urllib3.disable_warnings()  # necessary as long as the selenoprofiles_data is in a server without TLS certificates
@@ -150,8 +145,9 @@ Note that this may cause certain files to be overwritten, but none will be delet
 Before outputing, results are stored in a SQLite database inside the output_folder. 
 If selenoprofiles finds existing results in the database from a previous run, it loads them instead of running the pipeline, unless any prior step is forced.
 
-* Post-processing programs
-selenoprofiles join  : this functionality collects and compact results obtained after running selenoprofiles on multiple targets. See selenoprofiles join -h
+* Accessory programs
+selenoprofiles join     : collect and combine results previously obtained by running selenoprofiles on multiple targets. Run: selenoprofiles join -h
+selenoprofiles database : fix, inspect, edit the sqlite db used by selenoprofiles, or obtain fast output. Run: selenoprofiles database -h
 
 * System and global configuration
 -genetic_code     +   use a non-standard genetic code; see NCBI codes; implies -tblastn (see -help full)
@@ -1474,11 +1470,48 @@ def main():
         write("-download : finished, now quitting", 1)
         sys.exit()
 
+    if len(sys.argv) > 1 and sys.argv[1] == "database":
+
+        from .selenoprofiles_database import (
+            main as run_database,
+            def_opt as def_opt_database,
+            help_msg as help_msg_database,
+        )
+        
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles database", 1)
+        
+        if len(sys.argv) < 3:
+            sys.argv.append('-h')  # when only selenoprofiles join --> display help
+
+        db_opt = command_line(
+            def_opt_database,
+            help_msg_database,
+            "",
+            synonyms={}, #command_line_synonyms,
+            strict=notracebackException,
+        )        
+
+        run_database(db_opt)
+
+        write("\nselenoprofiles database completed.   Date: " + bbash("date"), 1)        
+        sys.exit()
+        
     ######
     if len(sys.argv) > 1 and sys.argv[1] == "join":
+
+        from .selenoprofiles_join_alignments import (
+            main as run_join_alignments,
+            def_opt as def_opt_join_alignments,
+            help_msg as help_msg_join_alignments,
+        )
+        
         write("|" + "-" * 119, 1)
         write("|        Running utility: selenoprofiles join", 1)
-
+        
+        if len(sys.argv) < 3:
+            sys.argv.append('-h')  # when only selenoprofiles join --> display help
+        
         bkp_argv = sys.argv.copy()
         join_opt = command_line(
             def_opt_join_alignments,
@@ -1638,7 +1671,7 @@ def main():
                 raise notracebackException(
                     "ERROR the search for profile: "
                     + family
-                    + " is already being computed by another instance of selenoprofiles! If this is not true, use the script selenoprofiles_database.py to clean the file results.sqlite"
+                    + " is already being computed by another instance of selenoprofiles! If this is not true, use the command 'selenoprofiles database' to clean the file results.sqlite"
                 )
             elif (
                 opt["no_db"]
@@ -10151,3 +10184,4 @@ if __name__ == "__main__":
         close_program()
     except:
         close_program()
+
