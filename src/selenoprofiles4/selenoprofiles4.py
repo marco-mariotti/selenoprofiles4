@@ -4,31 +4,25 @@ __email__ = "marco.mariotti@ub.edu"
 from ._version import __version__
 from .load_config import selenoprofiles_config_content
 
-global temp_folder
-global split_folder
-from string import *
+global temp_folder, split_folder
 import sys, os, traceback, shutil, gzip, tarfile, time, glob
 from types import MethodType
 from subprocess import *
-
-from .MMlib3 import *
+from string import *
 from sqlite3 import dbapi2 as sqlite, OperationalError, Connection, Cursor
 from ast import literal_eval
 from functools import cmp_to_key
-import networkx, requests, urllib3
+import networkx, requests, urllib3, obonet
+
+from .MMlib3 import *
 from .selenoprofiles_join_alignments import (
     main as run_join_alignments,
     def_opt as def_opt_join_alignments,
     help_msg as help_msg_join_alignments,
 )
 
-try:
-    import obonet
-except:
-    pass
 
-
-urllib3.disable_warnings()  # necessary as long as the selenoprofiles_data is in a server without TLS certificates
+#urllib3.disable_warnings()  # necessary as long as the selenoprofiles_data is in a server without TLS certificates
 home_config_filename = os.path.expanduser("~") + "/.selenoprofiles_config.txt"
 
 selenoprofiles_install_dir = os.path.dirname(os.path.realpath(__file__))
@@ -155,6 +149,9 @@ Note that this may cause certain files to be overwritten, but none will be delet
 
 Before outputing, results are stored in a SQLite database inside the output_folder. 
 If selenoprofiles finds existing results in the database from a previous run, it loads them instead of running the pipeline, unless any prior step is forced.
+
+* Post-processing programs
+selenoprofiles join  : this functionality collects and compact results obtained after running selenoprofiles on multiple targets. See selenoprofiles join -h
 
 * System and global configuration
 -genetic_code     +   use a non-standard genetic code; see NCBI codes; implies -tblastn (see -help full)
