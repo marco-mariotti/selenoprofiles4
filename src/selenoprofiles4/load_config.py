@@ -13,7 +13,7 @@ o = selenoprofiles_results
 # save extracted scaffolds in temp folder (1) or trash everything at each run (0)?
 save_chromosomes=0
 ## default profile. Searched in profiles_folder. Many possible type of value as argument (see -help)
-profile=AhpC
+profile=
 
 ### default: maximum sensitivity. Turn genewise_to_be_sure = 0 for more speed, dont_genewise = 1 for max speed.
 #dont_exonerate = 0         
@@ -95,6 +95,7 @@ families_set.metazoa =  SPS,DI,Fep15,FrnE,GPx,MsrA,Sel15,SelKi,SelH,SelI,SelJ,Se
 families_set.protist =    EhSEP2,Lmsel1,Sel1,Sel2,Sel3,Sel4,SelQ,SelTryp,MSP,Ostsp1,Ostsp2,Ostsp3
 families_set.machinery  =  SPS,SBP2,SecS,eEFsec,pstk,secp43
 families_set.eukarya   =  metazoa,protist
+families_set.se_traits   =  machinery,ybbb,yqeb,yqec
 
 families_set.all = machinery,metazoa,protist,prokarya
 

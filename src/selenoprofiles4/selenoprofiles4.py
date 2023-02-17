@@ -7,7 +7,7 @@ from .load_config import selenoprofiles_config_content
 global temp_folder
 global split_folder
 from string import *
-import sys, os, traceback, shutil, gzip, tarfile, time
+import sys, os, traceback, shutil, gzip, tarfile, time, glob
 from types import MethodType
 from subprocess import *
 
@@ -16,6 +16,11 @@ from sqlite3 import dbapi2 as sqlite, OperationalError, Connection, Cursor
 from ast import literal_eval
 from functools import cmp_to_key
 import networkx, requests, urllib3
+from .selenoprofiles_join_alignments import (
+    main as run_join_alignments,
+    def_opt as def_opt_join_alignments,
+    help_msg as help_msg_join_alignments,
+)
 
 try:
     import obonet
@@ -191,7 +196,7 @@ If selenoprofiles finds existing results in the database from a previous run, it
 -fasta_add         "+"  argument is a python expression manipulating a p2g result, named x. The expression is evaluated to a string which is added to the fasta header used for the result (for example in the fasta output, cds output, ali output etc). Useful to quickly add custom information to the output 
 
 * Miscellaneous
--fam_list         +       file with list of profiles, one per line. This is an alternative way to provide the list of profiles that overrides option -p
+-pf               +       file with list of profiles, one per line. This is an alternative way to provide the list of profiles that overrides option -p
 -name             +       specify manually the target file name. Normally it is derived from the file name
 -log              +       write a copy of the output normally printed to screen into a file provided as argument
 -add              +       provide a file with python code that is executed before the pipeline flow. It can be used to customize selenoprofiles (see manual)
@@ -252,30 +257,31 @@ As an example, see the SELENO keyword for attributes blast_options, exonerate_op
 
 """
 
+command_line_synonyms = {
+    "B": "blast",
+    "E": "exonerate",
+    "G": "genewise",
+    "C": "choose",
+    "F": "filter",
+    "O": "output",
+    "P": "profile",
+    "S": "species",
+    "s": "species",
+    "p": "profile",
+    "D": "database",
+    "no_splicing": "no_splice",
+    "N": "no_splice",
+}
+
 terminal_colors = {"routine": "blue", "database": "magenta", "profile": "green"}
 set_MMlib_var("colored_keywords", {"ERROR": "red,underscore", "WARNING": "red"})
 
 
-def load(config_filename, args={}):
+def load(config_filename, args={}, partial=False, override_args={}):
     """Load all global variables later used, reading configuration file and command line options. """
     ### initialising command line options and initialising file / objects lists . opt is a dictionary the all the command_line options. (0: False 1:True in case of boolean values). The -config FILE option allows to specify a different configuration file.  Every option in the configuration file is read, then eventually replaced by the correspondant command line option.
     # for i in range(len(sys.argv)):
     #  if sys.argv[i] == "-config":     config_filename=sys.argv[i+1]
-    command_line_synonyms = {
-        "B": "blast",
-        "E": "exonerate",
-        "G": "genewise",
-        "C": "choose",
-        "F": "filter",
-        "O": "output",
-        "P": "profile",
-        "S": "species",
-        "s": "species",
-        "p": "profile",
-        "D": "database",
-        "no_splicing": "no_splice",
-        "N": "no_splice",
-    }
     non_config_options = [
         "t",
         "v",
@@ -286,7 +292,7 @@ def load(config_filename, args={}):
         "filter",
         "choose",
         "output",
-        "fam_list",
+        "pf",
         "print_commands",
         "species",
         "dont_exonerate",
@@ -392,17 +398,23 @@ def load(config_filename, args={}):
         opt = command_line(
             def_opt,
             help_msg,
-            ["o", "t"],
+            [],  # "o", "t"],
             synonyms=command_line_synonyms,
             tolerated_regexp=["ACTION.*"]
-            + [p + ".*" for p in profile_alignment.parameters],
+            + [p + ".*" for p in profile_alignment.parameters]
+            + [".*"]
+            if partial
+            else [],
             strict=notracebackException,
             advanced={"full": full_help},
         )
 
         #### reading options from command line
-        opt['selenoprofiles_install_dir']=selenoprofiles_install_dir
+        opt["selenoprofiles_install_dir"] = selenoprofiles_install_dir
         # 2023
+
+        if override_args:
+            opt.update(override_args)
 
         ## allowing ~
         for k in opt:
@@ -413,7 +425,7 @@ def load(config_filename, args={}):
                     x = os.path.expanduser(opt[k])
                     opt[k] = x
                 if type(opt[k]) is dict:
-                    for kk,vv in opt[k].items():
+                    for kk, vv in opt[k].items():
                         if "~" in vv:
                             x = os.path.expanduser(vv)
                             opt[k][kk] = x
@@ -426,31 +438,44 @@ def load(config_filename, args={}):
             to_interpret = [k for k in opt if type(opt[k]) is str and "{" in opt[k]]
 
         # dictionary opt, e.g. DEFAULT tags
-        to_interpret2=[(k,kk)  for k, v in opt.items() if type(v) is dict  for kk,vv in v.items() if type(vv) is str and "{" in vv]
-        while len(to_interpret2):            
+        to_interpret2 = [
+            (k, kk)
+            for k, v in opt.items()
+            if type(v) is dict
+            for kk, vv in v.items()
+            if type(vv) is str and "{" in vv
+        ]
+        while len(to_interpret2):
             for k, kk in to_interpret2:
                 opt[k][kk] = opt[k][kk].format(**opt)
-            to_interpret2=[(k,kk)  for k, v in opt.items() if type(v) is dict  for kk,vv in v.items() if type(vv) is str and "{" in vv]
+            to_interpret2 = [
+                (k, kk)
+                for k, v in opt.items()
+                if type(v) is dict
+                for kk, vv in v.items()
+                if type(vv) is str and "{" in vv
+            ]
 
-                    
     # allowing to specify profile parameters on the command line
     for x in opt:
-        kwords=[]
-        values=[]
+        kwords = []
+        values = []
         if "." in x:
             category = x[: x.find(".")]
-            kwords =[   x[x.find(".") + 1 :]  ]
-            values = [   opt[x]   ]
-        elif type(opt[x]) is dict and not (x.startswith('__') or x in ['ACTION', 'families_set']):
-            category=x
-            kwords=[]
-            values=[]
+            kwords = [x[x.find(".") + 1 :]]
+            values = [opt[x]]
+        elif type(opt[x]) is dict and not (
+            x.startswith("__") or x in ["ACTION", "families_set"]
+        ):
+            category = x
+            kwords = []
+            values = []
             for tk, tv in opt[x].items():
                 kwords.append(tk)
                 values.append(tv)
-            
-        for kword,value in zip(kwords,values):
-        
+
+        for kword, value in zip(kwords, values):
+
             keywords_text[category][kword] = str(value)
             function_text = value
             if "filtering" in category:
@@ -458,7 +483,7 @@ def load(config_filename, args={}):
             elif "options" in category or "_db" in category:
                 function_text = '"""' + function_text + '"""'
             try:
-                #write(f'setting {category} {kword} = {function_text}', 1, how='reverse,magenta')                    
+                # write(f'setting {category} {kword} = {function_text}', 1, how='reverse,magenta')
                 exec("keywords[category][kword]=" + str(function_text))
             except:
                 printerr(
@@ -472,182 +497,108 @@ def load(config_filename, args={}):
                 )
                 raise
 
-    #write(keywords_text, 1, how='green')
-    #write(keywords, 1, how='yellow')
-            
+    # write(keywords_text, 1, how='green')
+    # write(keywords, 1, how='yellow')
+
     set_MMlib_var("opt", opt)
     sleep_time = opt["sleep_time"]
     max_attempts_database = opt["max_attempts_database"]
 
-    if opt["log"]:
-        if opt["log"] == 1:
-            raise notracebackException(
-                "selenoprofiles ERROR an log output must be provided with option -log"
-            )
-        global log_file
-        log_file = open(opt["log"], "w")
-        set_MMlib_var("log_file", log_file)
-    # set options and parameters
-    temp_folder = Folder(random_folder(opt["temp"]))
-    test_writeable_folder(
-        temp_folder, "Please provide a different folder with option -temp"
-    )
-    set_MMlib_var("temp_folder", temp_folder)
-    if opt["save_chromosomes"]:
-        split_folder = Folder(opt["temp"])
-    else:
-        split_folder = temp_folder
-    test_writeable_folder(split_folder, "split_folder")
-    set_MMlib_var("split_folder", split_folder)
-    bin_folder = Folder(opt["bin_folder"])
-    set_MMlib_var("bin_folder", bin_folder)
     profiles_folder = Folder(opt["profiles_folder"])
-    # 2023#
-    # check_directory_presence(profiles_folder, 'profiles_folder', notracebackException)
+    if not opt["profile"]:
+        raise notracebackException(
+            "ERROR you must provide one or more profiles to search with option -p\nRun selenoprofiles -h for usage"
+        )
 
-    if opt["genetic_code"] != 1:
-        set_genetic_code(opt["genetic_code"])
-        opt["tblastn"] = 1
-        if not opt["dont_exonerate"]:
-            exonerate_version = float(
-                bash("exonerate --version")[1].split("\n")[0].split()[-1][:3]
-            )
-            if exonerate_version < 2.4:
+    if not partial:
+        if opt["log"]:
+            if opt["log"] == 1:
                 raise notracebackException(
-                    "ERROR exonerate version detected: {}\nAlternative genetic codes are bugged in exonerate versions <2.4!\nPlease download and install exonerate version 2.4.0 if you want to use -genetic_code".format(
-                        exonerate_version
-                    )
+                    "selenoprofiles ERROR an log output must be provided with option -log"
                 )
+            global log_file
+            log_file = open(opt["log"], "w")
+            set_MMlib_var("log_file", log_file)
+        # set options and parameters
+        temp_folder = Folder(random_folder(opt["temp"]))
+        test_writeable_folder(
+            temp_folder, "Please provide a different folder with option -temp"
+        )
+        set_MMlib_var("temp_folder", temp_folder)
+        if opt["save_chromosomes"]:
+            split_folder = Folder(opt["temp"])
+        else:
+            split_folder = temp_folder
+        test_writeable_folder(split_folder, "split_folder")
+        set_MMlib_var("split_folder", split_folder)
+        bin_folder = Folder(opt["bin_folder"])
+        set_MMlib_var("bin_folder", bin_folder)
+        # 2023#
+        # check_directory_presence(profiles_folder, 'profiles_folder', notracebackException)
 
-        for k in keywords["blast_options"]:
-            keywords["blast_options"][k] += " -D " + str(opt["genetic_code"])
-        for k in keywords["exonerate_options"]:
-            keywords["exonerate_options"][k] += " --geneticcode " + str(
-                opt["genetic_code"]
+        if opt["genetic_code"] != 1:
+            set_genetic_code(opt["genetic_code"])
+            opt["tblastn"] = 1
+            if not opt["dont_exonerate"]:
+                exonerate_version = float(
+                    bash("exonerate --version")[1].split("\n")[0].split()[-1][:3]
+                )
+                if exonerate_version < 2.4:
+                    raise notracebackException(
+                        "ERROR exonerate version detected: {}\nAlternative genetic codes are bugged in exonerate versions <2.4!\nPlease download and install exonerate version 2.4.0 if you want to use -genetic_code".format(
+                            exonerate_version
+                        )
+                    )
+
+            for k in keywords["blast_options"]:
+                keywords["blast_options"][k] += " -D " + str(opt["genetic_code"])
+            for k in keywords["exonerate_options"]:
+                keywords["exonerate_options"][k] += " --geneticcode " + str(
+                    opt["genetic_code"]
+                )
+        # 2023
+        # for  k  in  keywords['genewise_options']:     keywords['genewise_options'][k]=keywords['genewise_options'][k].format(GENETIC_CODE=opt['genetic_code'])
+        # else:
+        #  for  k  in  keywords['genewise_options']:     keywords['genewise_options'][k]=keywords['genewise_options'][k].format(GENETIC_CODE=1)
+
+        ###############
+        ##### setting target
+        target_file = opt["t"]
+        check_file_presence(target_file, "target file", notracebackException)
+        target_file = abspath(target_file)
+        reference_genome_filename = target_file
+        set_MMlib_var(
+            "reference_genome_filename", target_file
+        )  # to allow some [gene].fasta_sequence() calls without specifying the genome file. see [blasthit].place_selenocysteine() using [blasthit].cds()
+        three_prime_length = opt["three_prime_length"]
+        set_MMlib_var("three_prime_length", three_prime_length)
+        five_prime_length = opt["five_prime_length"]
+        set_MMlib_var("five_prime_length", five_prime_length)
+        if opt["output_three_prime"] and not three_prime_length:
+            raise notracebackException(
+                "ERROR output_three_prime is active but three_prime_length is 0 or not defined!"
             )
-    # 2023
-    # for  k  in  keywords['genewise_options']:     keywords['genewise_options'][k]=keywords['genewise_options'][k].format(GENETIC_CODE=opt['genetic_code'])
-    # else:
-    #  for  k  in  keywords['genewise_options']:     keywords['genewise_options'][k]=keywords['genewise_options'][k].format(GENETIC_CODE=1)
-
-    # 2023
-    # ###############
-    # ### test routine
-    # if opt['test']:
-    #   write('\n'); write('TEST', how=terminal_colors['routine']); write(' routine', 1)
-    #   write('Slave programs:', 1)
-    #   write(' blastall    (ncbi blast)     : ')
-    #   b=bash('blastall ')
-    #   if b[0]==256:    write('found', 1)
-    #   else:            write('NOT FOUND! blastall is compulsory in the selenoprofiles pipeline, please install it!', 1)
-    #   write(' blastpgp    (ncbi blast)     : ')
-    #   b=bash('blastpgp --help')
-    #   if b[0]==256:    write('found', 1)
-    #   else:            write('NOT FOUND! blastpgp is compulsory in the selenoprofiles pipeline, please install it!', 1)
-    #   write(' formatdb    (ncbi blast)     : ')
-    #   b=bash('formatdb --help')
-    #   if b[0]==256:    write('found', 1)
-    #   else:            write('NOT FOUND! formatdb is compulsory in the selenoprofiles pipeline, please install it!', 1)
-    #   write(' exonerate   (exonerate pkg)  : ')
-    #   b=bash('exonerate ')
-    #   if b[0]==256:    write('found', 1)
-    #   else:            write('NOT FOUND! you could still run using option -dont_exonerate' , 1)
-    #   write(' fastaindex  (exonerate pkg)  : ')
-    #   b=bash('fastaindex ')
-    #   if b[0]==256:    write('found', 1)
-    #   else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
-    #   write(' fastafetch  (exonerate pkg)  : ')
-    #   b=bash('fastafetch ')
-    #   if b[0]==256:    write('found', 1)
-    #   else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
-    #   write(' fastasubseq (exonerate pkg)  : ')
-    #   b=bash('fastasubseq ')
-    #   if b[0]==256:    write('found', 1)
-    #   else:            write('NOT FOUND! the fasta suite by exonerate is compulsory for the selenoprofiles pipeline, please install it! ' , 1)
-    #   write(' genewise    (Wise2 package)  : ')
-    #   b=bash('genewise ')
-    #   if b[0]==16128:    write('found', 1)
-    #   else:            write('NOT FOUND! you could still run using option -dont_genewise' , 1)
-    #   write(' SECISearch3 (Seblastian)     : ')
-    #   b=bash('Seblastian.py ')
-    #   if b[0]==2048:    write('found', 1)
-    #   else:            write('NOT FOUND! SECISearch is recommended to search for selenoproteins; you can ignore this if you want to search your custom profiles' , 1)
-    #   ###     ##
-
-    #   write('\nPython modules and miscellaneous:', 1)
-    #   write(' oboparser   (module for GO)  : ')
-    #   try:
-    #     import annotations.GO.Parsers.oboparser as oboparser
-    #     write('found', 1)
-    #   except:
-    #     write('NOT FOUND! you cannot use method go_score() for filtering. This precludes the use of the built-in selenoprotein profiles', 1)
-    #     #sys.exc_clear()  #2022 #traceback
-
-    #   write(' obofile     (GO structure)   : ')
-    #   if is_file(opt['GO_obo_file']):                 write('found', 1)
-    #   else:                                           write('NOT FOUND! you cannot use method go_score() for filtering. This precludes the use of the built-in selenoprotein profiles', 1)
-    #   write(' uniref2go db    (GO annotation)  : ')
-    #   if  is_file( keywords ['uniref2go_db']['DEFAULT'] ):  write('found', 1)
-    #   else:                                           write('NOT FOUND! You cannot use methods go_score(), unless you defined a different uniref2go_db attribute for that profile. This precludes the use of the built-in selenoprotein profiles', 1)
-    #   write(' uniref database (tag/GO blast)   : ')
-    #   if  is_file( keywords ['tag_db']['DEFAULT'] ):  write('found', 1)
-    #   else:                                           write('NOT FOUND! You cannot use methods tag_score() and go_score(), unless you defined a different tag_db attribute for that profile. This precludes the use of the built-in selenoprotein profiles', 1)
-    #   write(' Pylab  (interactive graphs)  : ')
-    #   try:
-    #     import Pylab
-    #     write('found', 1)
-    #   except:
-    #     write('NOT FOUND! you cannot use the graphical tools ( -d or -D ) of selenoprofiles_build_profile.py', 1)
-    #     #sys.exc_clear()  #2022 #traceback
-
-    #   write(' ete3   (interactive trees)   : ')
-    #   try:
-    #     import ete3
-    #     write('found', 1)
-    #   except:
-    #     write('NOT FOUND! you cannot use the results viewer program called selenoprofiles_tree_drawer.py', 1)
-    #     #sys.exc_clear()  #2022 #traceback
-
-    #   sys.exit()
-
-    ###############
-    ##### setting target
-    target_file = opt["t"]
-    check_file_presence(target_file, "target file", notracebackException)
-    target_file = abspath(target_file)
-    reference_genome_filename = target_file
-    set_MMlib_var(
-        "reference_genome_filename", target_file
-    )  # to allow some [gene].fasta_sequence() calls without specifying the genome file. see [blasthit].place_selenocysteine() using [blasthit].cds()
-    three_prime_length = opt["three_prime_length"]
-    set_MMlib_var("three_prime_length", three_prime_length)
-    five_prime_length = opt["five_prime_length"]
-    set_MMlib_var("five_prime_length", five_prime_length)
-    if opt["output_three_prime"] and not three_prime_length:
-        raise notracebackException(
-            "ERROR output_three_prime is active but three_prime_length is 0 or not defined!"
-        )
-    if opt["output_five_prime"] and not five_prime_length:
-        raise notracebackException(
-            "ERROR output_five_prime is active but five_prime_length is 0 or not defined!"
-        )
-    # setting routine cascade
-    next_must_be_active = 0
-    for o in [
-        "blast",
-        "exonerate",
-        "genewise",
-        "choose",
-        "filter",
-        "database",
-        "output",
-    ]:
-        if opt[o]:
-            next_must_be_active = 1
-        elif next_must_be_active:
-            opt[o] = 1
-    if opt["print_commands"]:
-        set_MMlib_var("print_commands", 1)
+        if opt["output_five_prime"] and not five_prime_length:
+            raise notracebackException(
+                "ERROR output_five_prime is active but five_prime_length is 0 or not defined!"
+            )
+        # setting routine cascade
+        next_must_be_active = 0
+        for o in [
+            "blast",
+            "exonerate",
+            "genewise",
+            "choose",
+            "filter",
+            "database",
+            "output",
+        ]:
+            if opt[o]:
+                next_must_be_active = 1
+            elif next_must_be_active:
+                opt[o] = 1
+        if opt["print_commands"]:
+            set_MMlib_var("print_commands", 1)
 
     if is_file(str(opt["selenoprofiles_data_dir"]) + "/version.txt"):
         profiles_version = (
@@ -658,16 +609,15 @@ def load(config_filename, args={}):
     else:
         profiles_version = None
 
-    write("|" + "-" * 119, 1)
-    write(f"|         selenoprotein_data version: {profiles_version}", 1)
+    if not partial == 2:
+        write("|" + "-" * 119, 1)
+        write(f"|         selenoprotein_data version: {profiles_version}", 1)
 
     ## determining families
-    if opt["fam_list"]:
-        write("Reading families list from file: " + str(opt["fam_list"]), 1)
-        check_file_presence(opt["fam_list"], "families list file", notracebackException)
-        opt["profile"] = join(
-            [line.strip() for line in open(opt["fam_list"], "r")], ","
-        )
+    if opt["pf"]:
+        write("Reading families list from file: " + str(opt["pf"]), 1)
+        check_file_presence(opt["pf"], "families list file", notracebackException)
+        opt["profile"] = join([line.strip() for line in open(opt["pf"], "r")], ",")
     # here I change each set of families with the list of its members, iteratively
     profile_files = opt["profile"].split(",")
     profiles_names = []
@@ -687,8 +637,10 @@ def load(config_filename, args={}):
         profile_file = profile_files[i]
         if profile_file in profile_files[:i]:
             profile_files.pop(i)
+
     # changing profile names with profile file
-    write("/" + "-" * 119, 1)
+    if not partial == 1:
+        write("/" + "-" * 119, 1)
     for f in range(len(profile_files)):
         this_profile = profile_files[f]
         if this_profile == "NONE":
@@ -706,7 +658,7 @@ def load(config_filename, args={}):
                 + this_profile
                 + "\n\nIf you're trying to search the built-in selenoprotein profiles, you must first run: \nselenoprofiles -download"
             )
-        else:
+        elif not partial == 1:
             write(
                 "|-" + "-" * abs(f % 8 - 4) + "  load profile  " + profile_files[f], 1
             )
@@ -718,7 +670,13 @@ def load(config_filename, args={}):
                     + profile_ali.name
                 )
             profiles_hash[profile_ali.name] = profile_ali
-    write("\\" + "-" * 119, 1)
+    if not partial == 1:
+        write("\\" + "-" * 119, 1)
+
+    if partial == 1:
+        return profile_files
+    elif partial:
+        return
 
     # filtering state
     if not opt["state"]:
@@ -1361,7 +1319,7 @@ def main():
                 1,
             )
 
-        server_folder = "https://161.116.70.109/selenoprofiles_data/"
+        server_folder = "https://mariottigenomicslab.bio.ub.edu/selenoprofiles_data/"
         write(
             f"\nPreparing to download selenoprofiles_data from {server_folder} to {opt['selenoprofiles_data_dir']}",
             1,
@@ -1377,7 +1335,7 @@ def main():
         selenoprotein_profiles_dir = (
             opt["selenoprofiles_data_dir"] + "/selenoprotein_profiles"
         )
-        if not is_directory(profiles_dest_folder):
+        if not is_file(profiles_dest_folder + "SPS.fa"):
             profiles_lets_download = True
             profiles_size = get_remote_file_size(profiles_remote)
             # cmd=f"git clone https://github.com/marco-mariotti/selenoprotein_profiles.git  {selenoprotein_profiles_dir}"
@@ -1519,6 +1477,95 @@ def main():
         write("-download : finished, now quitting", 1)
         sys.exit()
 
+    ######
+    if len(sys.argv) > 1 and sys.argv[1] == "join":
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles join", 1)
+
+        bkp_argv = sys.argv.copy()
+        join_opt = command_line(
+            def_opt_join_alignments,
+            help_msg_join_alignments,
+            "",
+            synonyms=command_line_synonyms,
+            strict=notracebackException,
+        )
+        # write(join_opt, 1, how='magenta')
+        sys.argv = bkp_argv.copy()
+        override_args = {}
+        # if join_opt['pf']:
+        #     check_file_presence(join_opt["pf"], "file with list of profile names")
+        #     families_list=[f.strip()            for f in open(join_opt["pf"])                 if f.strip()]
+        #     override_args['profile']:
+
+        # determining list of profiles to be loaded
+        fam2filelist = {}
+        if join_opt["i"]:
+            for line in open(join_opt["i"]):
+                ffile = line.strip()
+                check_file_presence(ffile, "ali file provided in option -i")
+                family_name = base_filename(ffile).split(".")[0]
+
+                if not family_name in fam2filelist:
+                    fam2filelist[family_name] = []
+                fam2filelist[family_name].append(ffile)
+
+            if not fam2filelist:
+                raise notracebackException(
+                    "selenoprofiles join ERROR file provided with option -i was empty!"
+                )
+
+            override_args["profile"] = ",".join(sorted(fam2filelist.keys()))
+            load(config_filename, partial=2, override_args=override_args)
+
+        else:
+            if not join_opt["d"]:
+                raise notracebackException(
+                    "selenoprofiles join ERROR: you must select a selenoprofiles_output folder to search for alignments with option -d\nSee selenoprofiles join -h"
+                )
+            working_dir = join_opt["d"].rstrip("/") + "/"
+
+            if not join_opt["profile"] and not join_opt["pf"]:
+                override_args["profile"] = "all"
+
+            profile_files = load(
+                config_filename, partial=1, override_args=override_args
+            )  ## filling most things but not loading profiles
+            profiles_files_with_results = []
+            # now opt is filled with useful stuff, also some global variables are defined such as profiles_names
+            sys.argv = bkp_argv.copy()
+
+            for pf in profile_files:
+                fam = pf.split("/")[-1].split(".")[0]
+                filelist = glob.glob(f"{working_dir}*.*/output/{fam}.ali")
+                if filelist:
+                    fam2filelist[fam] = filelist
+                    profiles_files_with_results.append(pf)
+
+            if not fam2filelist:
+                raise notracebackException(
+                    "selenoprofiles join: no .ali files were found, exiting..."
+                )
+
+            # loading useful profiles in memory
+            override_args["profile"] = ",".join(profiles_files_with_results)
+            load(config_filename, partial=2, override_args=override_args)
+
+        if not join_opt["o"]:
+            raise notracebackException(
+                "selenoprofiles join ERROR: you must select an output folder to write joined alignments into with option -o\nSee selenoprofiles join -h"
+            )
+
+        output_dir = Folder(join_opt["o"])
+
+        run_join_alignments(
+            output_folder=output_dir, fam2filelist=fam2filelist, opt=join_opt
+        )
+
+        write("\nselenoprofiles join completed.   Date: " + bbash("date"), 1)
+        sys.exit()
+
+    ##### Normal usage  = selenoprofiles
     options_summary = load(
         config_filename
     )  # loading variables and getting a nice summary to show
@@ -3298,7 +3345,6 @@ def genewise(
 
     global chromosome_lengths
 
-    
     # replacing the input profile with a copy which change in all sequences all aminoacids in sec columns with U (in exonerate, it is *)
     profile = profile_ali.copy()
     for title in profile.titles():
@@ -3308,9 +3354,8 @@ def genewise(
     # determining genewise options: the ones specified for the profile override the ones specified as arguments of the genewise function
     genewise_options_used = genewise_options.copy()
     profile_genewise_options = profile.genewise_options_dict()
-    #write(profile_genewise_options, 1, how='reverse')
+    # write(profile_genewise_options, 1, how='reverse')
 
-    
     for option_name in profile_genewise_options:
         if profile_genewise_options[option_name] == "DEFAULT":
             del genewise_options_used[option_name]
@@ -3379,24 +3424,24 @@ def genewise(
         raise notracebackException(
             "ERROR genewise not found! Please install it or skip its execution with -dont_genewise"
         )
-    
+
     df_genewise = dereference(b[1])
     # 2023
-    #add_wisecfg = ""
-    #if df_genewise.endswith("src/bin/genewise"):
-    #cfg_dir = df_genewise[:-16] + "wisecfg"
-    
+    # add_wisecfg = ""
+    # if df_genewise.endswith("src/bin/genewise"):
+    # cfg_dir = df_genewise[:-16] + "wisecfg"
+
     # works with conda: ## finds its wisecfg
     cfg_dir = df_genewise[:-12] + "share/wise2/wisecfg"
-    
+
     add_wisecfg = 'export WISECONFIGDIR="' + cfg_dir + '"; '
-        
+
     # b holds the exit status of genewise (in pos 0)
     b = bash(
         add_wisecfg
         + " "
-        #+ df_genewise
-        +"genewise"
+        # + df_genewise
+        + "genewise"
         + " -pretty -sum -gff "
         + join(
             [
@@ -8416,23 +8461,34 @@ class parse_blast(parser):
         if self["keep_lengths"]:
             add_option += " -v QLENGTH=1 -v TLENGTH=1 "
 
-        b_awk=bash('which awk')
-        if b_awk[0]: # exit code >0
-            b_gawk=bash('which gawk')
-            if b_gawk[0]:                
-                raise notracebackException("ERROR awk or gawk must be available to run selenoprofiles! Install it with: conda install -c anaconda gawk")
-            awk_exec=b_gawk[1]
-        else:
-            awk_exec=b_awk[1]
+        # b_awk=bash('which awk')
+        # if b_awk[0]: # exit code >0
+        b_gawk = bash("which gawk")
+        if b_gawk[0]:
+            raise notracebackException(
+                "ERROR gawk must be available to run selenoprofiles! Install it with: conda install -c anaconda gawk"
+            )
+        awk_exec = b_gawk[1]
+        # else:
+        #     awk_exec=b_awk[1]
 
-        pipe_cmd=awk_exec+" -f "+selenoprofiles_install_dir+"/blaster_parser.awk " + add_option + " " + filename
-        #write(pipe_cmd, 1, how='magenta')
-        self.bash_pipe=bash_pipe(pipe_cmd,
-                                 return_popen=1)
-        self.file=self.bash_pipe.stdout
+        pipe_cmd = (
+            awk_exec
+            + " -f "
+            + selenoprofiles_install_dir
+            + "/blaster_parser.awk "
+            + add_option
+            + " "
+            + filename
+        )
+        # write(pipe_cmd, 1, how='magenta')
+        self.bash_pipe = bash_pipe(pipe_cmd, return_popen=1)
+        self.file = self.bash_pipe.stdout
         self.last_line = self.file.readline()
-        if self.bash_pipe.poll(): # exit code
-            raise Exception("ERROR parsing blast output! check standard error message above")
+        if self.bash_pipe.poll():  # exit code
+            raise Exception(
+                "ERROR parsing blast output! check standard error message above"
+            )
 
     def parse_next(self):
         g = blasthit()
@@ -8447,8 +8503,10 @@ class parse_blast(parser):
         if self["full_target"]:
             g.chromosome = replace_chars(g.chromosome, "%", " ")
         self.last_line = self.file.readline()
-        if self.bash_pipe.poll(): # exit code
-            raise Exception("ERROR parsing blast output! check standard error message above")
+        if self.bash_pipe.poll():  # exit code
+            raise Exception(
+                "ERROR parsing blast output! check standard error message above"
+            )
 
         return g
 
