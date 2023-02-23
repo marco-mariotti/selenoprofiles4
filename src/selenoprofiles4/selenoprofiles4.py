@@ -13,6 +13,7 @@ from sqlite3 import dbapi2 as sqlite, OperationalError, Connection, Cursor
 from ast import literal_eval
 from functools import cmp_to_key
 import networkx, requests, urllib3, obonet
+import easyterm
 
 from .MMlib3 import *
 
@@ -112,15 +113,11 @@ Additionally, a fasta alignment called PROFILE.ali is created for each profile, 
 * Frequently used options
 -ncpus         +   number of threads used for blast searches
 -no_splice || -N   disable intron prediction; for  RNA sequences or bacterial genomes. Genewise is deactivated in this mode
--h full            display advanced help page with full list of options
 
-* Citation
-If selenoprofiles has been useful for your research, please cite:  
-Mariotti M, Guigo R. Selenoprofiles: profile-based scanning of eukaryotic genome sequences for selenoprotein genes.
-Bioinformatics. 2010 26(21):2656-63.
+For full list of options (e.g. build a new profile; collect/display overview of results), run: selenoprofiles -h full
 
 Online documentation: https://selenoprofiles4.readthedocs.io/
-"""
+Citation:             https://selenoprofiles4.readthedocs.io/citation/"""
 )
 full_help = """
 ******** Full list of other options ********
@@ -145,9 +142,12 @@ Note that this may cause certain files to be overwritten, but none will be delet
 Before outputing, results are stored in a SQLite database inside the output_folder. 
 If selenoprofiles finds existing results in the database from a previous run, it loads them instead of running the pipeline, unless any prior step is forced.
 
-* Accessory programs
-selenoprofiles join     : collect and combine results previously obtained by running selenoprofiles on multiple targets. Run: selenoprofiles join -h
-selenoprofiles database : fix, inspect, edit the sqlite db used by selenoprofiles, or obtain fast output. Run: selenoprofiles database -h
+* Utilities
+selenoprofiles join     : collect and combine results previously obtained by running selenoprofiles on multiple targets
+selenoprofiles drawer   : displays an overview of results on multiple targets using a species tree as backbone
+selenoprofiles build    : create custom profile alignment to be search with selenoprofiles
+selenoprofiles database : fix, inspect, edit the sqlite db used by selenoprofiles, or obtain fast output
+### Note: every utility has it own help page; e.g. run: selenoprofiles build -h
 
 * System and global configuration
 -genetic_code     +   use a non-standard genetic code; see NCBI codes; implies -tblastn (see -help full)
@@ -268,7 +268,7 @@ command_line_synonyms = {
 
 terminal_colors = {"routine": "blue", "database": "magenta", "profile": "green"}
 set_MMlib_var("colored_keywords", {"ERROR": "red,underscore", "WARNING": "red"})
-
+opt=options()
 
 def load(config_filename, args={}, partial=False, override_args={}):
     """Load all global variables later used, reading configuration file and command line options. """
@@ -320,6 +320,12 @@ def load(config_filename, args={}, partial=False, override_args={}):
     def_opt = configuration_file(config_filename)
     # complete list of global variables
     global families_sets, keywords, opt, sleep_time, max_attempts_database, temp_folder, split_folder, bin_folder, profiles_folder, target_file, reference_genome_filename, three_prime_length, five_prime_length, profiles_names, profiles_hash, results_folder, target_name, target_species, target_results_folder, results_db_file, results_db, actions, blast_folder, exonerate_folder, genewise_folder, prediction_choice_folder, filtered_list_folder, output_folder, blast_nr_folder, target_file_index, chromosome_length_file, exonerate_extension, genewise_extension, genewise_tbs_extension, blast_options, exonerate_options, genewise_options, genewise_tbs_options, output_file_handlers, max_chars_per_column
+    #global families_sets, keywords, sleep_time, max_attempts_database, temp_folder, split_folder, bin_folder, profiles_folder, target_file, reference_genome_filename, three_prime_length, five_prime_length, profiles_names, profiles_hash, results_folder, target_name, target_species, target_results_folder, results_db_file, results_db, actions, blast_folder, exonerate_folder, genewise_folder, prediction_choice_folder, filtered_list_folder, output_folder, blast_nr_folder, target_file_index, chromosome_length_file, exonerate_extension, genewise_extension, genewise_tbs_extension, blast_options, exonerate_options, genewise_options, genewise_tbs_options, output_file_handlers, max_chars_per_column    
+    #nonlocal opt
+
+    # write(opt, 1, how='magenta') ### debug 2023
+    
+    
     # setting sets of families, defined by keywords starting with families_set. in the config file. e.g families_set.eukaryotic = sps,GPx,MsrA,DI,15-kDa,Fep15
     families_sets = (
         {}
@@ -370,6 +376,9 @@ def load(config_filename, args={}, partial=False, override_args={}):
                 )
                 raise
 
+    if partial==3:
+        return
+            
     # preparing to read command line options
     for i in non_config_options:
         if not i in def_opt:
@@ -1087,8 +1096,15 @@ def load(config_filename, args={}, partial=False, override_args={}):
         summary += "None"
     summary += "\n" + "#" * 120
 
+    write(opt, 1, how='yellow') ### debug 2023
+
+    print_opttt()
     return summary
 
+
+def print_opttt():
+    global  opt
+    write(opt, 1, how='red') ### debug 2023
 
 def mask_species(species_name):
     return replace(mask_characters(species_name), " ", "_")
@@ -1258,6 +1274,7 @@ def untar_gzfile(gztar, dest_folder=None, remove_gz=True):
 ################################################3
 ### MAIN PROGRAM START
 def main():
+    global opt
     write("", 1)
     write("|         ")
     write("selenoprofiles v" + str(__version__), how="reverse")
@@ -1296,12 +1313,15 @@ def main():
     # 2023
     if "-download" in sys.argv:
         write("-download : download selenoprofiles data\n", 1)
-        try:
-            options_summary = load(
-                config_filename
-            )  # just to get opt['selenoprofiles_data_dir']
-        except:
-            pass
+        #try:
+        #    options_summary = load(
+        #        config_filename
+        #    )  # just to get opt['selenoprofiles_data_dir']
+        #except:
+        #    pass
+        opt = easyterm.read_config_file(config_filename)
+        opt.resolve_links()
+        
 
         # write(opt['selenoprofiles_data_dir'], 1, how='green')
         if not is_directory(opt["selenoprofiles_data_dir"]):
@@ -1470,6 +1490,85 @@ def main():
         write("-download : finished, now quitting", 1)
         sys.exit()
 
+        
+    if len(sys.argv) < 3:
+        sys.argv.append('-h')  # when only selenoprofiles cmnd --> display help
+
+    if len(sys.argv) > 1 and sys.argv[1] == "build":
+
+        from .selenoprofiles_build_profile import (
+            main as run_build_profile,
+            def_opt as def_opt_build_profile,
+            help_msg as help_msg_build_profile,
+        )
+
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles build", 1)
+
+        build_opt = command_line(
+            def_opt_build_profile,
+            help_msg_build_profile,
+            "",
+            synonyms={}, 
+            nowarning=1
+        )
+
+        selenoprofiles_config = easyterm.read_config_file(config_filename)
+        selenoprofiles_config['selenoprofiles_install_dir']=selenoprofiles_install_dir
+        selenoprofiles_config.resolve_links()
+        for k,v in selenoprofiles_config.items():
+            if type(v) is str and '~' in v:
+                selenoprofiles_config[k]=os.path.expanduser(v)
+        
+        if not build_opt['temp']:
+            build_opt['temp']=selenoprofiles_config['temp']
+
+        load(config_filename, partial=3) #, override_args=override_args)            
+        run_build_profile(build_opt, selenoprofiles_config)
+
+        write("\nselenoprofiles build completed.   Date: " + bbash("date"), 1)
+        sys.exit()
+        
+    if len(sys.argv) > 1 and sys.argv[1] == "drawer":
+
+        from .selenoprofiles_tree_drawer import (
+            main as run_drawer,
+            def_opt as def_opt_drawer,
+            help_msg as help_msg_drawer,
+            help_msg_full as help_msg_full_drawer,
+        )
+
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles drawer", 1)
+
+        drawer_opt = easyterm.command_line_options(
+            def_opt_drawer,
+            help_msg_drawer,
+            ['cmd'], #just to accept "drawer"
+            advanced_help_msg={'full':help_msg_full_drawer, None:''}
+        )
+
+        
+        # selenoprofiles_config = easyterm.read_config_file(config_filename)
+        # selenoprofiles_config['selenoprofiles_install_dir']=selenoprofiles_install_dir
+        # selenoprofiles_config.resolve_links()
+        # for k,v in selenoprofiles_config.items():
+        #     if type(v) is str and '~' in v:
+        #         selenoprofiles_config[k]=os.path.expanduser(v)
+        
+        # if not build_opt['temp']:
+        #     build_opt['temp']=selenoprofiles_config['temp']
+
+        # load(config_filename, partial=3) #, override_args=override_args)            
+        # run_build_profile(build_opt, selenoprofiles_config)
+        run_drawer(drawer_opt)
+
+        
+        write("\nselenoprofiles drawer completed.   Date: " + bbash("date"), 1)
+        sys.exit()
+        
+
+        
     if len(sys.argv) > 1 and sys.argv[1] == "database":
 
         from .selenoprofiles_database import (
@@ -1480,9 +1579,6 @@ def main():
         
         write("|" + "-" * 119, 1)
         write("|        Running utility: selenoprofiles database", 1)
-        
-        if len(sys.argv) < 3:
-            sys.argv.append('-h')  # when only selenoprofiles join --> display help
 
         db_opt = command_line(
             def_opt_database,
@@ -1508,10 +1604,7 @@ def main():
         
         write("|" + "-" * 119, 1)
         write("|        Running utility: selenoprofiles join", 1)
-        
-        if len(sys.argv) < 3:
-            sys.argv.append('-h')  # when only selenoprofiles join --> display help
-        
+                
         bkp_argv = sys.argv.copy()
         join_opt = command_line(
             def_opt_join_alignments,
@@ -4084,6 +4177,11 @@ class clusteringseqidchangedException(Exception):
 
 class profile_alignment(alignment):
     """ Subclass of alignment.
+
+  Init on a .fa file to load an alignment into memory.
+   
+  Init with build=True to allow building on the fly. Other provided options are attributes that will be written.    
+
   Additional attributes:
   .filename             -> link to the main file loaded.  
   .queries              -> keywords, or list of indices (Starting with 0) of sequences being used as queries of exonerate/genewise -- see make_profile doc for possible syntaxes
@@ -4152,7 +4250,7 @@ class profile_alignment(alignment):
     def __getitem__(self, key):
         return self.__dict__[key]
 
-    def load(self, filename, **build_options):
+    def load(self, filename, build=False, **build_options):
         """ Loads a alignment into the profile object. If the config file is not present (or if any build_options are provided), the profile is built using defaults when necessary."""
         alignment.__init__(self, filename)
         if not self.check_length():
@@ -4166,7 +4264,7 @@ class profile_alignment(alignment):
                 "profile_alignment -> load ERROR can't load " + filename + " : empty"
             )
         self.filename = filename
-        if not is_file(self.filename + ".config") or build_options:
+        if build and (not is_file(self.filename + ".config") or build_options):
             self.make_profile(**build_options)
         else:
             self.load_profile()

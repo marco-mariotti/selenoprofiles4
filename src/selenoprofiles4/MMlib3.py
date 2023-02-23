@@ -23,6 +23,8 @@ STOP_CODONS_DNA=['TAA', 'TAG', 'TGA', 'TRA', 'TAR']
 one_letter_to_three_letter_aa_diz={'A':'alanine', 
 'R':'arginine', 'N':'asparagine','D':'aspartic_acid','C':'cysteine','E':'glutamic_acid','Q':'glutamine','G':'glycine','H':'histidine','I':'isoleucine','L':'leucine','K':'lysine','M':'methionine','F':'phenylalanine','P':'proline','S':'serine','T':'threonine','W':'tryptophan','Y':'tyrosine','V':'valine','U':'selenocysteine'}
 
+uppercase=ascii_uppercase
+lowercase=ascii_lowercase
 ## patching old forms
 def join(iterr, sep):
   return sep.join(iterr)
@@ -6488,24 +6490,28 @@ def function_help(f):
   return h
 
   
-def interactive_mode(vars=None, message="welcome to the shell" ):
+def interactive_mode(message="welcome to the shell" ):
   """ To open an interactive shell inside a python script. Usage: interactive_mode()() ; double parenthesis is because this returns a pointer to a function. """
-  #prompt_message = "Welcome!  Useful: G is the graph, DB, C"
-  prompt_message = message
-  try:
-      from IPython.Shell import IPShellEmbed
-      ipshell = IPShellEmbed(argv=[''],banner=prompt_message,exit_msg="Goodbye")
-      return  ipshell
-  except ImportError:
-      if vars is None:  vars=globals()
-      import code
-      import rlcompleter
-      import readline
-      readline.parse_and_bind("tab: complete")
-      # calling this with globals ensures we can see the environment
-      print(prompt_message)
-      shell = code.InteractiveConsole(vars)
-      return shell.interact
+  import code
+  return code.interact(banner=message, local=locals()) ## fix 2023
+
+
+  # #prompt_message = "Welcome!  Useful: G is the graph, DB, C"
+  # prompt_message = message
+  # try:
+  #     from IPython.Shell import IPShellEmbed
+  #     ipshell = IPShellEmbed(argv=[''],banner=prompt_message,exit_msg="Goodbye")
+  #     return  ipshell
+  # except ImportError:
+  #     if vars is None:  vars=globals()
+  #     import code
+  #     import rlcompleter
+  #     import readline
+  #     readline.parse_and_bind("tab: complete")
+  #     # calling this with globals ensures we can see the environment
+  #     print(prompt_message)
+  #     shell = code.InteractiveConsole(vars)
+  #     return shell.interact
 
 
 def load_chromosome_lengths(chromosome_length_file, max_chars=0, exception_raised=Exception):
