@@ -31,14 +31,13 @@ The basics:
 
 * Pre-processing alignment:
 -r  [ARG]   remove sequence redundancy before building the profile, leaving a max grade of identity between any sequence pair which is ARG [default 0.9]
--t  [ARG]   before building, the alignment is trimmed removing the columns with with more than ARG [default 0.1 or number of sequences minus one]
+-t  [ARG]   before building, the alignment is trimmed removing the columns with more than ARG gaps [default 0.1 or number of sequences minus one]
 
 * Inspecting profile features:
 -p          open the interactive environment after building (or loading) the profile
 -d  [ARG]   draw the distribution of profile AWSIc scores with pylab interactive graphics. Use 2 as ARG to plot AWSIw, 3 as ARG to plot average sequence identities
 -D  [ARG]   print the conservation score for each sequence. Arguments are like for -d
 -out  ARG   drawn output file if option -d is active. Accepted formats are pdf and png
-
 
 * Profile configuration:
 """

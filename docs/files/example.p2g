@@ -1,0 +1,81 @@
+Output_id:  SelI.1.selenocysteine
+----------  ---------------------
+-Target         /ensembl/genomes/gallus_gallus/Gallus_gallus.bGalGal1.mat.broiler.GRCg7b.dna.toplevel.fa
+-Chromosome (+) 3
+-Program        genewise
+-Query name     gi|144925920|ref|NP_001004832.2| selenoprotein I [Xenopus (Silurana) tropicalis]
+-Query range    1-400      length:400   coverage: 1.0
+-Profile range  1-404      length:404   coverage: 1.0    sec_position: [388]
+-ASI:           0.8168     (ignoring gaps: 0.8264)
+-AWSIc:         0.8931     Z-score: -0.696
+-AWSIw:         0.8977     Z-score: -0.866
+-State          kept
+
+------- alignment -------
+Query   MAWEYVSPEQLAGFDKYK <---Intron---> YSAVDTNPLSLYVMHPFWNSIVR <---Intron---> FFPTWLAPNLITFSGFLLLVFTFLLMA
+         | |||/ |||||| ||| <  10355nt   > |||||/|||||||||||||/||/ <   320nt    >  |||||||||||||||||||| | |||
+Target  -AMEYVTAEQLAGFSKYK                YSAVDSNPLSLYVMHPFWNTIVK                IFPTWLAPNLITFSGFLLLVFNFFLMA
+        -gagtgaggccggtaata                tagggaacctctgaccttaaaga                atcatcgcacaattgtcccgtattcag
+        -ctaatccaatcgtgaaa   gt     ag    agctagactctattactgactta   gt     ag    ttccgtccattctcgttttttattttc
+        -cggcggcgggccccgtg                ctcgccctgtgccgtccgccagg                cctgggcatcagttccggtccccccga
+                                                                                                            
+
+Query   FFDPDFYASA <---Intron---> PGQEHVPNWVWIVAGLLNFTAYTLD <---Intron---> GVDGKQARRTNSSTPLGELFDHGLDSWACIFFV
+        /||||||||| <   1339nt   > |  /|||| ||/| ||||| ||||| <   299nt    > |||||||||||||||||||||||||||||//||
+Target  YFDPDFYASA                PDHQHVPNGVWVVVGLLNFIAYTLD                GVDGKQARRTNSSTPLGELFDHGLDSWACVYFV
+        ttgcgttgtg                cgcccgcaggtggggccatagtatg                ggggacgcaaataaccggctgcgcgatgtgttg
+        atacatacc    gt     ag   ccaaaatcagtgtttgttattcact    gt     ag   agtagaacggcacgcctgattaagtaggcgtatt
+        ctctctctt                ttccgctataagctgtcccctccga                tttttaatcgccccacaagttctcgccgttgcct
+                                                                                                            
+
+Query   VTVYSIFGRGETGVSAVVLYFLLWVVLFSFILSHWEKYNTGILFLPWGYDLSQV <---Intron---> TISCVYLVTAVVGAETWYQPVVFNILYRDL
+        ||||| |||| ||||  ||| |||||||||||||||||||||||||||||/||| <   1079nt   > ||| ||/|||/|| | || | /|| |||||
+Target  VTVYSTFGRGSTGVSVFVLYLLLWVVLFSFILSHWEKYNTGILFLPWGYDISQV                TISIVYIVTAIVGVEAWYAPFLFNFLYRDL
+        gagttatgcgtaggagtgctccttggttttactctgataagactcctgtgaacg                aatagtagagagggggttgctctatttagc
+        tctacctgggccgtgttttatttgttttctttcagaaaacgttttcggaatgat   gt     ag    ctcttattccttgtacgacctttattagat
+        gtcccctcgccgtctcctccccaggggtacccctgggtcagtccgcgatcccgg                ctatccagactgaagcgtatcgttcataca
+                                                                                                            
+
+Query   FTTMIVG <---Intron---> CAVCVTLPMSLYNVFK <---Intron---> GYRNNTLKHTSLYEAMLPIISPVLLFILSTLWILASPSKILEHHP
+        |||||/  <   1015nt   > ||/ ||||||||| /| <   295nt    >  |/|||||| |/|| |||//|||||| | | ||  ||  ||| ||
+Target  FTTMIIA                CALTVTLPMSLYNFYK                AYKNNTLKHHSVYEVMLPLVSPVLLFALCTTWIFVSPMDILEVHP
+        taaaaag                tgcagaccaactatta                gtaaaatacctgtggacccgtcgtctgctaatatgtcagacggcc
+        tccttt    gt     ag   cgctctctctgtaataa   gt     ag    caaaactaaactaatttcttccttttctgccgtttcctattatac
+        ctagtt                tttccgggggcgtccc                gctatccggccttcgcggagccaggtttccctgcttatgccggctc
+                                                                                                            
+
+Query   RLFYFMVGTTFANIT <---Intron---> CQLIVCQMSNTRCRPLSWLLIPLTLAVVVSLSTVTPRDETLALVLLTVLVTLAHIHYGVNV <---Int
+        ||||||||| ||||/ <   599nt    > |||||||||/|||/||/|/|/|/ | / / /|   |  ||| | |||  /||||||||| | <   181
+Target  RLFYFMVGTAFANIS                CQLIVCQMSSTRCQPLNWMLLPIALVLFMVMSGFAPSSETLLLYLLTAFLTLAHIHYGVVV        
+        actttaggagtgaat                tccagtcaaaactcccatacccagcgctagatgtgcaagaccctccagtcacgcactgggg        
+        gttatttgcctcatc   gt     ag    gatttgatggcggactagtttctctttttttcgtccggactttattccttctcataagttt   gt   
+        gcctcgtaccctctt                cggcctggcctccgtgcggggcacggccgggtgtacccagtcccgatacccggccctagcg        
+                                                                                                            
+
+Query   ron---> VNQLSKHFNILPFSLRKPSTDUL--EEEKIGLQSAQVL
+        2nt   > |/|||/|||| ||||/||/ |||  ||||| |/||/||
+Target          VSQLSRHFNIRPFSLKKPTPDULGMEEEKISLRSAEVL
+                gaccaactaaccttcaacacgtcgagggaaatctgggc
+          ag    tgatggatatgctctaacccagtgtaaaatgtgccatt
+                gcagcgcctaaccaagacggtaaaggagaccggtaaag
+                                     *                
+------- positions -------
+Exon 1    104815551    104815601
+Exon 2    104825957    104826025
+Exon 3    104826346    104826454
+Exon 4    104827794    104827868
+Exon 5    104828168    104828430
+Exon 6    104829510    104829618
+Exon 7    104830634    104830682
+Exon 8    104830978    104831158
+Exon 9    104831758    104831940
+Exon 10   104833753    104833866
+
+-------- features -------
+None
+--------- 3' seq --------
+Total sequence length available downstream >= 6000
+Sequence until first stop codon: 
+TAA
+ * 
+

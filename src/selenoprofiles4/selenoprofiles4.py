@@ -65,9 +65,9 @@ selenoprofiles  -o output_folder  -t target_file  -s "species name"  -p profile 
 -t  target_file = a (multi-)fasta file containing nucleotide sequences
 -s  a species descriptor with no restrictions. Use quotes if composed by multiple words
 -p  the profile(s) to be searched. Multiple comma-separated arguments are accepted. Each argument can be:
-     - a profile name: a ready-made alignment called profile_name.fa is read in the profiles_folder defined in the config file
-     - a path to an aligned fasta files: this will be built into a profile on the fly
-     - a profile_set: a keyword expanded to a list of profiles. Built-in profile sets are defined in the config file
+     - a profile name: invokes a built-in alignment (located in the profiles_folder defined in the config file)
+     - a profile set: a keyword expanded to a list of profiles. Profile sets are defined in the config file
+     - a path to a profile alignment: to create one, see: selenoprofiles build -h 
 
 Examples of frequently used arguments:
  -p metazoa,machinery    search for metazoan selenoprotein families and for selenocysteine machinery
@@ -84,11 +84,10 @@ Output files are created inside a folder called like: output_folder/species_name
 The output file names have the syntax  profile_name.index.label.format in which :
  - profile_name identifies the source profile for the prediction
  - index is an arbitrary numeric id
- - label identifies the type of prediction: 
+ - label identifies the type of prediction. Most common:
     "selenocysteine" for selenoproteins: UGA is aligned to the Sec position of the profile
     "cysteine" for cysteine-homologs of selenoproteins
-    "pseudo" for predictions containing inframe stops or frameshifts (likely pseudogenes)
-    "uga_containing" for predictions whose only pseudogene features are in-frame UGAs
+    "pseudo" for predictions with inframe stops or frameshifts (likely pseudogenes)
     "homologue" for non-pseudogene predictions of profiles which are not selenoprotein families
  - format identifies the output format
 

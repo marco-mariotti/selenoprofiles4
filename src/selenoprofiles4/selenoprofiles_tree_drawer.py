@@ -48,6 +48,9 @@ The tree file can be omitted to draw an unstructured tree.
 
 The tree can contain also species without result. These nodes are not drawn, unless option -e is active.
 
+In the output, results are colored by their selenoprofiles label, e.g. "selenocysteine" results are green. 
+Use the -colors option to display the correspondance between labels and colors.
+
 The program opens an interactive ETE3 graphics unles option -out is active.
 If you're on a remote server, use X11 tunneling in your ssh connection.
 
@@ -117,6 +120,7 @@ def set_selenoprofiles_tree_drawer_var(varname, value):
 command_line_synonyms = {}
 
 def_opt = {  #'temp':'/home/mmariotti/temp', 'common':0,
+    "colors":False,
     "no_id": False,
     "add": 0,
     "sp_add": 0,
@@ -157,24 +161,26 @@ def_opt = {  #'temp':'/home/mmariotti/temp', 'common':0,
 ###### start main program function
 
 global label_to_color
-label_to_color = {
-    "selenocysteine": "#89C900",  # green
-    "cysteine": "#F40000",  # red
-    "arginine": "#F15BA6",  # pink
-    "threonine": "#8B1B8D",  # dark purple
-    "pseudo": "#545454",  #  gray
-    "uga_containing": "#EEA347",
-    "unaligned": "#979796",
-    "gapped": "#979796",  # grey
-    "homologue": "#E1D100",  # yellow
-    "unknown": "#979796",  # light grey
-    "serine": "#D09E5F",
-    "readthrough": "#0E6DBB",  # blue
-    "tRNA": "#C5D51B",
-    "glycine": "#FFB20B",  # orange
-    "leucine": "#834D1A",  # brown
-    "tRNA?": "#7A850D",
-}
+color_tuples=[
+    ("selenocysteine",  "#89C900",  "green"),
+    ("cysteine",  "#F40000", "red" ),
+    ("arginine",  "#F15BA6", "pink" ),
+    ("threonine",  "#8B1B8D", "dark purple" ),
+    ("pseudo",  "#545454", "gray" ),
+    ("uga_containing",  "#EEA347", "orange" ),
+    ("unaligned",  "#979796", "grey" ),
+    ("gapped",  "#979796", "grey" ),
+    ("homologue",  "#E1D100", "yellow" ),
+    ("unknown",  "#979796", "light grey" ),
+    ("serine",  "#D09E5F", "light brown" ),
+    ("readthrough",  "#0E6DBB", "blue" ),
+    ("tRNA",  "#C5D51B", "yellow" ),
+    ("glycine",  "#FFB20B", "bright orange" ),
+    ("leucine",  "#834D1A", "brown" ),
+    ("tRNA?",  "#7A850D", "dark yellow" )
+    ]
+
+label_to_color={x[0]:x[1] for x in color_tuples}
 
 
 global ordered_labels
@@ -684,6 +690,16 @@ def main(args):
 
     write("", 1)
 
+    if opt['colors']:
+        write('\nOption -colors: displaying the built-in colors for selenoprofiles labels\n', 1)
+        for a, b, c in sorted(color_tuples, key=lambda x:x[0]):
+            write(f'{a:<20}: {c:<16} {b}', 1)
+        write('\nExiting...', 1)
+        sys.exit()
+    
+    if not opt['i']:
+        raise notracebackException("selenoprofiles drawer ERROR you must provide at least one .ali file with -i\nRun with -h to see usage")
+    
     if opt["img_h"] == -1:
         opt["img_h"] = None
 
