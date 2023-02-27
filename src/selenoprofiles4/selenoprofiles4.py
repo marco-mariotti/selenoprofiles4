@@ -1095,15 +1095,7 @@ def load(config_filename, args={}, partial=False, override_args={}):
         summary += "None"
     summary += "\n" + "#" * 120
 
-    write(opt, 1, how='yellow') ### debug 2023
-
-    print_opttt()
     return summary
-
-
-def print_opttt():
-    global  opt
-    write(opt, 1, how='red') ### debug 2023
 
 def mask_species(species_name):
     return replace(mask_characters(species_name), " ", "_")
