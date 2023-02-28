@@ -1908,7 +1908,8 @@ def main():
                             done_end_of_parser = False
                             while not done_end_of_parser:
                                 try:
-                                    next(blast_hits_parser)
+                                    blast_hits_parser.next()
+                                    #next(blast_hits_parser)
                                 except StopIteration:
                                     done_end_of_parser = True
                             if opt["blast_filtering_warning"]:
