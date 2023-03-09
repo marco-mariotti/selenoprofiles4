@@ -1311,6 +1311,7 @@ def main():
         #except:
         #    pass
         opt = easyterm.read_config_file(config_filename)
+        opt["selenoprofiles_install_dir"] = selenoprofiles_install_dir
         opt.resolve_links()
         
 
@@ -3362,6 +3363,7 @@ def cyclic_exonerate(
         done_right = 1
     e = None
 
+    prev_target_prepared=None
     ## main while loop: it will exit from here only once it's done
     while (
         not (done_left and done_right and done_change_query)
@@ -3373,12 +3375,18 @@ def cyclic_exonerate(
         write_to_file(">" + query_name + "\n" + query_full_sequence, query_filename)
         # preparing target
         if not (cyclic_not_worth_doing):
-            current_range.fasta_sequence(
-                to_file=target_filename,
-                chromosome_file=chromosome_file,
-                title="fasta_title",
-            )
-
+            
+            if not prev_target_prepared is None and  prev_target_prepared == current_range.fasta_title():
+                pass
+                # not extracting same chunk again
+            else:
+                current_range.fasta_sequence(
+                    to_file=target_filename,
+                    chromosome_file=chromosome_file,
+                    title="fasta_title",                
+                )
+            prev_target_prepared=current_range.fasta_title()            
+            
         ### run exonerate!!!
         exonerate(
             query_filename,
@@ -3950,6 +3958,7 @@ def choose_query_from_profile_plus_prediction(
             "cyclic_exonerate ERROR no sequences are tagged as queries in the profile "
             + profile_ali.name
         )
+
     ordered_queries = profile_plus_prediction.order_by_similarity_with(target_name)
     for q_title in ordered_queries:
         if q_title in possible_tagged_queries:

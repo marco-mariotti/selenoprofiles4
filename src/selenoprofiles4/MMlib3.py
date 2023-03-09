@@ -2028,7 +2028,8 @@ If a master alignment is provided, the conservation threshold is checked with th
     #     return 1
     #  print score_diz
     #work_list.sort(compare_function)
-    work_list.sort(key=lambda x:score_diz[x]) 
+    #work_list.sort(key=lambda x:score_diz[x])
+    work_list.sort(key=lambda x:score_diz[x], reverse=True)     
     #  print work_list
     return work_list
 
