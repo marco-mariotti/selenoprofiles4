@@ -10247,6 +10247,7 @@ def myhook(errclass, errvalue, errtraceback):
 
     if issubclass(errclass, notracebackException):
         printerr(errvalue, 1)
+        sys.exit(1)
     else:
         sys.__excepthook__(errclass, errvalue, errtraceback)
 
