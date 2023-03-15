@@ -198,8 +198,7 @@ of the pipeline, determined by his category. There are many possible
 categories of actions: *post_blast_filter, post_blast, post_blast_merge,
 pre_choose, pre_filtering, post_filtering, pre_output*.
 
-The categories names are pretty self-explanatory, but see `Appendix
-2 <\l>`__ for their precise mapping in the workflow. The actions
+The categories names are pretty self-explanatory. The actions
 *post_blast* and *post_blast_merge* are performed on blast hits, while
 the others are performed on blast hits or exonerate/genewise
 predictions.
@@ -216,37 +215,29 @@ Let’s see an example which uses an if statement to execute operations
 only on a certain subset of the available predictions. Typically, the
 attributes that you want to check are the .label and the .filtered
 attributes. Let’s say for example that we want to check the chromosomes
-and strands where the prediction with label “unaligned” rely:
+and strands where the prediction with label “unaligned” rely::
 
-ACTION.post_filtering.test = "if x.label=='unaligned': print
-x.output_id(), ' CHROMOSOME ', x.chromosome, x.strand "
+  ACTION.post_filtering.test = "if x.label=='unaligned': print( f'{x.output_id()} CHROMOSOME {x.chromosome} {x.strand} ') "
 
-This adds something like this in the standard output of selenoprofiles:
+This adds something like this in the standard output of selenoprofiles::
 
-...
-
-SelI.1.unaligned CHROMOSOME gb|GL290990.1\| +
-
-SelI.3.unaligned CHROMOSOME gb|GL290997.1\| +
-
-SelI.4.unaligned CHROMOSOME gb|GL290984.1\| -
-
-...
+  ...
+  SelI.1.unaligned CHROMOSOME gb|GL290990.1| +
+  SelI.3.unaligned CHROMOSOME gb|GL290997.1| +
+  SelI.4.unaligned CHROMOSOME gb|GL290984.1| -
+  ...
 
 The next action is for giving a quick look to the protein sequence of
 all discarded predictions. Below is the output added.
 
-ACTION.post_filtering.check_ali = "if x.filtered != 'kept': print
-x.output_id(), x.protein()"
+::
 
-...
+   ACTION.post_filtering.check_ali = "if x.filtered != 'kept': print( f'{x.output_id()} {x.protein()} )'"
 
-SelI.4.unaligned
-ITLVGLFCNIAMYLIVYFQCPGLTEPAPRWCYFLIAFLIFAYQTLDNLDGKQARRTKSSSPLGELFDHCCDA
+::
 
-SelI.7.pseudo VTATGFVCNFIALFLMSSYMRPVNDGQEPV
-
-...
+   SelI.4.unaligned ITLVGLFCNIAMYLIVYFQCPGLTEPAPRWCYFLIAFLIFAYQTLDNLDGKQARRTKSSSPLGELFDHCCDA
+   SelI.7.pseudo VTATGFVCNFIALFLMSSYMRPVNDGQEPV
 
 After the *post_filtering* actions are performed, the results are stored
 in the selenoprofiles database. Remember that if selenoprofiles finds
@@ -272,9 +263,9 @@ all of them. For blast filtering, the most common attribute checked is
 the *evalue*, an attribute specific of blast hits. The blast hit is a
 subclass of *p2ghit* and has the same methods. Let’s see a simple blast
 filtering procedure as written in a profile configuration file; this
-accepts only the blast hits with *evalue* minor (better) than 1e-5:
+accepts only the blast hits with *evalue* minor (better) than 1e-5::
 
-blast_filtering = x.evalue < 1e-5
+  blast_filtering = x.evalue < 1e-5
 
 Selenoprofiles offers also more sophisticated tools, which map the
 prediction back to profile alignment to use what we know from the
@@ -284,16 +275,16 @@ in the genome. The resulting blast hits span only the initial portion of
 the profile.
 
 You may want to exclude those, using function
-*is_contained_in_profile_range*:
+*is_contained_in_profile_range*::
 
-blast_filtering = x.evalue < 1e-5 and not
-x.is_contained_in_profile_range(1, 35)
+  blast_filtering = x.evalue < 1e-5 and not
+  x.is_contained_in_profile_range(1, 35)
 
 The similar function *spans_profile_range* asks whether the predictions
 spans certain columns of the alignment, useful when you want only
-proteins with a certain conserved domain.
+proteins with a certain conserved domain::
 
-blast_filtering = x.evalue < 1e-5 and x.spans_profile_range(50, 60)
+  blast_filtering = x.evalue < 1e-5 and x.spans_profile_range(50, 60)
 
 The function *show_conservation_in_profile_range* is useful when dealing
 with blast filtering of profiles with regions of low information. It
@@ -301,9 +292,9 @@ checks the number of pairwise similarities (defined as positive scores
 in the BLOSUM62 matrix) between the amino acids in the query and in the
 target in the prediction along a certain profile range. In the example
 below, predictions are required to have 3 conserved amino acids in the
-region from positions 1 to 50.
+region from positions 1 to 50::
 
-blast_filtering = x.show_conservation_in_profile_range(1, 50, 3)
+  blast_filtering = x.show_conservation_in_profile_range(1, 50, 3)
 
 AWSI Z-score based filtering
 ----------------------------
@@ -366,33 +357,31 @@ the purple, blue and cyan dots correspond to the average minus 1, 2, 3
 standard deviation respectively. The default cut-off point is thus
 indicated by the leftmost cyan dot.
 
-.. image:: vertopal_96b2b00394234b8abc3729bdfc8764d3/media/image7.png
-   :alt: Image
-   :width: 5.67573in
-   :height: 4.25679in
+.. figure:: images/AWSI_distribution.png
+	    :width: 450
 
 The methods of the *p2ghit* class relevant to AWSI scores are:
 
-awsi() with no arguments, it returns the AWSIc value for this candidate.
-Used as *awsi(with_coverage=False)*, returns AWSIw instead
+ * **awsi()** with no arguments, it returns the AWSIc value for this candidate.
+   Used as *awsi(with_coverage=False)*, returns AWSIw instead
+   
+ * **awsi_z_score()** returns the z-score compute comparing the AWSI of this
+   candidate with the profile distribution. This function also accepts the
+   *with_coverage=False* switch to return AWSIw instead.
+   
+ * **awsi_filter()** returns *True* if the prediction would pass the default
+   AWSI-based filtering, *False* otherwise. This function also accepts the
+   *with_coverage=False* switch to return AWSIw instead. This is normally
+   computed just as *awsi_z_score()>-3*, with two possible exceptions. For
+   extremely conserved profiles, the cut-off threshold would be generally
+   too strict. Thus, if the candidate has an extremely high AWSI (>0.9), it
+   is accepted regardless of the profile characteristics. The second
+   exception is for profiles with few sequences (<3). In these case, the
+   computed AWSI standard deviation is always zero or extremely close to
+   it, and this would also result in filtering too strict. Thus, for these
+   profiles the filter just checks that *awsi()>=0.3*
 
-awsi_z_score() returns the z-score compute comparing the AWSI of this
-candidate with the profile distribution. This function also accepts the
-*with_coverage=False* switch to return AWSIw instead.
-
-awsi_filter() returns *True* if the prediction would pass the default
-AWSI-based filtering, *False* otherwise. This function also accepts the
-*with_coverage=False* switch to return AWSIw instead. This is normally
-computed just as *awsi_z_score()>-3*, with two possible exceptions. For
-extremely conserved profiles, the cut-off threshold would be generally
-too strict. Thus, if the candidate has an extremely high AWSI (>0.9), it
-is accepted regardless of the profile characteristics. The second
-exception is for profiles with few sequences (<3). In these case, the
-computed AWSI standard deviation is always zero or extremely close to
-it, and this would also result in filtering too strict. Thus, for these
-profiles the filter just checks that *awsi()>=0.3*
-
-One can easily alter the filter behavior using any of these arguments to
+One can  alter the filter behavior using any of these arguments to
 the *awsi_filter* function: *z_score*, *awsi*, *few_sequences_awsi.* For
 example awsi_filter(awsi=0.5) accepts any candidate scoring a AWSI with
 the profile of 0.5 or greater (or a *z_score* >-3).
@@ -408,8 +397,9 @@ the target at a certain position of the profile alignment (may be - for
 unaligned). It can be used to check that certain domains are complete
 (e.g. redox boxes CXXC).
 
-p2g_refiltering = x.seq_in_profile_pos(31)== 'C' and
-x.seq_in_profile_pos(34)== 'C'
+::
+
+   p2g_refiltering = x.seq_in_profile_pos(31)=='C' and x.seq_in_profile_pos(34)=='C'
 
 The function *sequence_identity_with_profile* computes a quantitative
 measure of how much the prediction fits in the profile: it computes the
@@ -418,19 +408,21 @@ average them. It is a simplification of the AWSI score. With no
 arguments, internal (but not terminal) gaps are counted as mismatches.
 The choice of the threshold in this case depends largely on the profile.
 
-p2g_refiltering = x.label!='pseudo' and
-x.sequence_identity_with_profile()>=0.25
+::
+   
+   p2g_refiltering = x.label!='pseudo' and x.sequence_identity_with_profile()>=0.25
 
 The more useful function *sequence_identity_in_range* is analogous the
 previous one, but computes the average sequence identity only on a
 certain range of the profile. Predictions not spanning this region are
 given 0.
 
-p2g_refiltering = x.label!='pseudo' and x.sequence_identity_in_range(40,
-80)>=0.35
+::
+   
+   p2g_refiltering = x.label!='pseudo' and x.sequence_identity_in_range(40, 80)>=0.35
 
 For a full list of the methods of the *p2ghit* class, run
-*selenoprofiles_3.py* with *-help full* or inspect the script inside
+*selenoprofiles* with *-help full* or inspect the script inside
 your installation directory.
 
 Tag blast filtering
@@ -451,9 +443,9 @@ are likely to be spurious, and will be assigned a negative tag score. To
 use tag blast, you must first set the list of tags for your profile in
 its configuration file. Tags are strings which are interpreted as perl
 regular expressions. In the configuration file of the profile, the tags
-are written as a python list of strings:
+are written as a python list of strings::
 
-tags = ['SecS ', '(Sec|selenocysteine|tRNA).\* selenium transferase']
+  tags = ['SecS ', '(Sec|selenocysteine|tRNA).\* selenium transferase']
 
 Tags should be carefully designed in order to recognize all sequences of
 the profile and those with similar names. For each blast hit appearing
@@ -467,17 +459,15 @@ tag, its score will be negative. The neutral tags are used to skip all
 the blast hits with uninformative titles and those based only on
 computational prediction. The neutral tags are defined in your main
 configuration file, with a decent default value. For filtering, we check
-whether the final tag score assigned to predictions is positive:
+whether the final tag score assigned to predictions is positive::
 
-p2g_refiltering = x.label!='pseudo' and x.tag_score() > 0
+  p2g_refiltering = x.label!='pseudo' and x.tag_score() > 0
 
 If you want to use the tag score in a filter, we suggest you to inspect
 manually the results and check their tag score first. For example with
-this action (paste it in the main configuration file):
+this action (paste it in the main configuration file)::
 
-ACTION.post_filtering.check_score = print “Tag score of”,
-x.output_id()+” filtered:
-“+x.filtered+”\\n”+str(x.tag_score(verbose=1)) [7]_
+  ACTION.post_filtering.check_score = print(f"Tag score of {x.output_id()} filtered: {x.filtered}:\n {x.tag_score(verbose=1)}")
 
 The verbose mode will allow you to check the titles of all proteins
 present in the blast output and the score assigned to them. This will
@@ -490,10 +480,9 @@ in the *tag_blast* subfolder inside the folder dedicated to this target.
 A tag blast run takes a few minutes, so take care of avoid doing it on a
 lot of hits. If you put the *tag_score* evaluation on the right side of
 an *and* construct, the tag blast will not be performed unless all
-conditions to his left are true:
+conditions to his left are true::
 
-p2g_refiltering = x.coverage()>0.4 and x.label!=‘pseudo’ and
-x.tag_score()>0
+  p2g_refiltering = x.coverage()>0.4 and x.label!='pseudo' and x.tag_score()>0
 
 GO score filtering
 ------------------
@@ -501,9 +490,9 @@ GO score filtering
 Similarly to the tag score, the GO score utilizes the same blast search
 against Uniref50, but in this case it is the GO terms associated to the
 proteins found which are evaluated. A list of the positive GO terms is
-to be provided in the profile configuration file:
+to be provided in the profile configuration file::
 
-go_terms = ["GO:08028", "GO:08030"]
+  go_terms = ["GO:08028", "GO:08030"]
 
 A score is assigned to each blast hit depending on the *evalue*, as in
 the tag score. The GO terms are searched considering their hierarchy: if
@@ -512,7 +501,9 @@ child of a GO term defined in the profile configuration, this will count
 as positive. Blast hit with no annotated GO are scored neutral. Only
 molecular functions GO terms are checked.
 
-p2g_refiltering = x.label!='pseudo' and x.go_score()>0
+::
+
+   p2g_refiltering = x.label!='pseudo' and x.go_score()>0
 
 Integrate your own code: option *-add*
 --------------------------------------
@@ -526,51 +517,42 @@ ready to run.
 
 User defined functions are useful for filtering, labeling or outputing.
 Let’s see how to create a simple output function. Create a file called
-*extension.py* where you define function which accept a *p2ghit*:
+*extension.py* where you define function which accept a *p2ghit*::
 
-def my_name_is(z):
-
-"""This functions accepts a p2ghit and returns its output id """
-
-return z.output_id()
+  def my_name_is(z):
+  """This functions accepts a p2ghit and returns its output id """
+  return z.output_id()
 
 If you now you provide this file with the option *-add*, the function
 *my_name_is* will be available in selenoprofiles. Running selenoprofiles
-with:
+with::
 
--add extension.py -ACTION.pre_output.test "print my_name_is(x)"
+  -add extension.py -ACTION.pre_output.test "print(my_name_is(x))"
 
-you will have something like this in the output:
+you will have something like this in the output::
 
-...
-
-SelI.1.unaligned
-
-SelI.3.unaligned
-
-SelI.4.unaligned
-
-...
+  ...
+  SelI.1.unaligned
+  SelI.3.unaligned
+  SelI.4.unaligned
+  ...
 
 Let’s see a more relevant example. Assume that for some reason you are
 interested only in the non-pseudo, single-exon predictions. You could
-then write this function in your *extension.py*:
+then write this function in your *extension.py*::
 
-def has_no_introns(z):
-
-“”” This functions accepts a p2ghit and returns True if it has no
-introns “””
-
-return len(z.exons)==1
-
+  def has_no_introns(z):  
+    """ This functions accepts a p2ghit and returns True if it has no introns"""
+    return len(z.exons)==1
+  
 You may then use this function for filtering, adding something like this
-in your profile *.config* file:
+in your profile *.config* file::
 
-p2g_refiltering = x.label!= "pseudo" and has_no_introns(x)
+  p2g_refiltering = x.label!= "pseudo" and has_no_introns(x)
 
 Adding functions may be useful for several purposes. It is possible to
 write procedures to improve the predictions, as those
-`previously <\l>`__ presented, or for filtering, as shown above. It can
+previously presented, or for filtering, as shown above. It can
 also be used to perform one-time operations (for example to load custom
 data), or override some functions or attributes used in selenoprofiles.
 For example, the user may want to customize the labeling procedure used
@@ -578,33 +560,32 @@ in selenoprofiles. The easiest way to do this is writing a new labeling
 procedure in the *extension.py* file, which redefines the *.label*
 attribute of the input *p2ghit*, and use it in a *pre_filtering* action.
 In this example, we define a procedure to label the predictions as short
-or long, checking their predicted protein length:
+or long, checking their predicted protein length::
 
-def custom_labelling(z):
+  def custom_labelling(z):
+    if len(z.protein()) >= 50:
+      z.label=‘long’    
+    else:
+      z.label=‘short’
 
-if len(z.protein()) >= 50: z.label=‘long’
+We activate this by adding this action in the main configuration file::
 
-else: z.label=‘short’
-
-We activate this by adding this action in the main configuration file:
-
-ACTION.pre_filtering.labelling = custom_labelling(x)
+  ACTION.pre_filtering.labelling = custom_labelling(x)
 
 Note that when the new function is called, the standard labeling
 procedure has been already called, so a *.label* attribute is available,
-and you can check it (or use it) to define the new label. Example:
+and you can check it (or use it) to define the new label. Example::
 
-def custom_labelling(z):
+  def custom_labelling(z):
+    original_label=z.label
+    if len(z.protein()) >= 50:
+      z.label='long_'+original_label
+    else:
+      z.label='short_'+original_label
 
-original_label=z.label
+The label is then typically used for filtering::
 
-if len(z.protein()) >= 50: z.label=‘long\_’+original_label
-
-else: z.label=‘short\_’+original_label
-
-The label is then typically used for filtering:
-
-p2g_refiltering = x.label.startswith("long")
+  p2g_refiltering = x.label.startswith("long")
 
 There are a few global functions in selenoprofiles that user may be
 interested in altering. In various steps of the workflow, the program
@@ -623,42 +604,33 @@ replaced by a simple hierarchal function, choosing predictions by
 genewise over those by exonerate, over those by blast (note that it is
 still possible that even blast is chosen in this way, if for a given hit
 the exonerate and genewise predictions are empty or non-valid). Put this
-into your *extension.py* file provided to option *-add*:
+into your *extension.py* file provided to option *-add*::
 
-global choose_prediction
-
-def choose_prediction(candidates):
-
-for c in candidates:
-
-if c.prediction_program()==‘genewise’: return ( c, ‘genewise is
-available’)
-
-for c in candidates:
-
-if c.prediction_program()==‘exonerate’: return ( c, ‘exonerate is 2nd
-best’)
-
-return (candidates[0], ‘only blast available’)
+  global choose_prediction
+  def choose_prediction(candidates):
+    for c in candidates:
+      if c.prediction_program()=='genewise':
+        return (c, 'genewise is available')
+	
+    for c in candidates:
+      if c.prediction_program()=='exonerate':
+        return (c, 'exonerate is 2nd best')
+	
+    return (candidates[0], 'only blast available')
 
 When writing a new *choose_prediction* function, you may still want to
 call internally the old function, which you can refer to as
 *choose_prediction_selenoprofiles.* In this example, the new function
 keeps the behavior of the old one, except for blast predictions which
 are forced to be never chosen. This is accomplished by returning an
-*empty_p2g*\ () object when only blast is available.
+*empty_p2g*\ () object when only blast is available::
 
-global choose_prediction
-
-def choose_prediction(candidates):
-
-if all( [ c.prediction_program()==‘blast‘ for c in candidates ] ):
-
-return empty_p2g(), ‘excluding blast’
-
-else:
-
-return choose_prediction_selenoprofiles(candidates)
+  global choose_prediction
+  def choose_prediction(candidates):
+    if all( [ c.prediction_program()=='blast' for c in candidates ] ):
+      return empty_p2g(), 'excluding blast'
+    else:
+      return choose_prediction_selenoprofiles(candidates)
 
 The second such function is named
 *choose_among_overlapping_p2gs_intrafamily* and is used when removing
@@ -682,22 +654,19 @@ AWSI score of the candidate with the 2 profiles, and their filtered
 attribute (a prediction kept by a profile is never masked by an
 overlapping prediction filtered by another profile). Let’s see how to
 replace it with a function which always keeps the prediction with longer
-protein sequence. Create an *extension.py* file like this:
+protein sequence. Create an *extension.py* file like this::
 
-global choose_among_overlapping_p2gs_rem_red
-
-def choose_among_overlapping_p2gs_rem_red(p2g_hit_A, p2g_hit_B):
-
-if len(p2g_hit_A.protein()) > len(p2g_hit_B.protein()): return p2g_hit_A
-
-elif len(p2g_hit_A.protein()) < len(p2g_hit_B.protein()): return
-p2g_hit_B
-
-else: return p2g_hit_A
+  global choose_among_overlapping_p2gs_rem_red
+  def choose_among_overlapping_p2gs_rem_red(p2g_hit_A, p2g_hit_B):
+    if len(p2g_hit_A.protein()) > len(p2g_hit_B.protein()):
+      return p2g_hit_A
+    elif len(p2g_hit_A.protein()) < len(p2g_hit_B.protein()):
+      return p2g_hit_B
+    else:
+      return p2g_hit_A
 
 If you believe that your own function may be useful to other users, or
-if you need help building your own function, feel free to contact me
-(see email on the cover page).
+if you need help building your own function, contact us.
 
 Custom prediction features
 --------------------------
@@ -728,137 +697,68 @@ modified. The *protein_motif* includes examples of all these procedures.
 All the code relevant to the *protein_motif* is here below, copied from
 *selenoprofiles_3.py*.
 
-def annotate_protein_motif(p, silent=False):
+::
 
-"""p is a p2ghit. This is an example of method to annotate the
-p2g_feature protein_motif. To use, add this to the main configuration
-file:
+  def annotate_protein_motif(p, silent=False):
+    """p is a p2ghit. This is an example of method to annotate the p2g_feature protein_motif. To use, add this to the main configuration file:  
+    ACTION.post_filtering.annotate_motif =    "if x.filtered == 'kept':  annotate_protein_motif(x)"   
+    """
+    s= protein_motif.motif.search(  p.protein() )   ##using search method of re.RegexObject  --  protein_motif.motif is such an object
+    while s:
+      protein_motif_instance=         protein_motif()
+      protein_motif_instance.start=   s.start()+1   #making 1 based
+      protein_motif_instance.end=     s.end()       #making 1 based and included, so it'd be +1-1
+      protein_motif_instance.sequence=     \\
+		    p.protein() [ protein_motif_instance.start-1 : protein_motif_instance.end ]
+      p.features.append(protein_motif_instance)     ## adding feature to p2g object
+      if not silent:  printerr('annotate_protein_motif found a motif: ‘ \\
+				 +protein_motif_instance.output()+' in prediction: '+p.output_id(), 1)
+      s=protein_motif.motif.search(  p.protein(), pos= s.start()+1 ) ## searching again, starting from just right of the previously found position
 
-ACTION.post_filtering.annotate_motif = "if x.filtered == 'kept':
-annotate_protein_motif(x)"
 
-"""
+  class protein_motif(p2g_feature):
+    """ protein motif is an example of a p2g_feature, to annotate the positions of a certain motif defined as a perl-style regexp.  The motif is defined in the line following this, as a class attribute. In the example, the redox box (CXXC) is the motif. 
+	Attributes:
+	- start      start of the protein motif in the protein sequence (1-based, included)
+	- end        end of protein motif in the protein sequence (1-based, included)
+	- sequence   motif sequence 
+    """
+    motif=re.compile( 'C..C' )
+    included_in_output=True
+    included_in_gff=   True
 
-s= protein_motif.motif.search( p.protein() ) ##using search method of
-re.RegexObject -- protein_motif.motif is such an object
+    def dump_text(self):
+      """ Returns a string with all the information for this feature. This string is stored in the sqlite database. """
+      return str(self.start)+':'+str(self.end)+':'+self.sequence
 
-while s:
+    def load_dumped_text(self, txt):
+      """ Reverse the dump_text method: gets a string as input, and loads the self object with the information found in that string. """
+      start, end, sequence= txt.split(':')
+      self.start= int(start);    self.end=int(end);    self.sequence=sequence
 
-protein_motif_instance= protein_motif()
+    def output(self):
+      """ Returns a string. This will be added to the p2g output of the prediction to which this            feature is linked -- if class attribute included_in_output is True"""
+      return 'Motif: '+self.sequence+' Start: '+str(self.start)+' End: '+str(self.end)
 
-protein_motif_instance.start= s.start()+1 #making 1 based
+    def gff(self, **keyargs):
+      """This must return a gff-like tab-separated string. In this case, we are exploiting and overriding the gff method of the gene class, which is a parent class for p2g_feature"""
+      ## getting a gene object with the genomic coordinates of the protein motif. we use the gene method subseq, which returns a subsequence of the parent gene. Indexes are adjusted for protein-nucleotide conversion
+      motif_gene_object= self.parent.subseq( start_subseq= (self.start-1)*3 +1,    \\
+					     length_subseq=(self.end-self.start+1)*3, minimal=True )
+      #now motif_gene_object has a .exons attributes with the genomic coordinates of the protein motif. now we can use the native gff method of the obtained gene object
+      return gene.gff(motif_gene_object,    **keyargs)
 
-protein_motif_instance.end= s.end() #making 1 based and included, so
-it'd be +1-1
+    def reset(self):
+      """ This method is called when the linked prediction is modified, to allow to recompute some or all attributes of the feature. In this case, we are removing all features of this class, and annotating them again with the same method used to add them in first place: annotate_protein_motif"""
+      ##removing instances of this class
+      for index_to_remove in \\
+       [i  for i, f in enumerate(self.parent.features) if f.__class__ == protein_motif ]  [::-1]: \\
+	  self.parent.features.pop(index_to_remove)
+      #reannotating
+      annotate_protein_motif( self.parent, silent=True )
 
-protein_motif_instance.sequence= \\\\
 
-p.protein() [ protein_motif_instance.start-1 :
-protein_motif_instance.end ]
-
-p.features.append(protein_motif_instance) ## adding feature to p2g
-object
-
-if not silent: printerr('annotate_protein_motif found a motif: ‘ \\\\
-
-+protein_motif_instance.output()+' in prediction: '+p.output_id(), 1)
-
-s=protein_motif.motif.search( p.protein(), pos= s.start()+1 ) ##
-searching again, starting from just right of the previously found
-position
-
-class protein_motif(p2g_feature):
-
-""" protein motif is an example of a p2g_feature, to annotate the
-positions of a certain motif defined as a perl-style regexp. The motif
-is defined in the line following this, as a class attribute. In the
-example, the redox box (CXXC) is the motif.
-
-Attributes:
-
-- start start of the protein motif in the protein sequence (1-based,
-included)
-
-- end end of protein motif in the protein sequence (1-based, included)
-
-- sequence motif sequence
-
-"""
-
-motif=re.compile( 'C..C' )
-
-included_in_output=True
-
-included_in_gff= True
-
-def dump_text(self):
-
-""" Returns a string with all the information for this feature. This
-string is stored in the sqlite database. """
-
-return str(self.start)+':'+str(self.end)+':'+self.sequence
-
-def load_dumped_text(self, txt):
-
-""" Reverse the dump_text method: gets a string as input, and loads the
-self object with the information found in that string. """
-
-start, end, sequence= txt.split(':')
-
-self.start= int(start); self.end=int(end); self.sequence=sequence
-
-def output(self):
-
-""" Returns a string. This will be added to the p2g output of the
-prediction to which this feature is linked -- if class attribute
-included_in_output is True"""
-
-return 'Motif: '+self.sequence+' Start: '+str(self.start)+' End:
-'+str(self.end)
-
-def gff(self, \**keyargs):
-
-"""This must return a gff-like tab-separated string. In this case, we
-are exploiting and overriding the gff method of the gene class, which is
-a parent class for p2g_feature"""
-
-## getting a gene object with the genomic coordinates of the protein
-motif. we use the gene method subseq, which returns a subsequence of the
-parent gene. Indexes are adjusted for protein-nucleotide conversion
-
-motif_gene_object= self.parent.subseq( start_subseq= (self.start-1)*3
-+1, \\\\
-
-length_subseq=(self.end-self.start+1)*3, minimal=True )
-
-#now motif_gene_object has a .exons attributes with the genomic
-coordinates of the protein motif. now we can use the native gff method
-of the obtained gene object
-
-return gene.gff(motif_gene_object, \**keyargs)
-
-def reset(self):
-
-""" This method is called when the linked prediction is modified, to
-allow to recompute some or all attributes of the feature. In this case,
-we are removing all features of this class, and annotating them again
-with the same method used to add them in first place:
-annotate_protein_motif"""
-
-##removing instances of this class
-
-for index_to_remove in \\\\
-
-[i for i, f in enumerate(self.parent.features) if f.__class_\_ ==
-protein_motif ] [::-1]: \\\\
-
-self.parent.features.pop(index_to_remove)
-
-#reannotating
-
-annotate_protein_motif( self.parent, silent=True )
-
-The code contains the definition of a class (*protein_motif*, including
+The code above contains the definition of a class (*protein_motif*, including
 5 methods), and the function *annotate_protein_motif*. This function
 takes as input a *p2ghit* instance, analyzes it, and if any protein
 motif is found, it populates its *.features* attribute with one
@@ -866,10 +766,9 @@ motif is found, it populates its *.features* attribute with one
 
 If this function is never run, the *protein_motif* class is unused. As
 mentioned within the code, to activate it you should add this line to
-the main configuration file:
+the main configuration file::
 
-ACTION.post_filtering.annotate_motif = if x.filtered == 'kept':
-annotate_protein_motif(x)
+  ACTION.post_filtering.annotate_motif = if x.filtered == 'kept':  annotate_protein_motif(x)
 
 In this way, the *annotate_protein_motif* will be run on every
 prediction that passed filtering. The protein motif *C..C* is defined as
@@ -892,8 +791,8 @@ to load the dumped information from the database into an empty
 *annotation_protein_motif*), and the *p2g_feature* class methods
 *dump_text* and *load_dumped_text* are the minimal set of definitions to
 make a functional feature. Other attributes and methods can be used to
-output the features.To output features to the native selenoprofiles
-format (*.p2g*, `previously illustrated <\l>`__), the class attribute
+output the features. To output features to the native selenoprofiles
+format (*.p2g*), the class attribute
 *included_in_output* must be *True*, and the *output* method has to be
 defined. Features can be used for gff output too, if the class attribute
 *included_in_gff* is set to *True*. In this case, it makes sense to take
