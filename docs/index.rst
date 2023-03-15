@@ -30,5 +30,6 @@ To install selenoprofiles, get started or learn advanced usage, check the docume
    multiple_targets
    user_profiles
    workflow
-   troubleshooting
+   pipeline_detailed
    advanced
+   troubleshooting
