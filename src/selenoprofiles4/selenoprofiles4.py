@@ -4908,7 +4908,7 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         b = bash(cmnd)
         if b[0] and "[blastpgp] WARNING: SetUpBlastSearch failed." in b[1]:
             raise notracebackException(
-                "ERROR blastall is not properly installed. Please visit http://big.crg.cat/news/20110616/installing_programs_and_modules_needed_by_selenoprofiles to fix it. This is the error message: "
+                "ERROR blastall is not properly installed. Please visit https://guigolab.github.io/blog/20110616/installing-programs-and-modules-needed-by-selenoprofiles/ to fix it. This is the error message: "
                 + b[1]
                 + "\n"
             )

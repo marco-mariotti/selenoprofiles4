@@ -14,7 +14,7 @@ Its basic usage is::
 The filename determines the name of the profile.
 After building a profile, you may use it with selenoprofiles providing it to the -p option, e.g.::
 
-  selenoprofiles -o output_folder -t target_file.fa -p built_profile.fa 
+  selenoprofiles -o output_folder -t target_file.fa -p built_profile.fa
 
 To build new profiles, the user should understand the basics of their functioning.
 A profile consists of two types of information:
@@ -28,6 +28,9 @@ The sequence alignment
 ----------------------
 A profile represents a protein family. A selenoprofiles search constitutes a search for sequences that *fit* in the profile.
 A profile includes homologs from multiple species, ideally as diverse as possible.
+
+**Important**: because exonerate and genewise may select any profile sequence for their prediction, it is important that you only
+include *complete* sequences in the profile. Partial sequences may give rise to partial predictions.
 
 The variation among profile sequences determines which homologs it can identify.
 A profile is efficient in identifying homologs belonging to lineages that are included in the profile,
@@ -150,7 +153,7 @@ This is convenient for profiles with sequences of very variable length, e.g. due
 *Selenoprofiles build* allows to print AWSIc values (option *-D*) or show their distribution with
 an interactive pylab plot (option *-d*), such as the one shown below:
 
-figure:: images/AWSI_distribution.png
+.. figure:: images/AWSI_distribution.png
 :width: 450
 
 

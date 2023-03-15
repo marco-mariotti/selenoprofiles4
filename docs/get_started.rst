@@ -12,10 +12,10 @@ Here's a minimal command line::
 
 These are the compulsory arguments:
 
- * -o  output folder, will be created if non-existing. 
- * -t  target_file = a (multi-)fasta file containing nucleotide sequences
- * -s  a species descriptor with no restrictions. Use quotes if composed by multiple words
- * -p  the profile(s) to be searched. Multiple comma-separated arguments are accepted. Each argument can be:
+ * **\-o**  output folder, will be created if non-existing. 
+ * **\-t**  target_file = a (multi-)fasta file containing nucleotide sequences
+ * **\-s**  a species descriptor with no restrictions. For multiple words, use quotes 
+ * **\-p**  the profile(s) to be searched. Multiple comma-separated arguments are accepted. Each argument can be:
 
    * a profile name: invokes a built-in profile (located in the profiles_folder defined in the config file)
    * a profile set: a keyword expanded to a list of profiles. Profile sets are defined in the config file
