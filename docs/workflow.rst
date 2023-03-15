@@ -68,14 +68,14 @@ The output folder is designed for projects that may include searching multiple p
 The content of each target subfolder will vary depending not only on the results of the search, but also on the options specified by the user. 
 In its most complete form, it contains the file:
 
- * results.sqlite             database storing all filtered results on this target
+ * **results.sqlite**             it is a database storing all filtered results on this target
 
 and the folders:
 
  * **output**	      contains the final output files of selenoprofiles
  * **blast**	      contains the psitblastn output files
  * **exonerate** 	      contains the exonerate output files
- * **genewise** 	      contains the genewise output files 
+ * **genewise** 	      contains the genewise output files
  * **prediction_choice**  contains the output files for the prediction choice/labelling step
  * **filtering**	      contains the output files for the filtering step
  * **tag_blast**	      contains the output files of the tag blast, if used (see tag blast)
@@ -289,6 +289,8 @@ whole chromosome is used as target. The default *exonerate_extension* is
 
 
 .. figure:: images/cyclic_exonerate.png
+	    :width: 450
+		    
 *Schema of the cyclic exonerate routine, from the selenoprofiles 2010 paper.
 A “superexon” represents either a
 blast hit, or more than one merged by co-linearity.*
@@ -350,7 +352,7 @@ alignment complemented with prediction of splice sites, basically just
 like exonerate, which. Nonetheless, genewise does not use heuristics and
 its running time is considerably higher. When you need to maximize
 speed, you can skip the genewise step using option
--*dont_genewise*\  [5]_.
+-*dont_genewise*.
 
 Genewise is generally run on genomic regions defined by an exonerate
 prediction, attempting to refine them. Such genomic regions are extended
@@ -425,7 +427,7 @@ an evident intron is shown here::
                  PAGYCFVEFAD A+AE+ +HK+NGKP+PGA P 
    Sbjct: 104096 PAGYCFVEFADLATAEKCLHKINGKPLPGATPV 104194
 
-The portion YV*SLFVFYHIPNFGVHLHTLFSLSRI is the translation of an intron.
+The portion ``YV*SLFVFYHIPNFGVHLHTLFSLSRI`` is the translation of an intron.
 It has no correspondence in the query, and it also contains a stop codon
 (it is normal as introns have no coding constraint). The
 *remove_internal_introns* method detects these cases by searching the
@@ -458,20 +460,11 @@ here below.
 The functions *complete_at_five_prime* and *complete_at_three_prime* are
 attempts to complete the coding sequence predictions looking for an
 upstream ATG and a downstream stop codons. Let’s see the corresponding
-lines in the *selenoprofiles.config* file (expanded for readability)::
+lines in the *selenoprofiles.config* file::
 
-  ACTION.post_filtering._improve4=
+  ACTION.post_filtering._improve4= if x.filtered=='kept': x.complete_at_three_prime(max_extension=10, max_query_unaligned=30)
 
-  \\\\ if x.filtered=='kept':
-
-  \\\\ x.complete_at_three_prime(max_extension=10, max_query_unaligned=30)
-
-  ACTION.post_filtering._improve5=
-
-  \\\\ if x.filtered=='kept':
-
-  \\\\ x.complete_at_five_prime(max_extension=15, max_query_unaligned=30,
-  full=False)
+  ACTION.post_filtering._improve5= if x.filtered=='kept': x.complete_at_five_prime(max_extension=15, max_query_unaligned=30, full=False)
 
 The completion at 5’ is performed only if a ATG is found before a stop
 codon, and if at most 15 codons would be added. Also, two other
@@ -520,7 +513,7 @@ function stops and that prediction is returned.
 
 The first condition checked is the presence of frameshifts. If a
 prediction possesses frameshifts while another doesn’t, the latter is
-taken [6]_.
+taken.
 
 Then, if the predictions come from a selenoprotein family, the number of
 aligned Sec positions is considered: if one possess more than the
@@ -553,8 +546,7 @@ labelled.
 For standard families, there are only two possible labels: *homologue*
 (a regular prediction) and *pseudo* (with any in-frame stop codon or
 frameshift). It is possible for the user to define its own labeling
-procedure: this is shortly described in the `option -add
-chapter <\l>`__.
+procedure: this is shortly described later ("option -add").
 
 For selenoprotein families, labeling is used to characterize the amino
 acid aligned to the Sec position. Generally there’s a single Sec in
@@ -599,9 +591,9 @@ Nonetheless, the user may decide to output the predictions with a
 different state, using the *-state* option, optionally with multiple
 arguments, comma separated with no space within. If for example you want
 to output all *filtered* and *refiltered* predicted, add to your command
-line:
+line::
 
--state filtered,refiltered
+  -state filtered,refiltered
 
 The *-state* option can accept the following arguments: *kept*,
 *filtered*, *refiltered*, *redundant* or *overlapping* (see below).
@@ -609,14 +601,14 @@ There is a way to have even more control on what prediction are output:
 the *-output_filter* option. This accepts a procedure with the same
 syntax of filters and actions, which is evaluated for every prediction:
 those for which this evaluates to *True* will be output. If for example
-you want to output only predictions on the positive strand, you can use:
+you want to output only predictions on the positive strand, you can use::
 
--output_filter "x.strand==‘+'"
+  -output_filter "x.strand==‘+'"
 
 To do this, you need to know a bit about the classes used in
-selenoprofiles, described in the `advanced usage <\l>`__ section. After
+selenoprofiles, described in the Advanced usage section. After
 filtering, results are stored in the sqlite database, ready for the
-`output phase <\l>`__.
+output phase (below).
 
 Removing inter-family redundancy
 --------------------------------
