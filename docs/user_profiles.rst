@@ -154,7 +154,7 @@ This is convenient for profiles with sequences of very variable length, e.g. due
 an interactive pylab plot (option *-d*), such as the one shown below:
 
 .. figure:: images/AWSI_distribution.png
-:width: 450
+	    :width: 450
 
 
 A practical guide to profile building

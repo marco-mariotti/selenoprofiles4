@@ -28,8 +28,8 @@ To install selenoprofiles, get started or learn advanced usage, check the docume
    get_started
    citation
    multiple_targets
-   user_profiles
    workflow
+   user_profiles
    pipeline_detailed
    advanced
    troubleshooting

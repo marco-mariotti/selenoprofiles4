@@ -277,8 +277,7 @@ the profile.
 You may want to exclude those, using function
 *is_contained_in_profile_range*::
 
-  blast_filtering = x.evalue < 1e-5 and not
-  x.is_contained_in_profile_range(1, 35)
+  blast_filtering = x.evalue < 1e-5 and not x.is_contained_in_profile_range(1, 35)
 
 The similar function *spans_profile_range* asks whether the predictions
 spans certain columns of the alignment, useful when you want only
@@ -520,8 +519,8 @@ Let’s see how to create a simple output function. Create a file called
 *extension.py* where you define function which accept a *p2ghit*::
 
   def my_name_is(z):
-  """This functions accepts a p2ghit and returns its output id """
-  return z.output_id()
+    """This functions accepts a p2ghit and returns its output id """
+    return z.output_id()
 
 If you now you provide this file with the option *-add*, the function
 *my_name_is* will be available in selenoprofiles. Running selenoprofiles
@@ -564,9 +563,9 @@ or long, checking their predicted protein length::
 
   def custom_labelling(z):
     if len(z.protein()) >= 50:
-      z.label=‘long’    
+      z.label='long'
     else:
-      z.label=‘short’
+      z.label='short'
 
 We activate this by adding this action in the main configuration file::
 
@@ -778,7 +777,9 @@ function, it is searched in the predicted protein sequence its dedicated
 method *search*. For each motif found, a *protein_motif* instance is
 created, and the start and end positions of the match are stored within
 this object; the protein sequence of the motif is also derived and
-stored. Once the *protein_motif* instance is ready, it is appended to
+stored.
+
+Once the *protein_motif* instance is ready, it is appended to
 the *.features* list attribute of the input *p2ghit*. Shortly after,
 this *p2ghit* reaches the database step, and its information is stored
 as a sqlite entry. All the features associated to it are also stored in
@@ -790,25 +791,33 @@ to load the dumped information from the database into an empty
 *protein_motif* instance. An annotating function (in this case
 *annotation_protein_motif*), and the *p2g_feature* class methods
 *dump_text* and *load_dumped_text* are the minimal set of definitions to
-make a functional feature. Other attributes and methods can be used to
+make a functional feature.
+
+Other attributes and methods can be used to
 output the features. To output features to the native selenoprofiles
 format (*.p2g*), the class attribute
 *included_in_output* must be *True*, and the *output* method has to be
 defined. Features can be used for gff output too, if the class attribute
 *included_in_gff* is set to *True*. In this case, it makes sense to take
 advantage of the *gene* class, the parent of both classes *p2ghit* and
-*p2g_feature.* The *gene* object is designed to represent a genomic
+*p2g_feature.*
+
+The *gene* object is designed to represent a genomic
 interval, optionally composed by multiple exons, on a certain chromosome
 (or scaffold) of a target file. It provides plenty of methods such as
 for fasta fetching, cutting subsequences, computing overlaps, merging
 gene structures and so on. Its native *gff* method returns one line for
 each exon in the object, reporting its coordinates and optionally other
-attributes. In the example above, the *protein_motif* class is not
+attributes.
+
+In the example above, the *protein_motif* class is not
 really used as a *gene* object, but just as a data container for the
 attributes *start*, *end*, *sequence*: its attributes *chromosome*,
 *strand*, *exons* are not used. Instead, the correct genomic coordinates
 of the protein motif are derived dynamically, and added to output by
-overriding the native *gff* method of the class gene. For each motif
+overriding the native *gff* method of the class gene.
+
+For each motif
 instance, its start and end positions relative to the full protein
 sequence are available. Thus, the *gene* method *subseq* is used to
 derive the global genomic coordinates of the motif. This function
