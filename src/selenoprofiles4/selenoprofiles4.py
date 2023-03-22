@@ -418,18 +418,7 @@ def load(config_filename, args={}, partial=False, override_args={}):
             opt.update(override_args)
 
         ## allowing ~
-        for k in opt:
-            if ("_dir" in k or "_folder" in k or "_db" in k or "_file" in k) and type(
-                opt[k]
-            ) is str:
-                if "~" in opt[k]:
-                    x = os.path.expanduser(opt[k])
-                    opt[k] = x
-                if type(opt[k]) is dict:
-                    for kk, vv in opt[k].items():
-                        if "~" in vv:
-                            x = os.path.expanduser(vv)
-                            opt[k][kk] = x
+        opt = opt_expand_tilde(opt)
 
         ## allowing variables (one option used in the value of another one)
         to_interpret = [k for k in opt if type(opt[k]) is str and "{" in opt[k]]
@@ -1161,8 +1150,25 @@ def load_chromosome_lengths(chromosome_length_file, max_chars=0):
     set_MMlib_var("chromosome_lengths", chromosome_lengths)
 
 
+
+def opt_expand_tilde(opt):
+    for k in opt:
+        if ("_dir" in k or "_folder" in k or "_db" in k or "_file" in k) and type(
+            opt[k]
+        ) is str:
+            if "~" in opt[k]:
+                x = os.path.expanduser(opt[k])
+                opt[k] = x
+            if type(opt[k]) is dict:
+                for kk, vv in opt[k].items():
+                    if "~" in vv:
+                        x = os.path.expanduser(vv)
+                        opt[k][kk] = x
+    return opt
+
+
 def get_remote_file_size(url):
-    response = requests.head(url, verify=False)
+    response = requests.head(url, verify=True)
     fsize = (
         response.headers["Content-Length"]
         if "Content-Length" in response.headers
@@ -1208,7 +1214,7 @@ def download_file(url, local_folder):
     tmp_filename = local_folder + "/" + local_filename + ".tmp"
     final_filename = local_folder + "/" + local_filename
     # NOTE the stream=True parameter below
-    with requests.get(url, stream=True, verify=False) as r:
+    with requests.get(url, stream=True, verify=True) as r:
         r.raise_for_status()
         with open(tmp_filename, "wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
@@ -1256,6 +1262,7 @@ def untar_gzfile(gztar, dest_folder=None, remove_gz=True):
         dst_path = os.path.join(dest_folder, f)
         os.rename(src_path, dst_path)
 
+    os.rmdir(tmp_dest_folder)
     if remove_gz:
         os.remove(gztar)
     return dest_folder
@@ -1313,7 +1320,9 @@ def main():
         opt = easyterm.read_config_file(config_filename)
         opt["selenoprofiles_install_dir"] = selenoprofiles_install_dir
         opt.resolve_links()
-        
+
+        opt = opt_expand_tilde(opt)
+
 
         # write(opt['selenoprofiles_data_dir'], 1, how='green')
         if not is_directory(opt["selenoprofiles_data_dir"]):
