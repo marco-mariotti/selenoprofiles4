@@ -7576,7 +7576,7 @@ class p2ghit(gene):
                                     introns_index_and_distances_and_direction.append(
                                         [intron_index, -1, "boundary"]
                                     )  # -1 is to ensure it will be first after sorting
-                                elif d:
+                                elif d: #old_p2g.__dict__
                                     introns_index_and_distances_and_direction.append(
                                         [intron_index, d - 1, "downstream"]
                                     )
@@ -7594,13 +7594,14 @@ class p2ghit(gene):
                             direction,
                         ) = introns_index_and_distances_and_direction[0]
 
+
                         if distance <= max_codons_removed * 3:
                             n_stop_codons_removed += 1
                             if direction == "downstream":
                                 gene_portion_to_remove = self.subseq(
                                     3 * (pos - n_gaps_in_target) + 1, distance + 3
                                 )
-                                n_aminoacids_to_remove = distance / 3
+                                n_aminoacids_to_remove = distance // 3
                                 n_nucleotides_left_at_intron_boundary = distance % 3
                                 if (
                                     n_nucleotides_left_at_intron_boundary
@@ -7644,7 +7645,7 @@ class p2ghit(gene):
                                     3 * (pos - n_gaps_in_target) + 1 - distance,
                                     distance + 3,
                                 )
-                                n_aminoacids_to_remove = distance / 3
+                                n_aminoacids_to_remove = distance // 3
                                 n_nucleotides_left_at_intron_boundary = distance % 3
                                 if (
                                     n_nucleotides_left_at_intron_boundary
@@ -7672,6 +7673,7 @@ class p2ghit(gene):
 
                                 positions_in_alignment_to_remove = 0
                                 n_gaps = 0  # not counting the positions of the stop
+
                                 while (
                                     positions_in_alignment_to_remove
                                     != n_aminoacids_to_remove + n_gaps
@@ -7714,6 +7716,7 @@ class p2ghit(gene):
                                 )
                             self.__dict__ = a.__dict__
                             self.reset_derived_data()
+
                             if not silent:
                                 write(
                                     (
@@ -7737,7 +7740,7 @@ class p2ghit(gene):
                             return self.clean_inframe_stop_codons(
                                 max_codons_removed=max_codons_removed, silent=silent
                             )  # instead of continuing the cycle through the positions, since it is difficult to take into account the reduction of the alignment, we just rerun the same function to see if it is necessary to cut off more codons from the prediction
-            except:
+            except Exception as err:
                 self.__dict__ = old_p2g.__dict__
                 printerr(
                     "clean_inframe_stop_codons WARNING can't process "
@@ -7749,6 +7752,7 @@ class p2ghit(gene):
                     + ") : skipping !",
                     1,
                 )
+                #raise err
                 # if opt['debug']: raise
 
     def clean_unaligned_tails(self):
@@ -10051,7 +10055,7 @@ def bSecisearch(p2g, silent=False, full=False):
     cds_seq = p2g.cds()
     prot_seq = p2g.protein()
     sec_ugas = []  # pos codon based, 0 based
-    for codon_index in range(len(cds_seq) / 3):
+    for codon_index in range(len(cds_seq) // 3):
         if (
             prot_seq[codon_index] == "U"
         ):  # and cds_seq[codon_index*3:codon_index*3+3]   =='TGA'
