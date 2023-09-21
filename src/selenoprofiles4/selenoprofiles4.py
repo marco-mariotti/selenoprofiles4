@@ -18,7 +18,7 @@ import easyterm
 from .MMlib3 import *
 
 
-#urllib3.disable_warnings()  # necessary as long as the selenoprofiles_data is in a server without TLS certificates
+# urllib3.disable_warnings()  # necessary as long as the selenoprofiles_data is in a server without TLS certificates
 home_config_filename = os.path.expanduser("~") + "/.selenoprofiles_config.txt"
 
 selenoprofiles_install_dir = os.path.dirname(os.path.realpath(__file__))
@@ -267,10 +267,11 @@ command_line_synonyms = {
 
 terminal_colors = {"routine": "blue", "database": "magenta", "profile": "green"}
 set_MMlib_var("colored_keywords", {"ERROR": "red,underscore", "WARNING": "red"})
-opt=options()
+opt = options()
+
 
 def load(config_filename, args={}, partial=False, override_args={}):
-    """Load all global variables later used, reading configuration file and command line options. """
+    """Load all global variables later used, reading configuration file and command line options."""
     ### initialising command line options and initialising file / objects lists . opt is a dictionary the all the command_line options. (0: False 1:True in case of boolean values). The -config FILE option allows to specify a different configuration file.  Every option in the configuration file is read, then eventually replaced by the correspondant command line option.
     # for i in range(len(sys.argv)):
     #  if sys.argv[i] == "-config":     config_filename=sys.argv[i+1]
@@ -319,12 +320,11 @@ def load(config_filename, args={}, partial=False, override_args={}):
     def_opt = configuration_file(config_filename)
     # complete list of global variables
     global families_sets, keywords, opt, sleep_time, max_attempts_database, temp_folder, split_folder, bin_folder, profiles_folder, target_file, reference_genome_filename, three_prime_length, five_prime_length, profiles_names, profiles_hash, results_folder, target_name, target_species, target_results_folder, results_db_file, results_db, actions, blast_folder, exonerate_folder, genewise_folder, prediction_choice_folder, filtered_list_folder, output_folder, blast_nr_folder, target_file_index, chromosome_length_file, exonerate_extension, genewise_extension, genewise_tbs_extension, blast_options, exonerate_options, genewise_options, genewise_tbs_options, output_file_handlers, max_chars_per_column
-    #global families_sets, keywords, sleep_time, max_attempts_database, temp_folder, split_folder, bin_folder, profiles_folder, target_file, reference_genome_filename, three_prime_length, five_prime_length, profiles_names, profiles_hash, results_folder, target_name, target_species, target_results_folder, results_db_file, results_db, actions, blast_folder, exonerate_folder, genewise_folder, prediction_choice_folder, filtered_list_folder, output_folder, blast_nr_folder, target_file_index, chromosome_length_file, exonerate_extension, genewise_extension, genewise_tbs_extension, blast_options, exonerate_options, genewise_options, genewise_tbs_options, output_file_handlers, max_chars_per_column    
-    #nonlocal opt
+    # global families_sets, keywords, sleep_time, max_attempts_database, temp_folder, split_folder, bin_folder, profiles_folder, target_file, reference_genome_filename, three_prime_length, five_prime_length, profiles_names, profiles_hash, results_folder, target_name, target_species, target_results_folder, results_db_file, results_db, actions, blast_folder, exonerate_folder, genewise_folder, prediction_choice_folder, filtered_list_folder, output_folder, blast_nr_folder, target_file_index, chromosome_length_file, exonerate_extension, genewise_extension, genewise_tbs_extension, blast_options, exonerate_options, genewise_options, genewise_tbs_options, output_file_handlers, max_chars_per_column
+    # nonlocal opt
 
     # write(opt, 1, how='magenta') ### debug 2023
-    
-    
+
     # setting sets of families, defined by keywords starting with families_set. in the config file. e.g families_set.eukaryotic = sps,GPx,MsrA,DI,15-kDa,Fep15
     families_sets = (
         {}
@@ -375,9 +375,9 @@ def load(config_filename, args={}, partial=False, override_args={}):
                 )
                 raise
 
-    if partial==3:
+    if partial == 3:
         return
-            
+
     # preparing to read command line options
     for i in non_config_options:
         if not i in def_opt:
@@ -465,7 +465,6 @@ def load(config_filename, args={}, partial=False, override_args={}):
                 values.append(tv)
 
         for kword, value in zip(kwords, values):
-
             keywords_text[category][kword] = str(value)
             function_text = value
             if "filtering" in category:
@@ -1086,6 +1085,7 @@ def load(config_filename, args={}, partial=False, override_args={}):
 
     return summary
 
+
 def mask_species(species_name):
     return replace(mask_characters(species_name), " ", "_")
 
@@ -1095,7 +1095,7 @@ def unmask_species(species_name):
 
 
 def load_chromosome_lengths(chromosome_length_file, max_chars=0):
-    """Utility to load chromosome lenghts from a fastalength output file and also set it as a MMlib variable; also performing controls on the file """
+    """Utility to load chromosome lenghts from a fastalength output file and also set it as a MMlib variable; also performing controls on the file"""
     global chromosome_lengths
     chromosome_lengths = {}
     for line in open(chromosome_length_file, "r"):
@@ -1150,7 +1150,6 @@ def load_chromosome_lengths(chromosome_length_file, max_chars=0):
     set_MMlib_var("chromosome_lengths", chromosome_lengths)
 
 
-
 def opt_expand_tilde(opt):
     for k in opt:
         if ("_dir" in k or "_folder" in k or "_db" in k or "_file" in k) and type(
@@ -1182,19 +1181,20 @@ def get_remote_file_size(url):
 
 
 size_names = [
-    (1024 ** 5, "P"),
-    (1024 ** 4, "T"),
-    (1024 ** 3, "G"),
-    (1024 ** 2, "M"),
-    (1024 ** 1, "K"),
-    (1024 ** 0, "B"),
+    (1024**5, "P"),
+    (1024**4, "T"),
+    (1024**3, "G"),
+    (1024**2, "M"),
+    (1024**1, "K"),
+    (1024**0, "B"),
 ]
 
 
 def human_readable_size(bytes, system=size_names):
     """Human-readable file size.
     Using the traditional system, where a factor of 1024 is used::     >>> size(10)    '10B'
-    >>> size(20000)    '19K'       >>> size(100000)    '97K'           >>> size(200000)    '195K'        """
+    >>> size(20000)    '19K'       >>> size(100000)    '97K'           >>> size(200000)    '195K'
+    """
     for factor, suffix in system:
         if bytes >= factor:
             break
@@ -1311,18 +1311,17 @@ def main():
     # 2023
     if "-download" in sys.argv:
         write("-download : download selenoprofiles data\n", 1)
-        #try:
+        # try:
         #    options_summary = load(
         #        config_filename
         #    )  # just to get opt['selenoprofiles_data_dir']
-        #except:
+        # except:
         #    pass
         opt = easyterm.read_config_file(config_filename)
         opt["selenoprofiles_install_dir"] = selenoprofiles_install_dir
         opt.resolve_links()
 
         opt = opt_expand_tilde(opt)
-
 
         # write(opt['selenoprofiles_data_dir'], 1, how='green')
         if not is_directory(opt["selenoprofiles_data_dir"]):
@@ -1491,12 +1490,10 @@ def main():
         write("-download : finished, now quitting", 1)
         sys.exit()
 
-        
     if len(sys.argv) < 3:
-        sys.argv.append('-h')  # when only selenoprofiles cmnd --> display help
+        sys.argv.append("-h")  # when only selenoprofiles cmnd --> display help
 
     if len(sys.argv) > 1 and sys.argv[1] == "build":
-
         from .selenoprofiles_build_profile import (
             main as run_build_profile,
             def_opt as def_opt_build_profile,
@@ -1507,31 +1504,26 @@ def main():
         write("|        Running utility: selenoprofiles build", 1)
 
         build_opt = command_line(
-            def_opt_build_profile,
-            help_msg_build_profile,
-            "",
-            synonyms={}, 
-            nowarning=1
+            def_opt_build_profile, help_msg_build_profile, "", synonyms={}, nowarning=1
         )
 
         selenoprofiles_config = easyterm.read_config_file(config_filename)
-        selenoprofiles_config['selenoprofiles_install_dir']=selenoprofiles_install_dir
+        selenoprofiles_config["selenoprofiles_install_dir"] = selenoprofiles_install_dir
         selenoprofiles_config.resolve_links()
-        for k,v in selenoprofiles_config.items():
-            if type(v) is str and '~' in v:
-                selenoprofiles_config[k]=os.path.expanduser(v)
-        
-        if not build_opt['temp']:
-            build_opt['temp']=selenoprofiles_config['temp']
+        for k, v in selenoprofiles_config.items():
+            if type(v) is str and "~" in v:
+                selenoprofiles_config[k] = os.path.expanduser(v)
 
-        load(config_filename, partial=3) #, override_args=override_args)            
+        if not build_opt["temp"]:
+            build_opt["temp"] = selenoprofiles_config["temp"]
+
+        load(config_filename, partial=3)  # , override_args=override_args)
         run_build_profile(build_opt, selenoprofiles_config)
 
         write("\nselenoprofiles build completed.   Date: " + bbash("date"), 1)
         sys.exit()
-        
-    if len(sys.argv) > 1 and sys.argv[1] == "drawer":
 
+    if len(sys.argv) > 1 and sys.argv[1] == "drawer":
         from .selenoprofiles_tree_drawer import (
             main as run_drawer,
             def_opt as def_opt_drawer,
@@ -1545,39 +1537,34 @@ def main():
         drawer_opt = easyterm.command_line_options(
             def_opt_drawer,
             help_msg_drawer,
-            ['cmd'], #just to accept "drawer"
-            advanced_help_msg={'full':help_msg_full_drawer, None:''}
+            ["cmd"],  # just to accept "drawer"
+            advanced_help_msg={"full": help_msg_full_drawer, None: ""},
         )
 
-        
         # selenoprofiles_config = easyterm.read_config_file(config_filename)
         # selenoprofiles_config['selenoprofiles_install_dir']=selenoprofiles_install_dir
         # selenoprofiles_config.resolve_links()
         # for k,v in selenoprofiles_config.items():
         #     if type(v) is str and '~' in v:
         #         selenoprofiles_config[k]=os.path.expanduser(v)
-        
+
         # if not build_opt['temp']:
         #     build_opt['temp']=selenoprofiles_config['temp']
 
-        # load(config_filename, partial=3) #, override_args=override_args)            
+        # load(config_filename, partial=3) #, override_args=override_args)
         # run_build_profile(build_opt, selenoprofiles_config)
         run_drawer(drawer_opt)
 
-        
         write("\nselenoprofiles drawer completed.   Date: " + bbash("date"), 1)
         sys.exit()
-        
 
-        
     if len(sys.argv) > 1 and sys.argv[1] == "database":
-
         from .selenoprofiles_database import (
             main as run_database,
             def_opt as def_opt_database,
             help_msg as help_msg_database,
         )
-        
+
         write("|" + "-" * 119, 1)
         write("|        Running utility: selenoprofiles database", 1)
 
@@ -1585,27 +1572,26 @@ def main():
             def_opt_database,
             help_msg_database,
             "",
-            synonyms={}, #command_line_synonyms,
+            synonyms={},  # command_line_synonyms,
             strict=notracebackException,
-        )        
+        )
 
         run_database(db_opt)
 
-        write("\nselenoprofiles database completed.   Date: " + bbash("date"), 1)        
+        write("\nselenoprofiles database completed.   Date: " + bbash("date"), 1)
         sys.exit()
-        
+
     ######
     if len(sys.argv) > 1 and sys.argv[1] == "join":
-
         from .selenoprofiles_join_alignments import (
             main as run_join_alignments,
             def_opt as def_opt_join_alignments,
             help_msg as help_msg_join_alignments,
         )
-        
+
         write("|" + "-" * 119, 1)
         write("|        Running utility: selenoprofiles join", 1)
-                
+
         bkp_argv = sys.argv.copy()
         join_opt = command_line(
             def_opt_join_alignments,
@@ -1806,7 +1792,6 @@ def main():
                 for cluster_index in range(
                     profile_ali.n_clusters()
                 ):  # index is 0 based
-
                     blast_outfile = (
                         blast_folder_profile_subfolder
                         + family
@@ -1919,7 +1904,7 @@ def main():
                             while not done_end_of_parser:
                                 try:
                                     blast_hits_parser.next()
-                                    #next(blast_hits_parser)
+                                    # next(blast_hits_parser)
                                 except StopIteration:
                                     done_end_of_parser = True
                             if opt["blast_filtering_warning"]:
@@ -2411,9 +2396,9 @@ def main():
 
                     # writing file with results from this step
                     if chosen_predictions_outfile_text:
-                        chosen_predictions_outfile_text = chosen_predictions_outfile_text[
-                            :-1
-                        ]  # removing last \n
+                        chosen_predictions_outfile_text = (
+                            chosen_predictions_outfile_text[:-1]
+                        )  # removing last \n
                     write_to_file(
                         chosen_predictions_outfile_text, chosen_predictions_outfile
                     )
@@ -2599,8 +2584,8 @@ def main():
                                 else:
                                     ## passing filtering. Let's check for refiltering.
                                     passes_refiltering = False
-                                    passes_refiltering = profile_ali.p2g_refiltering_eval()(
-                                        chosen_hit
+                                    passes_refiltering = (
+                                        profile_ali.p2g_refiltering_eval()(chosen_hit)
                                     )
                                     if not passes_refiltering:
                                         filtering_predictions_outfile_text += (
@@ -2625,9 +2610,9 @@ def main():
 
                     # writing file with results from this step
                     if filtering_predictions_outfile_text:
-                        filtering_predictions_outfile_text = filtering_predictions_outfile_text[
-                            :-1
-                        ]  # removing last \n
+                        filtering_predictions_outfile_text = (
+                            filtering_predictions_outfile_text[:-1]
+                        )  # removing last \n
                     write_to_file(
                         filtering_predictions_outfile_text,
                         filtering_predictions_outfile,
@@ -3094,11 +3079,12 @@ def main():
 
 #######################################################################################################################################
 
+
 ### main routines functions! They are used later on.
 def psitblastn(profile, target_file, outfile="", blast_options={}):
-    """ This function runs psitblastn on the target and store results on outfile (if indicated) or in a temporary file, and returns a blast_parser to the results.
-      Blast options are read first from blast_options and then from the profile alignment (latter overriding the former).
-  """
+    """This function runs psitblastn on the target and store results on outfile (if indicated) or in a temporary file, and returns a blast_parser to the results.
+    Blast options are read first from blast_options and then from the profile alignment (latter overriding the former).
+    """
     blast_options_used = blast_options.copy()
     profile_blast_options = profile.blast_options_dict()
     for option_name in profile_blast_options:
@@ -3142,9 +3128,9 @@ def psitblastn(profile, target_file, outfile="", blast_options={}):
 
 
 def tblastn(ss_profile, target_file, outfile="", blast_options={}):
-    """ This function runs tblastn with a single sequence profile on the target and store results on outfile (if indicated) or in a temporary file, and returns a blast_parser to the results.
-      Blast options are read first from blast_options and then from the profile alignment (latter overriding the former).
-  """
+    """This function runs tblastn with a single sequence profile on the target and store results on outfile (if indicated) or in a temporary file, and returns a blast_parser to the results.
+    Blast options are read first from blast_options and then from the profile alignment (latter overriding the former).
+    """
     blast_options_used = blast_options.copy()
     profile_blast_options = ss_profile.blast_options_dict()
     for option_name in profile_blast_options:
@@ -3185,9 +3171,9 @@ def tblastn(ss_profile, target_file, outfile="", blast_options={}):
 
 
 def multi_tblastn(ms_profile, target_file, outfile="", blast_options={}):
-    """ This function runs a tblastn with a multiple sequence profile compressed to a single consensus query sequence, on the target and store results on outfile (if indicated) or in a temporary file, and returns a blast_parser to the results.
-      Blast options are read first from blast_options and then from the profile alignment (latter overriding the former).
-  """
+    """This function runs a tblastn with a multiple sequence profile compressed to a single consensus query sequence, on the target and store results on outfile (if indicated) or in a temporary file, and returns a blast_parser to the results.
+    Blast options are read first from blast_options and then from the profile alignment (latter overriding the former).
+    """
     blast_options_used = blast_options.copy()
     profile_blast_options = ms_profile.blast_options_dict()
     for option_name in profile_blast_options:
@@ -3236,7 +3222,7 @@ def exonerate(
     dont_parse=False,
     mode="p2g",
 ):
-    """ see below in cyclic exonerate; note: in selenoprofiles, dont_parse=True """
+    """see below in cyclic exonerate; note: in selenoprofiles, dont_parse=True"""
     if not outfile:
         outfile = temp_folder + "tempout.exonerate"
     exonerate_options_str = ""
@@ -3281,11 +3267,11 @@ def cyclic_exonerate(
     mode="p2g",
     merge_multiple=True,
 ):
-    """ This function runs cyclic_exonerate (see Mariotti and Guigo, 2010) on the target using the specified profile and using as seed (determining the positions of search) a gene object, whose boundaries are used. 
-  If outfile is not indicated, it is put on a temporary file.   A exonerate_parser object is returned.
-  seed is a gene object which contains all the information to initiate the cyclic exonerate routine. the chromosome name, strand and boundaries positions are used. If a .query attribute is present, its .chromosome attribute is used to obtain the full query sequence and so use the profile to choose the best query before running exonerate. If it hasn't, the first query chosen is simply the first sequence of the alignment.
-  If the exonerate object is empty or it has load error, an empty exonerate object with a descriptive .error_message attribute is returned
-  """
+    """This function runs cyclic_exonerate (see Mariotti and Guigo, 2010) on the target using the specified profile and using as seed (determining the positions of search) a gene object, whose boundaries are used.
+    If outfile is not indicated, it is put on a temporary file.   A exonerate_parser object is returned.
+    seed is a gene object which contains all the information to initiate the cyclic exonerate routine. the chromosome name, strand and boundaries positions are used. If a .query attribute is present, its .chromosome attribute is used to obtain the full query sequence and so use the profile to choose the best query before running exonerate. If it hasn't, the first query chosen is simply the first sequence of the alignment.
+    If the exonerate object is empty or it has load error, an empty exonerate object with a descriptive .error_message attribute is returned
+    """
     global chromosome_lengths
     if not chromosome_lengths_hash:
         chromosome_lengths_hash = chromosome_lengths
@@ -3372,7 +3358,7 @@ def cyclic_exonerate(
         done_right = 1
     e = None
 
-    prev_target_prepared=None
+    prev_target_prepared = None
     ## main while loop: it will exit from here only once it's done
     while (
         not (done_left and done_right and done_change_query)
@@ -3384,18 +3370,20 @@ def cyclic_exonerate(
         write_to_file(">" + query_name + "\n" + query_full_sequence, query_filename)
         # preparing target
         if not (cyclic_not_worth_doing):
-            
-            if not prev_target_prepared is None and  prev_target_prepared == current_range.fasta_title():
+            if (
+                not prev_target_prepared is None
+                and prev_target_prepared == current_range.fasta_title()
+            ):
                 pass
                 # not extracting same chunk again
             else:
                 current_range.fasta_sequence(
                     to_file=target_filename,
                     chromosome_file=chromosome_file,
-                    title="fasta_title",                
+                    title="fasta_title",
                 )
-            prev_target_prepared=current_range.fasta_title()            
-            
+            prev_target_prepared = current_range.fasta_title()
+
         ### run exonerate!!!
         exonerate(
             query_filename,
@@ -3472,8 +3460,9 @@ def cyclic_exonerate(
 def genewise(
     profile_ali, target_file, outfile="", seed="", extension=15000, genewise_options={}
 ):
-    """ This function runs genewise on the target using the specified profile and using as seed (determining the positions of search) a gene object, whose boundaries are used, after being extended by the extension parameter.
-  If outfile is not indicated, it is put on a temporary file.   A genewise object is returned."""
+    """This function runs genewise on the target using the specified profile and using as seed (determining the positions of search) a gene object, whose boundaries are used, after being extended by the extension parameter.
+    If outfile is not indicated, it is put on a temporary file.   A genewise object is returned.
+    """
 
     global chromosome_lengths
 
@@ -3622,10 +3611,10 @@ def genewise(
 def choose_prediction(
     candidates, check_filtered=False
 ):  # also called choose_prediction_selenoprofiles so you can link that even if you define a new choose_prediction
-    """ Decision routine. Returns the best object among the provided and a text with the reason why it returned that. 
-  The challenge is generally between exonerate and genewise, but blast is treated as equal, apart from the fact that it is not considered when frameshifts are predicted by any program, since blast would be chosen by accident.
-  If check_filtered flag is set to True, then the .filtered attribute of p2gs is also checked. The ones with "filtered" and "refiltered" are considered lower level than "kept". "overlapping", "redundant" are not considered since they are not run with this function for construnction.
-  """
+    """Decision routine. Returns the best object among the provided and a text with the reason why it returned that.
+    The challenge is generally between exonerate and genewise, but blast is treated as equal, apart from the fact that it is not considered when frameshifts are predicted by any program, since blast would be chosen by accident.
+    If check_filtered flag is set to True, then the .filtered attribute of p2gs is also checked. The ones with "filtered" and "refiltered" are considered lower level than "kept". "overlapping", "redundant" are not considered since they are not run with this function for construnction.
+    """
     ## putting all non-empty prediction in candidates (list). Then, when we don't like any of these for some reason (checkpoints below) we remove it from the candidate list. When we have a single candidate left, there we have chosen.
     if len(candidates) == 0:
         return empty_p2g(), "None available"
@@ -3708,7 +3697,7 @@ choose_prediction_selenoprofiles = choose_prediction
 
 
 def assign_label_selenoprotein_families(p2g_hit):
-    """ This function is used to assign a label for hits predicted for selenoprotein families (containing at least a U in the profile)"""
+    """This function is used to assign a label for hits predicted for selenoprotein families (containing at least a U in the profile)"""
     if not p2g_hit:
         raise Exception("ERROR can't assign label to empty p2ghit!")
     if (
@@ -3745,7 +3734,7 @@ def assign_label_selenoprotein_families(p2g_hit):
 
 
 def assign_label_non_selenoprotein_families(p2g_hit):
-    """ This function is used to assign a label for hits predicted for non selenoprotein families (not containing any Us in the profile)"""
+    """This function is used to assign a label for hits predicted for non selenoprotein families (not containing any Us in the profile)"""
     if not p2g_hit:
         raise Exception("ERROR can't assign label to empty p2ghit!")
     if p2g_hit.stop_codons() or p2g_hit.frameshifts():
@@ -3767,15 +3756,15 @@ def merge_p2g_hits_by_colinearity(
     get_sequence=None,
     no_seq=False,
 ):
-    """ Input can be any iterable of gene objects having a query attribute which is a gene itself. examples: [super]blasthit, exonerate, genewise classes.
-  
-  The post_function, if defined,  is used to add attributes from the colinear objects to the new one. The function must take 3 arguments (gene objects or subclasses): the upstream gene object, the downstream one, the resulting one, and return a single gene object which will overwrite the resulting object.
-  By default the .alignment is modified to include the sequence of the joined p2g hits.
-    When portions of the query are missing, one or more "x" are inserted to fill the gap.  
-    If you provide a sequence_collection, the method seq_of will be used to obtain the missing sequence in the query. The target is filled just with gaps.
-    For the same purpose, you may use instead any get_sequence function which given a fasta title, returns the sequence.
-  To ignore the .alignment attribute (when loading from tab blast files), use no_seq=True    
-  """
+    """Input can be any iterable of gene objects having a query attribute which is a gene itself. examples: [super]blasthit, exonerate, genewise classes.
+
+    The post_function, if defined,  is used to add attributes from the colinear objects to the new one. The function must take 3 arguments (gene objects or subclasses): the upstream gene object, the downstream one, the resulting one, and return a single gene object which will overwrite the resulting object.
+    By default the .alignment is modified to include the sequence of the joined p2g hits.
+      When portions of the query are missing, one or more "x" are inserted to fill the gap.
+      If you provide a sequence_collection, the method seq_of will be used to obtain the missing sequence in the query. The target is filled just with gaps.
+      For the same purpose, you may use instead any get_sequence function which given a fasta title, returns the sequence.
+    To ignore the .alignment attribute (when loading from tab blast files), use no_seq=True
+    """
     if inplace:
         worklist = p2g_list
     else:
@@ -3811,7 +3800,6 @@ def merge_p2g_hits_by_colinearity(
                     or distance_in_query <= max_distance_in_query
                 )
             ):
-
                 new_one = this.union_with(next)
                 new_one.id = this.id
                 new_one.query = this.query.union_with(next.query)
@@ -3855,7 +3843,6 @@ def merge_p2g_hits_by_colinearity(
                                 + next.alignment.seq_of("q")
                             )
                     else:
-
                         distance_in_query_corrected_with_gaps_in_q = distance_in_query
                         p = 0
                         gaps_encountered_query = 0
@@ -3911,7 +3898,7 @@ def merge_p2g_hits_by_colinearity(
 def merge_p2g_hits_by_colinearity_post_function_blast_hits(
     upstream_g, downstream_g, result_g
 ):
-    """ Post function for function merge_p2g_hits_by_colinearity when used on blast hits. Returns a superblasthit.  Beware: this means that the merge_p2g_hits_by_colinearity function returns a mixture of blasthits and superblasthits. """
+    """Post function for function merge_p2g_hits_by_colinearity when used on blast hits. Returns a superblasthit.  Beware: this means that the merge_p2g_hits_by_colinearity function returns a mixture of blasthits and superblasthits."""
     # transforming blast hit in a superblasthit class.
     out_g = superblasthit()
     for i in result_g.__dict__:
@@ -3933,7 +3920,7 @@ def merge_p2g_hits_by_colinearity_post_function_blast_hits(
 def merge_p2g_hits_by_colinearity_post_function_exonerate_hits(
     upstream_g, downstream_g, result_g
 ):
-    """ Post function for function merge_p2g_hits_by_colinearity when used on exonerate hits. Returns a superexoneratehit.  Beware: this means that the merge_p2g_hits_by_colinearity function returns a mixture of exoneratehit and superexoneratehit. """
+    """Post function for function merge_p2g_hits_by_colinearity when used on exonerate hits. Returns a superexoneratehit.  Beware: this means that the merge_p2g_hits_by_colinearity function returns a mixture of exoneratehit and superexoneratehit."""
     out_g = superexoneratehit()
     for i in result_g.__dict__:
         out_g.__dict__[i] = result_g.__dict__[i]
@@ -3960,7 +3947,7 @@ def merge_p2g_hits_by_colinearity_post_function_exonerate_hits(
 def choose_query_from_profile_plus_prediction(
     profile_plus_prediction, profile_ali, target_name="target"
 ):
-    """ used with the profile and the profile with the prediction, returns the most similar query tagged protein"""
+    """used with the profile and the profile with the prediction, returns the most similar query tagged protein"""
     possible_tagged_queries = profile_ali.queries_titles()
     if not possible_tagged_queries:
         raise notracebackException(
@@ -3975,7 +3962,7 @@ def choose_query_from_profile_plus_prediction(
 
 
 def choose_among_overlapping_p2gs_intrafamily(p2g_hit_A, p2g_hit_B):
-    """ this function is used when removing intra-profile redundancy to decide which prediction is kept when two overlap. This is basically a link to the choose_prediction function which is used again here """
+    """this function is used when removing intra-profile redundancy to decide which prediction is kept when two overlap. This is basically a link to the choose_prediction function which is used again here"""
     if p2g_hit_A.positions_summary() == p2g_hit_B.positions_summary():
         return cmp(p2g_hit_A.id, p2g_hit_B.id)  ## taking care of ties
     g = choose_prediction_selenoprofiles([p2g_hit_A, p2g_hit_B])[0]
@@ -3986,7 +3973,7 @@ def choose_among_overlapping_p2gs_intrafamily(p2g_hit_A, p2g_hit_B):
 
 
 def choose_among_overlapping_p2gs_interfamily(p2g_hit_A, p2g_hit_B):
-    """ function called to choose which prediction to choose during the inter-profile redundancy check step. it also check the .filtered attribute (counts only if -full_db is active) """
+    """function called to choose which prediction to choose during the inter-profile redundancy check step. it also check the .filtered attribute (counts only if -full_db is active)"""
     # filtered attribute:
     if p2g_hit_A.filtered in ["filtered", "refiltered"] and not p2g_hit_B.filtered in [
         "filtered",
@@ -4016,9 +4003,9 @@ def choose_among_overlapping_p2gs_interfamily(p2g_hit_A, p2g_hit_B):
 
 
 def description_format(line):
-    """ This function take as input a description line for an exonerate/genewise hit, obtained using the header function of the gene class (option no species and no id) and turns it into a nicer looking string so that all those passing through this function will be graphically aligned.
-  example: sps_temp.25.genewise_tbs -> chromosome:10 strand:- positions:13426764-13426956,13420711-13420814,13418249-13418356,13415823-13415977,...,13401151-13401362
-  """
+    """This function take as input a description line for an exonerate/genewise hit, obtained using the header function of the gene class (option no species and no id) and turns it into a nicer looking string so that all those passing through this function will be graphically aligned.
+    example: sps_temp.25.genewise_tbs -> chromosome:10 strand:- positions:13426764-13426956,13420711-13420814,13418249-13418356,13415823-13415977,...,13401151-13401362
+    """
     global max_chars_per_column
     out = ""
     out += (
@@ -4041,14 +4028,14 @@ def description_format(line):
 
 
 def load_p2g_from_db_result(db_result, profile=None):
-    """ Note: uses global variable results_db
-    function to transform the object coming out from the db to a p2ghit of the right class. 
-    example of db_result: 
+    """Note: uses global variable results_db
+    function to transform the object coming out from the db to a p2ghit of the right class.
+    example of db_result:
     db_id,  profile, program, target_header, query_header, chromosome, alignment_query, alignment_target, label, state, awsi
-    
+
     the profile name is ignored cause we need something to go from the profile name to the profile instance.  If provided as argument of this function, it's added.
     If profile is not provided as argument, a .profile_name attribute is added to the object. This is useful cause sometimes you deal with results for which you don't want to load the profile. In this case, some methods (such .output_id() ) can still be called, since they look for this .profile_name attribute instead of profile.name
-    
+
     When the results.state attribute is stored in the database with an index ( e.g.   redundant_89 , overlapping_SelK.7 ), the global variable results_db is quiered to retrieve the target gene and this is loaded (through this same function) and put in the .overlapping ; the recursion will only go the a single level, since "redundant" and "overlapping" results are not checked for redundancy so cannot be pointed by .overlapping attributes
     """
     db_id = db_result[0]
@@ -4131,9 +4118,9 @@ def load_p2g_from_db_result(db_result, profile=None):
 
 
 def parse_blast_subject_and_evalues(blast_file):
-    """ Simple function to parse a blast output and return the list of [subject name, evalue].
-  This function was built to be used with tag_blast, since the normal parse_blast(er) methods do not keep the full subject names.
-  """
+    """Simple function to parse a blast output and return the list of [subject name, evalue].
+    This function was built to be used with tag_blast, since the normal parse_blast(er) methods do not keep the full subject names.
+    """
     if not is_valid_blast_output(blast_file):
         raise Exception(
             "parse_blast_subject_and_evalues ERROR not a valid blast output file:"
@@ -4174,42 +4161,42 @@ def parse_blast_subject_and_evalues(blast_file):
 
 
 class profilechangedException(Exception):
-    """ just another exception class"""
+    """just another exception class"""
 
 
 class profiledatafilemissingException(Exception):
-    """ just another exception class"""
+    """just another exception class"""
 
 
 class clusteringseqidchangedException(Exception):
-    """ just another exception class"""
+    """just another exception class"""
 
 
 class profile_alignment(alignment):
-    """ Subclass of alignment.
+    """Subclass of alignment.
 
-  Init on a .fa file to load an alignment into memory.
-   
-  Init with build=True to allow building on the fly. Other provided options are attributes that will be written.    
+    Init on a .fa file to load an alignment into memory.
 
-  Additional attributes:
-  .filename             -> link to the main file loaded.  
-  .queries              -> keywords, or list of indices (Starting with 0) of sequences being used as queries of exonerate/genewise -- see make_profile doc for possible syntaxes
-  .name                 -> family name (filename without extension, if not specified)
-  .blast_options        -> options string concatenated with every command line running psitblastn
-  .exonerate_options    -> options string concatenated with every command line running exonerate
-  .genewise_options     -> options string concatenated with every command line running genewise
-  .tag_blast_options    -> options string concatenated with every command line running blastp for tag_blast (tag_score and go_score methods)
-  .blast_filtering      -> python procedure to filter blast hits
-  .p2g_filtering        -> python procedure to filter p2g candidates
-  .p2g_refiltering      -> python procedure to refilter rp2g candidates
-  .tags                 -> list of regexp tags (as strings) used for tag_score. Matches with any of these give a positive score
-  .neutral_tags         -> list of regexp tags (as strings) used for tag_score. Matches with any of these avoid putting a negative score (the entry needs to be positive or is skipped)
-  .tag_db               -> protein database used for tag_blast (tag_score and go_score methods)
-  .clustering_seqid     -> sequence identity threshold for pre-psitblastn clustering
-  .max_columns_gaps     -> maximum percent of gaps allowed in a column to be included in the consensus query computed for psitblastn searches
-  .max_blast_hits       -> maximum number of blast hits allowed for this profile
-  """
+    Init with build=True to allow building on the fly. Other provided options are attributes that will be written.
+
+    Additional attributes:
+    .filename             -> link to the main file loaded.
+    .queries              -> keywords, or list of indices (Starting with 0) of sequences being used as queries of exonerate/genewise -- see make_profile doc for possible syntaxes
+    .name                 -> family name (filename without extension, if not specified)
+    .blast_options        -> options string concatenated with every command line running psitblastn
+    .exonerate_options    -> options string concatenated with every command line running exonerate
+    .genewise_options     -> options string concatenated with every command line running genewise
+    .tag_blast_options    -> options string concatenated with every command line running blastp for tag_blast (tag_score and go_score methods)
+    .blast_filtering      -> python procedure to filter blast hits
+    .p2g_filtering        -> python procedure to filter p2g candidates
+    .p2g_refiltering      -> python procedure to refilter rp2g candidates
+    .tags                 -> list of regexp tags (as strings) used for tag_score. Matches with any of these give a positive score
+    .neutral_tags         -> list of regexp tags (as strings) used for tag_score. Matches with any of these avoid putting a negative score (the entry needs to be positive or is skipped)
+    .tag_db               -> protein database used for tag_blast (tag_score and go_score methods)
+    .clustering_seqid     -> sequence identity threshold for pre-psitblastn clustering
+    .max_columns_gaps     -> maximum percent of gaps allowed in a column to be included in the consensus query computed for psitblastn searches
+    .max_blast_hits       -> maximum number of blast hits allowed for this profile
+    """
 
     parameters = [
         "blast_filtering",
@@ -4236,7 +4223,7 @@ class profile_alignment(alignment):
     ]
 
     def __init__(self, filename="", **build_options):
-        """ This class can be initialized with an alignment file. If a .config file if found, the profile parameters are read from there, otherwise (or in case any build_option is specified) it is build and the file is created. """
+        """This class can be initialized with an alignment file. If a .config file if found, the profile parameters are read from there, otherwise (or in case any build_option is specified) it is build and the file is created."""
         self.filename = ""
         self.queries = None
         for category in profile_alignment.parameters:
@@ -4261,7 +4248,7 @@ class profile_alignment(alignment):
         return self.__dict__[key]
 
     def load(self, filename, build=False, **build_options):
-        """ Loads a alignment into the profile object. If the config file is not present (or if any build_options are provided), the profile is built using defaults when necessary."""
+        """Loads a alignment into the profile object. If the config file is not present (or if any build_options are provided), the profile is built using defaults when necessary."""
         alignment.__init__(self, filename)
         if not self.check_length():
             raise notracebackException(
@@ -4285,7 +4272,7 @@ class profile_alignment(alignment):
             )
 
     def first_words_are_uniq(self):
-        """ Returns False if profile names do no respect this rule"""
+        """Returns False if profile names do no respect this rule"""
         first_words_hash = {}
         for title in self.titles():
             f_word = title.split()[0]
@@ -4295,14 +4282,14 @@ class profile_alignment(alignment):
         return True
 
     def load_profile(self):
-        """ This function loads all options from the config filename. If something is not specified in the config, it gets the default value.
-    The "queries" attribute may have several forms: 
-    - it can be a list of 0-based indexes   e.g.   [0, 1, 3, 4, 5, 7]
-    - it can be the word "all"  , which means that all sequences are used as queries (but see below)
-    - it can be an expression like best:FLOAT , which means that the first X sequences are used, where X is FLOAT*number of sequences in the alignment. Remember that the sequences are ordered by "completeness".  e.g.   best:0.5  -> the first half of the sequences are used
-    - it can be an expression like last_query:TITLE, which means that all the first sequences up to the one named TITLE are used (TITLE can be even partial: it is searched in each title, the first one matching will be the last query).    e.g.  last_query:gi|73946000|ref|XP_854030.1
-    NOTE: in all forms apart from the first one (indexes listing), if the profile is a selenoprotein family, the sequences which lack one or more selenocysteine positions (meaning that they contain a gap in any of the sec_positions) are ignored. To avoid this, you can precede the expression with not_only_u:  ; e.g.   not_only_u:all    e.g.#2  not_only_u:last_query:XP_854030.1
-    """
+        """This function loads all options from the config filename. If something is not specified in the config, it gets the default value.
+        The "queries" attribute may have several forms:
+        - it can be a list of 0-based indexes   e.g.   [0, 1, 3, 4, 5, 7]
+        - it can be the word "all"  , which means that all sequences are used as queries (but see below)
+        - it can be an expression like best:FLOAT , which means that the first X sequences are used, where X is FLOAT*number of sequences in the alignment. Remember that the sequences are ordered by "completeness".  e.g.   best:0.5  -> the first half of the sequences are used
+        - it can be an expression like last_query:TITLE, which means that all the first sequences up to the one named TITLE are used (TITLE can be even partial: it is searched in each title, the first one matching will be the last query).    e.g.  last_query:gi|73946000|ref|XP_854030.1
+        NOTE: in all forms apart from the first one (indexes listing), if the profile is a selenoprotein family, the sequences which lack one or more selenocysteine positions (meaning that they contain a gap in any of the sec_positions) are ignored. To avoid this, you can precede the expression with not_only_u:  ; e.g.   not_only_u:all    e.g.#2  not_only_u:last_query:XP_854030.1
+        """
         config_diz = (
             {}
         )  # keeping track of those changed in this run of load_profile, so then I can set defaults only for the remaining ones.
@@ -4352,7 +4339,7 @@ class profile_alignment(alignment):
             self.save_profile_data()
 
     def compute_all_profile_data(self, keep_awsi=False):
-        """ compute all profile data, for saving it """
+        """compute all profile data, for saving it"""
         self.build_conservation(keep_awsi=keep_awsi)
         self.conservation_map()  # ignoring returned value, just to compute it
         self.clusters()  # ignoring returned value, just to compute it
@@ -4365,7 +4352,7 @@ class profile_alignment(alignment):
         )
 
     def build_conservation(self, silent=False, keep_awsi=False):
-        """ compute average and std deviation for the two methods (with coverage or w/o)"""
+        """compute average and std deviation for the two methods (with coverage or w/o)"""
         self.conservation_data = {}
         if len([t for t in self.titles() if t != "BLAST_QUERY_MASTER"]) == 1:
             printerr("Single sequence profile!", 1)
@@ -4402,7 +4389,7 @@ class profile_alignment(alignment):
             self.conservation_data["awsi_scores_without_coverage"] = title2score
 
     def conservation_properties(self, with_coverage=True):
-        """ Returns average awsi score, deviation """
+        """Returns average awsi score, deviation"""
         if self.conservation_data is None:
             self.build_conservation()
         if with_coverage:
@@ -4414,15 +4401,16 @@ class profile_alignment(alignment):
         return bool(self.sec_pos())
 
     def make_profile(self, **options):  # replacing this later below
-        """As options, you may provide anything that can appear in a profile config file: PARAMETERS 
-If any of those are not set, they are not written on the .config file, which is equivalent to set them on DEFAULT
-There are 3 ways to define the queries in the profile, ordered by hierarchy:
-all             -> All sequences are queries (default)    
-[...]           -> You provide directly the list of queries titles, or indices (starting from 0) in the ordered titles list
-last_query      -> You provide the last title in the ordered titles list that will be labelled as query. This may be a incomplete title: it just have to be found in a title
-query_threshold -> you provide the proportion of the full list of queries in the ordered list that will be labelled
+        """As options, you may provide anything that can appear in a profile config file: PARAMETERS
+        If any of those are not set, they are not written on the .config file, which is equivalent to set them on DEFAULT
+        There are 3 ways to define the queries in the profile, ordered by hierarchy:
+        all             -> All sequences are queries (default)
+        [...]           -> You provide directly the list of queries titles, or indices (starting from 0) in the ordered titles list
+        last_query      -> You provide the last title in the ordered titles list that will be labelled as query. This may be a incomplete title: it just have to be found in a title
+        query_threshold -> you provide the proportion of the full list of queries in the ordered list that will be labelled
 
-NOTE that in the first, third and fourth cases, those titles for which at least one U position in the alignment contains a gap in the sequence are ignored, unless the option "not_only_U" is defined.  """
+        NOTE that in the first, third and fourth cases, those titles for which at least one U position in the alignment contains a gap in the sequence are ignored, unless the option "not_only_U" is defined.
+        """
         try:
             self.convert_sequences(upper)
             self.remove_empty_columns()
@@ -4546,7 +4534,7 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
     )
 
     def save_profile_data(self):
-        """ dump a .profile_data file to avoid repeating the computation. """
+        """dump a .profile_data file to avoid repeating the computation."""
         fileout = self.filename + ".profile_data"
         try:
             fh = open(fileout, "w")
@@ -4596,9 +4584,9 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
             )
 
     def load_profile_data(self):
-        """ It loads all saved data for this profile. It fills the attributes: .clusters_data, .blast_queries_data, .conservation_data, self.conservation_map_data
-    It will recompute data if the profile appears to have changed (or the clustering_seqid value changed -> recompute clusters).
-    """
+        """It loads all saved data for this profile. It fills the attributes: .clusters_data, .blast_queries_data, .conservation_data, self.conservation_map_data
+        It will recompute data if the profile appears to have changed (or the clustering_seqid value changed -> recompute clusters).
+        """
         profile_data_file = self.filename + ".profile_data"
         try:
             if not is_file(profile_data_file):
@@ -4713,11 +4701,11 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
     #      raise skipprofileException, "ERROR loading profile_data for profile: "+self.name+' ; try removing the .profile_data file and rerun.'
 
     def md5sum_id(self):
-        """ Returns the md5sum output on the alignmetn file. useful to check if the alignment has changed from a previous run"""
+        """Returns the md5sum output on the alignmetn file. useful to check if the alignment has changed from a previous run"""
         return bbash("md5sum " + self.filename).split()[0]
 
     def queries_titles(self):
-        """ Returns the titles of the sequences tagged as queries. see make_profile help for the accepted expressions """
+        """Returns the titles of the sequences tagged as queries. see make_profile help for the accepted expressions"""
         if type(self.queries) == str:
             q_titles = []
             expression = lower(self.queries).split("not_only_u:")[-1]
@@ -4769,13 +4757,13 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
                 )
 
     def sec_pos(self):
-        """ Returns the positions in which you have at least a U (0 based)"""
+        """Returns the positions in which you have at least a U (0 based)"""
         if self.sec_pos_data is None:
             self.sec_pos_data = self.all_positions_of("U")
         return self.sec_pos_data
 
     def seq_of(self, title, sec_columns=None):
-        """ Overriding the standard seq_of method to give the possibility to automatically substitute all aminoacids in the requested seq that align to U columns with a provided character (e.g. * or X).  """
+        """Overriding the standard seq_of method to give the possibility to automatically substitute all aminoacids in the requested seq that align to U columns with a provided character (e.g. * or X)."""
         seq = alignment.seq_of(self, title)
         if sec_columns:
             for sec_pos in self.sec_pos():
@@ -4784,7 +4772,7 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         return seq
 
     def fasta(self, only_queries=0, tag_queries=0, to_file=""):
-        """ This function return a string with the fasta representation of the profile alignment. Query are indicated with # QUERY only if tag_queries is True."""
+        """This function return a string with the fasta representation of the profile alignment. Query are indicated with # QUERY only if tag_queries is True."""
         out = ""
         for title_index, title in enumerate(self.titles()):
             is_query = title_index in self.queries
@@ -4801,7 +4789,7 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         return not bool(self.filename)
 
     def clusters(self):
-        """ Returns the list of alignments after clustering, already processed adding the blast query """
+        """Returns the list of alignments after clustering, already processed adding the blast query"""
         if not self.clusters_data:
             self.clusters_data = self.clustering(
                 self.clustering_seqid_value(),
@@ -4842,7 +4830,7 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         return self.clusters_data
 
     def clusters_relative_positions(self):
-        """it's a hash of hashes. for each cluster you have a k: title (blast_query something) -> value:  hash like {k: 1-based position -> value: 1-based positions in ali}     -- 1-based! """
+        """it's a hash of hashes. for each cluster you have a k: title (blast_query something) -> value:  hash like {k: 1-based position -> value: 1-based positions in ali}     -- 1-based!"""
         out = {}
         for title in self.blast_queries().titles()[:-1]:
             out[title] = {}
@@ -4856,7 +4844,7 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         return out
 
     def blast_master_sequence(self, blast_queries_alignment):
-        """ Compute the blast master sequence from the various blast queries of the different clusters. This function is used both when the clusters are computed or loaded from a .cluster file. """
+        """Compute the blast master sequence from the various blast queries of the different clusters. This function is used both when the clusters are computed or loaded from a .cluster file."""
         blast_master_seq = ""
 
         for pos in range(blast_queries_alignment.length()):
@@ -4876,13 +4864,13 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         return blast_master_seq
 
     def n_clusters(self):
-        """ Return the number of clusters computed for this profile"""
+        """Return the number of clusters computed for this profile"""
         return len(self.clusters())
 
     def pssm(self, fileout=""):
-        """ This function builds a pssm from the profile to be used with psiblast. If the file is not specified, it is created in the temp file with the base name of the profile + .pssm.
-    In both cases, a file called as the pssm, but with the added extension .ascii is created, containing the pssm in human readable format.
-    """
+        """This function builds a pssm from the profile to be used with psiblast. If the file is not specified, it is created in the temp file with the base name of the profile + .pssm.
+        In both cases, a file called as the pssm, but with the added extension .ascii is created, containing the pssm in human readable format.
+        """
         if fileout:
             pssm_filename = fileout
         else:
@@ -4928,7 +4916,7 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         return pssm_filename
 
     def pssm_matrix(self, modify_sec=False):
-        """ This function returns a python representation of the pssm, as a list of hashes with integers as values and aminacids as keys. An additional key is present, 'self', containing the aminoacid in the query. This can be used as a control. The length of the list is the length of the blast query sequence. """
+        """This function returns a python representation of the pssm, as a list of hashes with integers as values and aminacids as keys. An additional key is present, 'self', containing the aminoacid in the query. This can be used as a control. The length of the list is the length of the blast query sequence."""
         if is_file(temp_folder + self.name + ".pssm.ascii"):
             ascii_pssm = temp_folder + self.name + ".pssm.ascii"
         else:
@@ -4983,20 +4971,21 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         return pssm_hash_list
 
     def blast_queries(self):
-        """ Returns a list of the blast queries for this profile, in the form [ [title1, seq1], [title2, seq2] ... ] """
+        """Returns a list of the blast queries for this profile, in the form [ [title1, seq1], [title2, seq2] ... ]"""
         self.clusters()  # just to ensure blast_queries_data has been created and filled.
         return self.blast_queries_data
 
     def blast_query_title(self):  # , with_suffix=False):
-        """ Returns the title of the query used for psiblast"""
+        """Returns the title of the query used for psiblast"""
         last_title = self.titles()[-1]
         if last_title.startswith("BLAST_QUERY"):
             return last_title
         return "BLAST_QUERY"
 
     def blast_query_file(self, fileout="", sec_char="U"):  # 3.1a
-        """ This function builds a file that can be used as query of psiblast. Us are replaced with * (or with the argument of sec_char). 
-    If fileout is not specified, it is built in the temporary folder and the filename is returned. """
+        """This function builds a file that can be used as query of psiblast. Us are replaced with * (or with the argument of sec_char).
+        If fileout is not specified, it is built in the temporary folder and the filename is returned.
+        """
         if not fileout:
             fileout = temp_folder + self.name + ".blast_query"
         seq = self.blast_query_seq(sec_char=sec_char)
@@ -5005,12 +4994,12 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
         return fileout
 
     def blast_query_seq(self, sec_char="U"):  # 3.1a
-        """ This is used by the previous function to compute the sequence of the blast query. careful: it contains gaps!
-    The sequence returned is a consensus position by position of the profile. If a U is found at any column, a U is always put in that position.
-    The function utilize a parameter to determine which columns contains to many gaps to be considered in the blast query:  the option defined in the profile (or the default in the main) configuration file max_column_gaps.
-    This function is actually never called for the profile alignment: it is called with the clusters subalignments. 
-    
-    """
+        """This is used by the previous function to compute the sequence of the blast query. careful: it contains gaps!
+        The sequence returned is a consensus position by position of the profile. If a U is found at any column, a U is always put in that position.
+        The function utilize a parameter to determine which columns contains to many gaps to be considered in the blast query:  the option defined in the profile (or the default in the main) configuration file max_column_gaps.
+        This function is actually never called for the profile alignment: it is called with the clusters subalignments.
+
+        """
         last_title = self.titles()[-1]
         threshold = self.max_column_gaps_for_blast_query_value()
         if last_title.startswith("BLAST_QUERY"):
@@ -5027,10 +5016,10 @@ NOTE that in the first, third and fourth cases, those titles for which at least 
 
     def consensus_sequence(self, threshold=0.0, sec_char=""):  # , exclude={}):
         """MODIFIED FROM MMLIB to avoid sec_char in almost desert columns.
-  This function computes a consensus sequences taking into account all sequences in the alignment (apart from the titles in the input hash exclude). Not all the columns are taken into account: only those having at maximum "threshold" gaps (in proportion). 
-If sec_char is set to a non-False value, any column containing a "U" will return a sec_char, PROVIDED IT PASS THE THRESHOLD OF gaps in this column. 
-If a master alignment is provided, the conservation threshold is checked with this alignment instead of with self. This provided that the master alignment must have column numbering identical to self.
-"""
+          This function computes a consensus sequences taking into account all sequences in the alignment (apart from the titles in the input hash exclude). Not all the columns are taken into account: only those having at maximum "threshold" gaps (in proportion).
+        If sec_char is set to a non-False value, any column containing a "U" will return a sec_char, PROVIDED IT PASS THE THRESHOLD OF gaps in this column.
+        If a master alignment is provided, the conservation threshold is checked with this alignment instead of with self. This provided that the master alignment must have column numbering identical to self.
+        """
         seq = ""
         conservation_map_data = self.conservation_map()  # exclude=exclude)
         for pos in range(self.length()):
@@ -5052,7 +5041,7 @@ If a master alignment is provided, the conservation threshold is checked with th
         return seq
 
     def fix_multiple_secs(self, seq):
-        """ Bugfix to avoid consecutive U or *, which makes blastall explode"""
+        """Bugfix to avoid consecutive U or *, which makes blastall explode"""
         seq_no_gap = replace(seq, "-", "")
         index = 0
         index_no_gap = -1
@@ -5078,7 +5067,7 @@ If a master alignment is provided, the conservation threshold is checked with th
         return seq
 
     def blast_format_alignment(self, fileout=""):
-        """ This function builds a alignment in the format wanted by blastpgp to build a pssm. It is basically a Tab format, with sequences names that cannot contain any space """
+        """This function builds a alignment in the format wanted by blastpgp to build a pssm. It is basically a Tab format, with sequences names that cannot contain any space"""
         max_chars = 120
         if not fileout:
             fileout = temp_folder + self.name + ".blast_format_alignment"
@@ -5093,19 +5082,19 @@ If a master alignment is provided, the conservation threshold is checked with th
         return fileout
 
     def blast_filtering_eval(self):
-        """ This returns a function of evaluation of a blast hit. this returns True or False if the blasthit provided passes or not the blast filtering specified for this profile. """
+        """This returns a function of evaluation of a blast hit. this returns True or False if the blasthit provided passes or not the blast filtering specified for this profile."""
         return self.filtering_eval(category="blast_filtering")
 
     def p2g_filtering_eval(self):
-        """ This returns a function of evaluation of a p2g. this returns True or False if the p2g provided passes or not the filtering specified for this profile. """
+        """This returns a function of evaluation of a p2g. this returns True or False if the p2g provided passes or not the filtering specified for this profile."""
         return self.filtering_eval(category="p2g_filtering")
 
     def p2g_refiltering_eval(self):
-        """ This returns a function of evaluation of a p2g. this returns True or False if the p2g provided passes or not the refiltering specified for this profile. """
+        """This returns a function of evaluation of a p2g. this returns True or False if the p2g provided passes or not the refiltering specified for this profile."""
         return self.filtering_eval(category="p2g_refiltering")
 
     def filtering_eval(self, category):
-        """ Utility to save code for the previous 3 functions. category is p2g_refiltering or blast_options etc. ; it checks if the value defined in the profile is a keyword, if it is not, it tries to evaluate it as the second part of a lambda statement, with the object being filtered called x. If not value is defined in the profile, the default of this category is used."""
+        """Utility to save code for the previous 3 functions. category is p2g_refiltering or blast_options etc. ; it checks if the value defined in the profile is a keyword, if it is not, it tries to evaluate it as the second part of a lambda statement, with the object being filtered called x. If not value is defined in the profile, the default of this category is used."""
         if self.__dict__[category]:
             if self.__dict__[category] in keywords[category]:
                 return keywords[category][self.__dict__[category]]
@@ -5135,7 +5124,7 @@ If a master alignment is provided, the conservation threshold is checked with th
             return keywords[category]["DEFAULT"]
 
     def tag_db_filename(self):
-        """ Returns the tag database specified for this profile. This includes translating a keyword, if the database is specified as keyword and not as a complete path. It also checks if the file exists and raises and exception if it doesn't """
+        """Returns the tag database specified for this profile. This includes translating a keyword, if the database is specified as keyword and not as a complete path. It also checks if the file exists and raises and exception if it doesn't"""
         possible_keyword = self.tag_db
         if not self.tag_db:
             possible_keyword = "DEFAULT"
@@ -5148,7 +5137,7 @@ If a master alignment is provided, the conservation threshold is checked with th
         return possible_keyword
 
     def uniref2go_db_filename(self):
-        """ Returns the uniref2go database for this profile. This includes translating a keyword, if the database is specified as keyword and not as a complete path. It also checks if the file exists and raises and exception if it doesn't """
+        """Returns the uniref2go database for this profile. This includes translating a keyword, if the database is specified as keyword and not as a complete path. It also checks if the file exists and raises and exception if it doesn't"""
         possible_keyword = self.uniref2go_db
         if not self.uniref2go_db:
             possible_keyword = "DEFAULT"
@@ -5161,7 +5150,7 @@ If a master alignment is provided, the conservation threshold is checked with th
         return possible_keyword
 
     def blast_options_dict(self):
-        """ Returns a dictionary with the blast options like option: value. """
+        """Returns a dictionary with the blast options like option: value."""
         return self.options_dict(category="blast")
 
     def exonerate_options_dict(self):
@@ -5174,7 +5163,7 @@ If a master alignment is provided, the conservation threshold is checked with th
         return self.options_dict(category="tag_blast")
 
     def options_dict(self, category):
-        """ Utility to run blast_options_dict, exonerate_options_dict or any other with the same logic"""
+        """Utility to run blast_options_dict, exonerate_options_dict or any other with the same logic"""
         if self.is_cluster_subalignment():
             return self.parent_profile.options_dict(category)
         if self.__dict__[category + "_options"] in keywords[category + "_options"]:
@@ -5208,19 +5197,19 @@ If a master alignment is provided, the conservation threshold is checked with th
         return out
 
     def clustering_seqid_value(self):
-        """ This takes the attribute self.clustering_seqid and translates it into something that can be used right away (it changes the potential label into a value)"""
+        """This takes the attribute self.clustering_seqid and translates it into something that can be used right away (it changes the potential label into a value)"""
         return self.options_non_str(category="clustering_seqid", istype=float)
 
     def max_column_gaps_for_blast_query_value(self):
-        """ This takes the attribute self.max_column_gaps and translates it into something that can be used right away (it changes the potential label into a value)"""
+        """This takes the attribute self.max_column_gaps and translates it into something that can be used right away (it changes the potential label into a value)"""
         return self.options_non_str(category="max_column_gaps", istype=float)
 
     def max_blast_hits_number_value(self):
-        """ This takes the attribute self.max_blast_hits and translates it into something that can be used right away (it changes the potential label into a value)"""
+        """This takes the attribute self.max_blast_hits and translates it into something that can be used right away (it changes the potential label into a value)"""
         return self.options_non_str(category="max_blast_hits", istype=int)
 
     def options_non_str(self, category, istype):
-        """ generalized function to return a number"""
+        """generalized function to return a number"""
         if self.is_cluster_subalignment():
             return self.parent_profile.options_non_str(category, istype)
         if type(self.__dict__[category]) == str:
@@ -5247,7 +5236,7 @@ If a master alignment is provided, the conservation threshold is checked with th
         return len([t for t in self.titles() if t != "BLAST_QUERY_MASTER"])
 
     def summary(self, descriptor=""):
-        """ This returns a summary of the attributes of the object. If descriptor is set as None, the first line of output (like >>> profile: profilename) is skipped """
+        """This returns a summary of the attributes of the object. If descriptor is set as None, the first line of output (like >>> profile: profilename) is skipped"""
         if descriptor != None and not descriptor:
             descriptor = self.name
         tab_width = 120
@@ -5319,7 +5308,7 @@ If a master alignment is provided, the conservation threshold is checked with th
     #    self.queries.append(len(self.titles())-1)
 
     def neutral_tags_list(self):
-        """ Utility to return the list of neutral tags contained in self.neutral_tags but checking whether a keyword is provided: in this case, this is translated to the corresponding list defined in the config file """
+        """Utility to return the list of neutral tags contained in self.neutral_tags but checking whether a keyword is provided: in this case, this is translated to the corresponding list defined in the config file"""
         if type(self.neutral_tags) == list:
             return self.neutral_tags
         if self.neutral_tags not in keywords["neutral_tags"]:
@@ -5338,10 +5327,10 @@ If a master alignment is provided, the conservation threshold is checked with th
 
 
 class overriding_cursor(Cursor):
-    """ just to replace the execute command with something lock-proof"""
+    """just to replace the execute command with something lock-proof"""
 
     def execute(self, *args):
-        """ ovverides the normal execute command allowing for waiting if the db is locked"""
+        """ovverides the normal execute command allowing for waiting if the db is locked"""
         attempts = 0
         success = False
         while not success and attempts <= max_attempts_database:
@@ -5363,7 +5352,7 @@ class overriding_cursor(Cursor):
 
 
 class selenoprofiles_db(sqlite.Connection):
-    """ Class to manage the selenoprofiles database. """
+    """Class to manage the selenoprofiles database."""
 
     results_fields = [
         "id",
@@ -5398,7 +5387,7 @@ class selenoprofiles_db(sqlite.Connection):
             )
 
     def has_table(self, name):
-        """ Utility to check if the database as a table with such name"""
+        """Utility to check if the database as a table with such name"""
         try:
             db_cursor = self.original_cursor()
             db_cursor.execute("SELECT * FROM " + name)
@@ -5407,7 +5396,7 @@ class selenoprofiles_db(sqlite.Connection):
             return False
 
     def table_entry(self, table_name, **keyargs):
-        """ Utility to return an entry from a table with certain characteristics, definable by key arguments.  """
+        """Utility to return an entry from a table with certain characteristics, definable by key arguments."""
         db_cursor = self.cursor()
         line = (
             "SELECT * FROM "
@@ -5427,7 +5416,7 @@ class selenoprofiles_db(sqlite.Connection):
         return all_results[0]
 
     def initialise_db(self):
-        """ Add necessary tables """
+        """Add necessary tables"""
         db_cursor = self.cursor()
         db_cursor.execute(
             "CREATE TABLE has_results_for_profile (id INTEGER PRIMARY KEY, profile VARCHAR(50), has_output VARCHAR(11))"
@@ -5441,7 +5430,7 @@ class selenoprofiles_db(sqlite.Connection):
         )
 
     def add_entry(self, table_name, entry_from_db, make_id_null=True):
-        """ This add a result from another db in the table with the same name"""
+        """This add a result from another db in the table with the same name"""
         db_cursor = self.cursor()
         if make_id_null:
             entry_to_put = entry_from_db[1:]
@@ -5468,7 +5457,7 @@ class selenoprofiles_db(sqlite.Connection):
         )
 
     def has_results_for_profile(self, profile):
-        """ Return a value among NO YES ONGOING UNCHECKED WAITING UNCHECKED-2.    NO   is returned even if there's no entry in the db"""
+        """Return a value among NO YES ONGOING UNCHECKED WAITING UNCHECKED-2.    NO   is returned even if there's no entry in the db"""
         db_cursor = self.cursor()
         db_cursor.execute(
             'SELECT * FROM has_results_for_profile WHERE profile=="' + profile + '"'
@@ -5479,8 +5468,8 @@ class selenoprofiles_db(sqlite.Connection):
         return a[-1]
 
     def set_has_results_for_profile(self, profile_name, value):
-        """ Utility to set this property: has_results_for_profile. It finds automatically if there was an entry already and replace it.
-    value should be a string, among NO YES ONGOING UNCHECKED WAITING UNCHECKED-2  """
+        """Utility to set this property: has_results_for_profile. It finds automatically if there was an entry already and replace it.
+        value should be a string, among NO YES ONGOING UNCHECKED WAITING UNCHECKED-2"""
         db_cursor = self.cursor()
         old_entry = self.table_entry("has_results_for_profile", profile=profile_name)
         if (
@@ -5499,14 +5488,14 @@ class selenoprofiles_db(sqlite.Connection):
             )
 
     def set_stopped_profiles_as_ok(self):
-        """ This is used in combination with option -stop: it will set the values of the profiles that were with option -stop as checked"""
+        """This is used in combination with option -stop: it will set the values of the profiles that were with option -stop as checked"""
         db_cursor = self.cursor()
         db_cursor.execute(
             'UPDATE has_results_for_profile SET  has_output="YES" WHERE has_output == "UNCHECKED-2"'
         )
 
     def computation_in_progress(self, apart_from=[]):
-        """ Returns True if the database reports of any   has_results_for_profile   property which is either UNCHECKED or ONGOING, which means that computation is in progress in this target."""
+        """Returns True if the database reports of any   has_results_for_profile   property which is either UNCHECKED or ONGOING, which means that computation is in progress in this target."""
         db_cursor = self.cursor()
         line = 'SELECT * FROM has_results_for_profile WHERE has_output == "UNCHECKED" OR has_output == "ONGOING"'
         db_cursor.execute(line)
@@ -5517,7 +5506,7 @@ class selenoprofiles_db(sqlite.Connection):
         return False
 
     def save(self):
-        """ saves the changes (commit). it tries more than once if it finds locked  """
+        """saves the changes (commit). it tries more than once if it finds locked"""
         attempts = 0
         success = False
         while not success and attempts <= max_attempts_database:
@@ -5547,7 +5536,7 @@ class selenoprofiles_db(sqlite.Connection):
     #    self.close()
 
     def add_result(self, p2g_hit):
-        """ Add a result to the database, annotating its data (prediction program etc), and also  the chromosome is in. The majority of information is in the header"""
+        """Add a result to the database, annotating its data (prediction program etc), and also  the chromosome is in. The majority of information is in the header"""
         state = p2g_hit.filtered
         if state == "redundant":
             state += "_" + str(p2g_hit.overlapping.id)
@@ -5577,7 +5566,7 @@ class selenoprofiles_db(sqlite.Connection):
             self.add_feature_to_result(obj, p2g_hit)
 
     def add_feature_to_result(self, obj, p2g_hit):
-        """ Add a feature (obj) to this result in the database """
+        """Add a feature (obj) to this result in the database"""
         db_cursor = self.cursor()
         result_id = self.result_id(
             profile_name=p2g_hit.profile.name, output_index=p2g_hit.id
@@ -5590,7 +5579,7 @@ class selenoprofiles_db(sqlite.Connection):
         )
 
     def result_id(self, profile_name, output_index):
-        """ Utility to parse the db and return the database id of a certain prediction. the argument output_index is:  5 in the example prediction sps.5.selenocysteine """
+        """Utility to parse the db and return the database id of a certain prediction. the argument output_index is:  5 in the example prediction sps.5.selenocysteine"""
         db_cursor = self.cursor()
         db_cursor.execute(
             'SELECT * FROM results WHERE profile=="'
@@ -5612,7 +5601,7 @@ class selenoprofiles_db(sqlite.Connection):
         return all_results[0][0]
 
     def clear_results(self, profile_name):
-        """ Clean the table from the entries relative to a certain profile. """
+        """Clean the table from the entries relative to a certain profile."""
         db_cursor = self.cursor()
         db_cursor.execute(
             'SELECT id FROM results WHERE profile == "' + profile_name + '" '
@@ -5627,7 +5616,7 @@ class selenoprofiles_db(sqlite.Connection):
             )
 
     def get_results(self, profile_name, states=[]):
-        """ Utility to get all results in the database relative to this profile """
+        """Utility to get all results in the database relative to this profile"""
         db_cursor = self.cursor()
         sql_cmnd = 'SELECT * FROM results WHERE profile == "' + profile_name + '" '
         if states:
@@ -5644,7 +5633,7 @@ class selenoprofiles_db(sqlite.Connection):
         return db_cursor.fetchall()
 
     def get_result(self, profile_name, index_id):
-        """ Utility to get a single result from the database. The index_id must be specified """
+        """Utility to get a single result from the database. The index_id must be specified"""
         db_cursor = self.cursor()
         db_cursor.execute(
             'SELECT * FROM results WHERE profile == "'
@@ -5666,7 +5655,7 @@ class selenoprofiles_db(sqlite.Connection):
         return all_results[0]
 
     def get_results_on_chromosome(self, chromosome, strand=None):
-        """ Utility to get all results in the database on a certain chromosome (or scaffold). If strand is defined to "+" or "-", only those in the desired strand are reported """
+        """Utility to get all results in the database on a certain chromosome (or scaffold). If strand is defined to "+" or "-", only those in the desired strand are reported"""
         db_cursor = self.cursor()
         strand_add = ""
         if strand in ["+", "-"]:
@@ -5680,7 +5669,7 @@ class selenoprofiles_db(sqlite.Connection):
         return db_cursor.fetchall()
 
     def all_chromosomes_with_predictions(self):
-        """ Returns a list of the chromosomes with something predicted"""
+        """Returns a list of the chromosomes with something predicted"""
         db_cursor = self.cursor()
         db_cursor.execute("SELECT DISTINCT chromosome FROM results ")
         db_results = db_cursor.fetchall()
@@ -5689,8 +5678,9 @@ class selenoprofiles_db(sqlite.Connection):
         return [r[0] for r in db_results]
 
     def features_of(self, result_db_id, add_parent=False):
-        """ Returns the list of all features as python objects associated in the db with the desired result object, given its db id. 
-    With add_parent,  you can provide a p2ghit object that will be linked in the .parent attribute of feature object. """
+        """Returns the list of all features as python objects associated in the db with the desired result object, given its db id.
+        With add_parent,  you can provide a p2ghit object that will be linked in the .parent attribute of feature object.
+        """
         list_out = []
         db_cursor = self.cursor()
         db_cursor.execute(
@@ -5722,7 +5712,7 @@ class selenoprofiles_db(sqlite.Connection):
         return list_out
 
     def remove_overlapping_states(self, silent=False):
-        """ Clean the database from all interfamily overlap calls """
+        """Clean the database from all interfamily overlap calls"""
         if not silent:
             write("DATABASE", how=terminal_colors["database"])
             write(" removing overlap calls. ")
@@ -5754,7 +5744,7 @@ class selenoprofiles_db(sqlite.Connection):
             write(" removed " + str(n_removed) + " overlap calls.", 1)
 
     def remove_redundancy(self, chromosome_list=None, silent=False):
-        """ Parse all results in the database for this target and removes the overlapping ones (updating their state attribute to "redundant", deciding which to keep with the usual choose_prediction function"""
+        """Parse all results in the database for this target and removes the overlapping ones (updating their state attribute to "redundant", deciding which to keep with the usual choose_prediction function"""
         db_cursor = self.cursor()
         if chromosome_list is None:
             chromosome_list = self.all_chromosomes_with_predictions()
@@ -5808,7 +5798,7 @@ class selenoprofiles_db(sqlite.Connection):
 
 
 class p2ghit(gene):
-    """ This class includes blasthit, exoneratehit and genewisehit class. It contains the code for all operations that we want to perform on any selenoprofiles result, so it is the mother class for output. It is a gene class which contains a .query attribute which is a second gene instance. """
+    """This class includes blasthit, exoneratehit and genewisehit class. It contains the code for all operations that we want to perform on any selenoprofiles result, so it is the mother class for output. It is a gene class which contains a .query attribute which is a second gene instance."""
 
     def __init__(self):
         gene.__init__(self)
@@ -5824,7 +5814,7 @@ class p2ghit(gene):
         self.awsi_data = {}
 
     def reset_derived_data(self):
-        """ To be called everytime a prediction set of coordinates is modified"""
+        """To be called everytime a prediction set of coordinates is modified"""
         self.cds_sequence = ""
         self.awsi_data = {}
         self.sequence_identity_with_profile_data = {}
@@ -5842,18 +5832,18 @@ class p2ghit(gene):
         )
 
     def cds(self):
-        """ Returns the coding sequence for the prediction. If frameshifts are predicted, these inserted nucleotides are not returned: the sequence returned always translates to the predicted protein sequence (considering SecTGAs) """
+        """Returns the coding sequence for the prediction. If frameshifts are predicted, these inserted nucleotides are not returned: the sequence returned always translates to the predicted protein sequence (considering SecTGAs)"""
         ##### Although the coding sequence is completely obtainable in lazy computing from the misc_sequence_data, the codign sequence is available even before populating the misc_sequence_data, since it is parsed from exonerate and genewise output. So I'm keeping the .cds_sequence attribute just to take advantage of this, and not perform any subsequence fetch if user wants only the coding sequence
         if "cds_sequence" not in self.__dict__ or not self.cds_sequence:
             self.cds_sequence = self.subsequence(1, self.length())
         return self.cds_sequence
 
     def dna(self):
-        """ Returns the full DNA sequence for the prediction, including introns and eventual frameshifts."""
+        """Returns the full DNA sequence for the prediction, including introns and eventual frameshifts."""
         return self.subsequence(1, self.span(), include_introns=True)
 
     def aligned_cds(self):
-        """ Returns the cds like the previous function, but with gaps in positions as the .alignment attribute. This is useful if you want to index the cds with indexes coming from the aligned sequences."""
+        """Returns the cds like the previous function, but with gaps in positions as the .alignment attribute. This is useful if you want to index the cds with indexes coming from the aligned sequences."""
         seq = self.cds()
         for pos in range(len(self.alignment.seq_of("t"))):
             if self.alignment.seq_of("t")[pos] == "-":
@@ -5861,7 +5851,7 @@ class p2ghit(gene):
         return seq
 
     def frameshifts(self):
-        """ Return the number of frameshifts found in this prediction """
+        """Return the number of frameshifts found in this prediction"""
         introns_g = self.introns(minimal=True)
         count = 0
         for st, end in introns_g.exons:
@@ -5870,11 +5860,11 @@ class p2ghit(gene):
         return count
 
     def protein(self):
-        """ Returns the protein sequence predicted in the target"""
+        """Returns the protein sequence predicted in the target"""
         return nogap(self.alignment.seq_of("t"))
 
     def is_complete_at_three_prime(self):
-        """ returns True if the next codon is a stop codon """
+        """returns True if the next codon is a stop codon"""
         (
             seq_until_stop,
             translation,
@@ -5885,7 +5875,7 @@ class p2ghit(gene):
         return False
 
     def output_header(self):
-        """ used in all fasta files """
+        """used in all fasta files"""
         add = ""
         if opt["fasta_add"]:
             x = self
@@ -5900,7 +5890,7 @@ class p2ghit(gene):
         return self.header(no_id=True, function_prediction_program=1) + add
 
     def output_fasta(self):
-        """ Returns the text for its fasta file"""
+        """Returns the text for its fasta file"""
         return (
             ">"
             + self.output_id()
@@ -5913,7 +5903,7 @@ class p2ghit(gene):
     fasta = output_fasta
 
     def output_cds(self):
-        """ Returns the text for a cds fasta file"""
+        """Returns the text for a cds fasta file"""
         seq = self.cds()
         (
             seq_until_stop,
@@ -5925,7 +5915,7 @@ class p2ghit(gene):
         return ">" + self.output_id() + " " + self.output_header() + "\n" + seq
 
     def output_dna(self):
-        """ Returns the text for a dna fasta file"""
+        """Returns the text for a dna fasta file"""
         seq = self.dna()
         (
             seq_until_stop,
@@ -5937,7 +5927,7 @@ class p2ghit(gene):
         return ">" + self.output_id() + " " + self.output_header() + "\n" + seq
 
     def output_aligned_cds(self):
-        """ Returns a pairwise alignment in fasta between the coding sequence and a fake back translation of the blast_query_master where gaps in the original alignment have been converted to X, while new gaps are as -.  """
+        """Returns a pairwise alignment in fasta between the coding sequence and a fake back translation of the blast_query_master where gaps in the original alignment have been converted to X, while new gaps are as -."""
         t = "UnMaTcHaBlE"
         prot_profile_ali = self.alignment_with_profile(dont_shrink=True, title=t)
         c_pos_target = -1
@@ -5974,7 +5964,7 @@ class p2ghit(gene):
         )
 
     def output_introns(self):
-        """Returns the text for the introns output file """
+        """Returns the text for the introns output file"""
         if len(self.exons) < 2:
             return None
         out = ""
@@ -5999,14 +5989,14 @@ class p2ghit(gene):
         return out
 
     def output_id(self):
-        """ Returns the base for output: e.g. sps.1.selenocysteine"""
+        """Returns the base for output: e.g. sps.1.selenocysteine"""
         try:
             return self.profile.name + "." + str(self.id) + "." + self.label
         except:
             return self.profile_name + "." + str(self.id) + "." + self.label
 
     def output_feature(self, feature_name):
-        """ Generic function for outputing a feature, like secises """
+        """Generic function for outputing a feature, like secises"""
         out = ""
         for obj in self.features:
             if obj.__class__.__name__ == feature_name:
@@ -6017,7 +6007,7 @@ class p2ghit(gene):
         return self.output_feature("secis")
 
     def stop_codons(self):
-        """ Returns a list of elements like[position_in_prot_seq_1_based, codon_in_upper_RNA_letters] """
+        """Returns a list of elements like[position_in_prot_seq_1_based, codon_in_upper_RNA_letters]"""
         out = []
         for pos in range(len(self.protein())):
             if self.protein()[pos] in "*":
@@ -6041,11 +6031,11 @@ class p2ghit(gene):
         return out
 
     def n_stop_codons(self):
-        """ Returns the number of stop codons. This was implemented to speed up procedures in which you just care about how many stop codons you have, and not how many do you have."""
+        """Returns the number of stop codons. This was implemented to speed up procedures in which you just care about how many stop codons you have, and not how many do you have."""
         return self.protein().count("*")
 
     def aligned_secTGAs(self):
-        """ Returns the number of aligned secTGAs in the query """
+        """Returns the number of aligned secTGAs in the query"""
         secTGAs = 0
         for pos in self.alignment.all_positions_of("U"):
             if not self.alignment.seq_of("t")[pos] in "-x":
@@ -6053,7 +6043,7 @@ class p2ghit(gene):
         return secTGAs
 
     def prediction_program(self):
-        """ Recognize the type of p2ghit and returns the program used for the prediction """
+        """Recognize the type of p2ghit and returns the program used for the prediction"""
         if not self:
             return "None"
         if issubclass(self.__class__, blasthit):
@@ -6069,11 +6059,11 @@ class p2ghit(gene):
             )
 
     def query_full_name(self):
-        """ Return the full name of the query, as it appears in the profile. This differs from self.query.chromosome by the fact that this is sometimes only the first word of the full title """
+        """Return the full name of the query, as it appears in the profile. This differs from self.query.chromosome by the fact that this is sometimes only the first word of the full title"""
         return self.profile.fill_title(self.query.chromosome)
 
     def coverage(self):
-        """ Returns the coverage respect to the profile, i.e. how much profile is spanned"""
+        """Returns the coverage respect to the profile, i.e. how much profile is spanned"""
         if "profile" not in self.__dict__ or (not self.profile):
             raise Exception(
                 "coverage ERROR no profile alignment is defined for this p2g hit. Please add this as its property "
@@ -6086,13 +6076,13 @@ class p2ghit(gene):
         return coverage_value
 
     def ali_fasta_title(self):
-        """Returns the fasta title normally displayed for the prediction in the .ali file """
+        """Returns the fasta title normally displayed for the prediction in the .ali file"""
         return self.output_id() + " " + self.output_header()
 
     def filled_alignment(self, target_title=""):
-        """ Returns a pairwise alignment like the one in .alignment, but filled with the full query sequence (self.alignment contains only the query sequence which is found in the prediction file. This method returns an alignment which contains it all) 
-    The titles are: 1.the full title for the query , 2.the output title for the target (=   self.output_id()+' '+self.header(no_id=True, function_prediction_program=1)   ), unless a different target title is specified as argument
-    """
+        """Returns a pairwise alignment like the one in .alignment, but filled with the full query sequence (self.alignment contains only the query sequence which is found in the prediction file. This method returns an alignment which contains it all)
+        The titles are: 1.the full title for the query , 2.the output title for the target (=   self.output_id()+' '+self.header(no_id=True, function_prediction_program=1)   ), unless a different target title is specified as argument
+        """
         ali = alignment()
         query_full_title = self.profile.fill_title(self.query.chromosome)
         query_seq = self.alignment.seq_of("q")
@@ -6104,8 +6094,7 @@ class p2ghit(gene):
         return ali
 
     def alignment_with_profile(self, profile_ali="", dont_shrink=False, title=""):
-        """ This returns the alignment for the p2g hit along with the profile alignment, produced by the transfer alignment method of alignment class. A profile_ali must be defined either as argument or be present as .profile attribute of the p2g_hit. The alignment returned contains the same titles as the profile_ali, plus the standard fasta title containing the protein sequence of the target.
-    """
+        """This returns the alignment for the p2g hit along with the profile alignment, produced by the transfer alignment method of alignment class. A profile_ali must be defined either as argument or be present as .profile attribute of the p2g_hit. The alignment returned contains the same titles as the profile_ali, plus the standard fasta title containing the protein sequence of the target."""
         if "profile" in self.__dict__ and not profile_ali:
             profile_ali = self.profile
         elif "profile" not in self.__dict__ and not profile_ali:
@@ -6117,10 +6106,10 @@ class p2ghit(gene):
 
     def sequence_identity_with_profile(self, dont_count_gaps=0):
         """This maps the prediction back to the profile and returns the average sequence identity with the sequences of the profile. dont_count_gaps is flag for the following behavior:
-    0 -> terminal gaps are not counted
-    1 -> gaps are not counted
-    2 -> everything is counted (resulting score will be much lower than the other methods for uncomplete hits)
-  """
+        0 -> terminal gaps are not counted
+        1 -> gaps are not counted
+        2 -> everything is counted (resulting score will be much lower than the other methods for uncomplete hits)
+        """
         if dont_count_gaps not in self.sequence_identity_with_profile_data:
             dont_count_gaps = int(dont_count_gaps)
             dcg = bool(dont_count_gaps == 1)
@@ -6137,9 +6126,9 @@ class p2ghit(gene):
     seq_id = sequence_identity_with_profile
 
     def weighted_seq_identity_with_profile(self, with_coverage=True):
-        """ Scores this prediction against the rest of the alignment, returning a float from 0.0 to 1.0; also called AWSI - awsi. See function with same name in MMlib.
-    The score is based on pairwise comparisons, in which a WSI score is computed as a sequence identity with weights on the different columns of the profiles. During a pairwise comparison between a profile sequence and a candidate sequence, the weight is given by the representation of the aminoacid in this profile sequence across all the profile. More conserved positions are given more weight. Unless with_coverage=False, this weight is also multiplied by the column coverage, that is to say, the number of total characters which are not gaps divided by the total number of profile sequences.
-    """
+        """Scores this prediction against the rest of the alignment, returning a float from 0.0 to 1.0; also called AWSI - awsi. See function with same name in MMlib.
+        The score is based on pairwise comparisons, in which a WSI score is computed as a sequence identity with weights on the different columns of the profiles. During a pairwise comparison between a profile sequence and a candidate sequence, the weight is given by the representation of the aminoacid in this profile sequence across all the profile. More conserved positions are given more weight. Unless with_coverage=False, this weight is also multiplied by the column coverage, that is to say, the number of total characters which are not gaps divided by the total number of profile sequences.
+        """
         if with_coverage not in self.awsi_data:
             try:
                 if self.profile.nseq() == 1:
@@ -6216,7 +6205,7 @@ class p2ghit(gene):
     awsi = weighted_seq_identity_with_profile
 
     def awsi_z_score(self, with_coverage=True):
-        """ min: -999  max 999 """
+        """min: -999  max 999"""
         awsi = self.weighted_seq_identity_with_profile(with_coverage)
         average, std_dev = self.profile.conservation_properties(with_coverage)
         if std_dev == 0.0:
@@ -6239,7 +6228,7 @@ class p2ghit(gene):
     def awsi_filter(
         self, awsi=0.9, z_score=-3, few_sequences_awsi=0.3, with_coverage=True
     ):
-        """ default awsi-based filter. Predictions with values of awsi or z_score greater than arguments pass the filter. by default AWSIc is computed. with_coverage=False activates AWSIw (see manual).  If the profile contains only one or two sequences, the filter checks that AWSI is greater than argument few_sequences_awsi """
+        """default awsi-based filter. Predictions with values of awsi or z_score greater than arguments pass the filter. by default AWSIc is computed. with_coverage=False activates AWSIw (see manual).  If the profile contains only one or two sequences, the filter checks that AWSI is greater than argument few_sequences_awsi"""
         if self.profile.nseq() < 3:
             return (
                 self.weighted_seq_identity_with_profile(with_coverage)
@@ -6250,7 +6239,7 @@ class p2ghit(gene):
         return self.awsi_z_score(with_coverage=with_coverage) > z_score
 
     def most_similar_sequence(self, dont_count_gaps=0):
-        """ Returns the title of the most similar sequence in the profile, computed with dont_count_gaps as in sequence_identity_with_profile"""
+        """Returns the title of the most similar sequence in the profile, computed with dont_count_gaps as in sequence_identity_with_profile"""
         dont_count_gaps = int(dont_count_gaps)
         dcg = bool(dont_count_gaps == 1)
         dctg = bool(dont_count_gaps == 0)
@@ -6273,11 +6262,12 @@ class p2ghit(gene):
 
     def sequence_identity_in_range(self, start, end, dont_count_gaps=0, min_aligned=1):
         """Returns the average sequence identity computed only along the profile range start,end both 1-based and included.
- dont_count_gaps is flag for the following behavior:
-    0 -> terminal gaps are not counted
-    1 -> gaps are not counted
-    2 -> everything is counted (resulting score will be much lower than the other methods for uncomplete hits)
-   min_aligned is the minimum number fo aligned residues to return something != 0.0 ; this is a trick to avoid returning a high seq id when just a single or few aminoacids are aligned.                                                                                                        """
+        dont_count_gaps is flag for the following behavior:
+           0 -> terminal gaps are not counted
+           1 -> gaps are not counted
+           2 -> everything is counted (resulting score will be much lower than the other methods for uncomplete hits)
+          min_aligned is the minimum number fo aligned residues to return something != 0.0 ; this is a trick to avoid returning a high seq id when just a single or few aminoacids are aligned.
+        """
         dont_count_gaps = int(dont_count_gaps)
         dcg = bool(dont_count_gaps == 1)
         dctg = bool(dont_count_gaps == 0)
@@ -6319,13 +6309,16 @@ class p2ghit(gene):
             return 0.0
 
     def conservation_score(self):
-        """ Returns a score computed using the conservation_score method of the alignment class in MMlib: """ + alignment.conservation_score.__doc__
+        (
+            """ Returns a score computed using the conservation_score method of the alignment class in MMlib: """
+            + alignment.conservation_score.__doc__
+        )
         return self.alignment_with_profile(title="UnMaTcHaBlE").conservation_score(
             title="UnMaTcHaBlE"
         )
 
     def gff(self, is_gtf=False):
-        """ Returns a gff for this prediction. it includes the positions of selenocysteine in the line of the exon where it belongs"""
+        """Returns a gff for this prediction. it includes the positions of selenocysteine in the line of the exon where it belongs"""
         g = self.copy()
         g.id = self.output_id()
         g.program = "selenoprofiles_" + self.prediction_program()
@@ -6407,13 +6400,13 @@ class p2ghit(gene):
     output_gff = gff
 
     def gtf(self):
-        """ Returns a gtf3 text for this prediction"""
+        """Returns a gtf3 text for this prediction"""
         return self.gff(is_gtf=True)
 
     output_gtf = gtf
 
     def seq_in_profile_pos(self, pos):
-        """ Return the aa in the target aligned to the position pos of the profile alignment, 1 based!"""
+        """Return the aa in the target aligned to the position pos of the profile alignment, 1 based!"""
         if "profile" not in self.__dict__ or (not self.profile):
             raise Exception(
                 "profile_alignment->seq_in_profile_pos ERROR no profile alignment is defined for this p2g hit. Please add this as its property "
@@ -6426,7 +6419,7 @@ class p2ghit(gene):
         return self.filled_alignment().seq_of(1)[pos_in_self_ali - 1]
 
     def sec_is_aligned(self, to_chars="UC", query_aa="U"):
-        """ Returns True if at least one U in the query (or another aa provided with query_aa) is aligned to either a U or C (or any other list of characters provided as to_chars argument). If a * is detected in the target in a candidate position, runs internally place_selenocysteine to be able to evaluate."""
+        """Returns True if at least one U in the query (or another aa provided with query_aa) is aligned to either a U or C (or any other list of characters provided as to_chars argument). If a * is detected in the target in a candidate position, runs internally place_selenocysteine to be able to evaluate."""
         for pos in range(self.alignment.length()):
             if self.alignment.seq_of("q")[pos] in query_aa + "*":
                 if "U" in to_chars and self.alignment.seq_of("t")[pos] == "*":
@@ -6439,7 +6432,7 @@ class p2ghit(gene):
         return False
 
     def introns_summary(self):
-        """ Returns a string with a summary of the positions of the introns, if any are present. The positions are cds-based, 1-based and denote the last position of each exon. example:   '123,456' for a 3 exons gene, '' for a single exon gene """
+        """Returns a string with a summary of the positions of the introns, if any are present. The positions are cds-based, 1-based and denote the last position of each exon. example:   '123,456' for a 3 exons gene, '' for a single exon gene"""
         out = ""
         if len(self.exons) > 1:
             length_cds_so_far = 0
@@ -6450,7 +6443,7 @@ class p2ghit(gene):
         return out
 
     def sec_positions_list(self):
-        """ This function returns what was the sec_pos attribute, that is to say, a list of positions of all the Sec aminoacids relative to the coordinates along the target chromosome. The position is precisely the one of the first position of the UGA codon.  The positions are guessed from the positions of U letter in the alignment inside the p2ghit object      """
+        """This function returns what was the sec_pos attribute, that is to say, a list of positions of all the Sec aminoacids relative to the coordinates along the target chromosome. The position is precisely the one of the first position of the UGA codon.  The positions are guessed from the positions of U letter in the alignment inside the p2ghit object"""
         sec_pos = []
         aa_seq = nogap(self.alignment.seq_of("t"))
         pos_u_in_aa_seq = aa_seq.find("U")
@@ -6464,11 +6457,11 @@ class p2ghit(gene):
         return sec_pos
 
     def tag_score(self, silent=False, max_n_titles=0, neutral=False, verbose=False):
-        """ This function computes the tag score specific to this prediction, which is computed by running blastp with the predicted protein sequence against a reference database, typically uniref, and parsing the results using profile-defined tags.
-    Blast is run only if necessary (output file not present) using function blast_against_tag_db (see below).
-    For each blast hit, the full title of the subject and its evalue are considered.
-    Initially the title is run a set of neutral tags. If any of these are matching, this blast hit is not considered for the final score. Then, the set of positive tags (profile defined tags) are tried to match. If any of these match, a positive score is assigned to this blast hit. If not, a negative score is assigned. The absolute value of the score attributed is the negative logarithm of the evalue.
-    The final score is the sum of all scores attributed to all blast hits.    """
+        """This function computes the tag score specific to this prediction, which is computed by running blastp with the predicted protein sequence against a reference database, typically uniref, and parsing the results using profile-defined tags.
+        Blast is run only if necessary (output file not present) using function blast_against_tag_db (see below).
+        For each blast hit, the full title of the subject and its evalue are considered.
+        Initially the title is run a set of neutral tags. If any of these are matching, this blast hit is not considered for the final score. Then, the set of positive tags (profile defined tags) are tried to match. If any of these match, a positive score is assigned to this blast hit. If not, a negative score is assigned. The absolute value of the score attributed is the negative logarithm of the evalue.
+        The final score is the sum of all scores attributed to all blast hits."""
         if self.tag_score_data is None:
             if self.profile.tags:
                 positive = self.profile.tags
@@ -6496,12 +6489,12 @@ class p2ghit(gene):
         return self.tag_score_data
 
     def go_score(self, silent=False, max_n_titles=0, verbose=False, terms=[]):
-        """ This function computes the GO (gene ontology) score of this prediction, which si computed running blast with the predicted protein sequence against a reference database, typically uniref, and parsing the results using a set of user-defined GO terms associated to this family.
-    Blast is run only if necessary (output file not present) using function blast_against_tag_db (see below).
-    For each blast hit, the full title of the subject and its evalue are considered; if the protein has no functional GO term, it is treated as neutral, i.e., it is assigned a score of 0.
-    If it has some, then the profile-GO are matched with those of this protein (and with the parents of those annotated for this protein). If any is found, the title is assigned a positive a score, while if it hasn't any, a negative score is assigned.
-    The absolute value of the score attributed is the negative logarithm of the evalue.
-    The final score is the sum of all scores attributed to all blast hits.    """
+        """This function computes the GO (gene ontology) score of this prediction, which si computed running blast with the predicted protein sequence against a reference database, typically uniref, and parsing the results using a set of user-defined GO terms associated to this family.
+        Blast is run only if necessary (output file not present) using function blast_against_tag_db (see below).
+        For each blast hit, the full title of the subject and its evalue are considered; if the protein has no functional GO term, it is treated as neutral, i.e., it is assigned a score of 0.
+        If it has some, then the profile-GO are matched with those of this protein (and with the parents of those annotated for this protein). If any is found, the title is assigned a positive a score, while if it hasn't any, a negative score is assigned.
+        The absolute value of the score attributed is the negative logarithm of the evalue.
+        The final score is the sum of all scores attributed to all blast hits."""
         if self.go_score_data is None:
             if not terms:
                 terms = self.profile.go_terms
@@ -6565,8 +6558,10 @@ class p2ghit(gene):
                                 try:
                                     # 2022
                                     # all_parents_of_go_for_this_title=  gene_ontology().get_all_parents_ids(go_for_this_title)
-                                    all_parents_of_go_for_this_title = networkx.descendants(
-                                        gene_ontology(), go_for_this_title
+                                    all_parents_of_go_for_this_title = (
+                                        networkx.descendants(
+                                            gene_ontology(), go_for_this_title
+                                        )
                                     )
                                     all_parents_of_go_for_this_title.add(
                                         go_for_this_title
@@ -6583,7 +6578,9 @@ class p2ghit(gene):
                                             ]
                                         ):
                                             found_go = True
-                                except networkx.NetworkXError:  # annotations.GO.ontology.NoSuchTermError:
+                                except (
+                                    networkx.NetworkXError
+                                ):  # annotations.GO.ontology.NoSuchTermError:
                                     printerr(
                                         "WARNING GO found in annotated protein was not found among known GO terms: "
                                         + go_for_this_title
@@ -6610,12 +6607,12 @@ class p2ghit(gene):
         return self.go_score_data
 
     def blast_against_tag_db(self, outfile="", silent=False, force=False):
-        """ Utility to perform a 'tag blast' of a predicted sequence (p2ghit) against a reference database (typically nr); the output can then be used to determine the tag_score of the prediction. If outfile is not defined, it is set to: blast_nr_folder_profile_subfolder+  self.profile.name+'.'+self.id+'.blast_nr'  (e.g. selenoprofiles_results/A.anophagefferens/tab_blast/SelR/SelR.15.blast_nr).
-    If silent is not True, a service message is displayed while blast is running
-    Normally, the output file is tested, and if it is a valid output, blast is not run. 
-    If force is True, blast is run anyway.
-    Returns the path to the outfile produced
-    """
+        """Utility to perform a 'tag blast' of a predicted sequence (p2ghit) against a reference database (typically nr); the output can then be used to determine the tag_score of the prediction. If outfile is not defined, it is set to: blast_nr_folder_profile_subfolder+  self.profile.name+'.'+self.id+'.blast_nr'  (e.g. selenoprofiles_results/A.anophagefferens/tab_blast/SelR/SelR.15.blast_nr).
+        If silent is not True, a service message is displayed while blast is running
+        Normally, the output file is tested, and if it is a valid output, blast is not run.
+        If force is True, blast is run anyway.
+        Returns the path to the outfile produced
+        """
         if not outfile:
             outfile = (
                 Folder(blast_nr_folder + self.profile.name)
@@ -6677,7 +6674,7 @@ class p2ghit(gene):
     tag_blast = blast_against_tag_db
 
     def three_prime(self, length=-1, chromosome_length=False):
-        """ Returns the fasta text for the sequence downstream this p2ghit """
+        """Returns the fasta text for the sequence downstream this p2ghit"""
         if length == -1:
             if "three_prime_length" in globals():
                 length = three_prime_length
@@ -6725,7 +6722,7 @@ class p2ghit(gene):
     output_three_prime = three_prime
 
     def five_prime(self, length=-1, chromosome_length=False):
-        """ Returns the fasta text for the sequence upstream this p2ghit. option/config parameter five_prime_length must be defined """
+        """Returns the fasta text for the sequence upstream this p2ghit. option/config parameter five_prime_length must be defined"""
         if length == -1:
             if "five_prime_length" in globals():
                 length = five_prime_length
@@ -6771,7 +6768,7 @@ class p2ghit(gene):
     output_five_prime = five_prime
 
     def boundaries_in_profile(self):
-        """ Returns the boundaries that the target spans in the profile [start, end], both 1 based and included"""
+        """Returns the boundaries that the target spans in the profile [start, end], both 1 based and included"""
         if "profile" not in self.__dict__ or (not self.profile):
             raise Exception(
                 "profile_alignment->boundaries_in_profile ERROR no profile alignment is defined for this p2g hit. Please add this as its property "
@@ -6788,8 +6785,9 @@ class p2ghit(gene):
         return [prediction_start_in_ali, prediction_end_in_ali]
 
     def is_contained_in_profile_range(self, pos_start, pos_end):
-        """ This function tells if the prediction spans only a certain portion of the profile. Positions are 1 based. 
-    This is thought to filter out prediction which spans uniquely a regino of the profile with low sequence information/repetitive sequence    """
+        """This function tells if the prediction spans only a certain portion of the profile. Positions are 1 based.
+        This is thought to filter out prediction which spans uniquely a regino of the profile with low sequence information/repetitive sequence
+        """
         (
             prediction_start,
             prediction_end,
@@ -6799,7 +6797,7 @@ class p2ghit(gene):
         return prediction_start >= pos_start and prediction_end <= pos_end
 
     def spans_profile_range(self, pos_start, pos_end):
-        """ This function tells if the prediction spans a certain portion of the profile. Positions are 1 based.    """
+        """This function tells if the prediction spans a certain portion of the profile. Positions are 1 based."""
         (
             prediction_start,
             prediction_end,
@@ -6811,12 +6809,13 @@ class p2ghit(gene):
         )
 
     def target_sequence_is_repetitive(self, minimal_aa_set_size=5):
-        """ This function is useful to filter out spurious hits. It checks if the target is just the repetition of a few aminoacids:
-    if the set of distinct aminoacids contained in the sequence predicted for tha target is < than minimal_aa_set_size (def:5), it returns True)    """
+        """This function is useful to filter out spurious hits. It checks if the target is just the repetition of a few aminoacids:
+        if the set of distinct aminoacids contained in the sequence predicted for tha target is < than minimal_aa_set_size (def:5), it returns True)
+        """
         return len(all_chars_in(self.alignment.seq_of("t"))) < minimal_aa_set_size
 
     def alignment_is_repetitive(self, minimal_aa_set_size=5, only_identities=False):
-        """ This function (similar to target_sequence_is_repetitive) considers the target sequence in the positions in which it is conserved, defined as the positions in which query and target carries similar aminoacids (defined be similar_aas function in MMlib): the aminoacids in these positions are concatenated to form an "alignment core". If this is formed only by few aminoacids (less than minimal_aa_set_size, def:5), True is returned, otherwise False is returned.  The function is thought for filtering out spurious hits. """
+        """This function (similar to target_sequence_is_repetitive) considers the target sequence in the positions in which it is conserved, defined as the positions in which query and target carries similar aminoacids (defined be similar_aas function in MMlib): the aminoacids in these positions are concatenated to form an "alignment core". If this is formed only by few aminoacids (less than minimal_aa_set_size, def:5), True is returned, otherwise False is returned.  The function is thought for filtering out spurious hits."""
         if only_identities:
             all_conserved_positions = []
             id_matrix = self.alignment.identity_matrix()
@@ -6836,7 +6835,7 @@ class p2ghit(gene):
         )
 
     def show_conservation_in_profile_range(self, profile_start, profile_end, min_aas=4):
-        """ This function is useful to filter out spurious hits. It returns true only if the prediction has at least min_aas (def:4) which are conserved in the query in the indicated profile range. Conserved here means they must be similar amino acids according to similar_aas function. It is a more strict version of  is_contained_in_profile_range  (but reversed in boolean value). positions in input are 1 based """
+        """This function is useful to filter out spurious hits. It returns true only if the prediction has at least min_aas (def:4) which are conserved in the query in the indicated profile range. Conserved here means they must be similar amino acids according to similar_aas function. It is a more strict version of  is_contained_in_profile_range  (but reversed in boolean value). positions in input are 1 based"""
         prediction_start, prediction_end = self.boundaries_in_profile()
         if prediction_start >= profile_end or prediction_end <= profile_start:
             return False
@@ -6868,7 +6867,7 @@ class p2ghit(gene):
         return number_of_similar_aas >= min_aas
 
     def has_redox_box(self, sec_index=1):
-        """ This returns truth if the prediction show a redox box including the sec_position in the profile. If more than one sec is present, sec_index can be used to specify which position. 1 stands for first"""
+        """This returns truth if the prediction show a redox box including the sec_position in the profile. If more than one sec is present, sec_index can be used to specify which position. 1 stands for first"""
         sec_pos = self.profile.sec_pos()[sec_index - 1] + 1  # sec pos is 1 based
         p_start, p_end = self.boundaries_in_profile()
         if sec_pos >= p_start and sec_pos <= p_end:
@@ -6879,7 +6878,7 @@ class p2ghit(gene):
         return False
 
     def pretty_alignment(self, chars_per_line=100):
-        """ Shows the pairwise alignemnt between query and target"""
+        """Shows the pairwise alignemnt between query and target"""
         o = ""
         target_cds = self.aligned_cds()
         a = ""
@@ -7136,7 +7135,7 @@ class p2ghit(gene):
         return o
 
     def output_p2g(self, chars_per_line=100):
-        """ Selenoprofiles custom output. It contains the protein alignment and the underlining sequence of the target, in a format similar to genewise. All introns shorter than 6 bp are shown as frameshifts. """
+        """Selenoprofiles custom output. It contains the protein alignment and the underlining sequence of the target, in a format similar to genewise. All introns shorter than 6 bp are shown as frameshifts."""
         o = ""
         try:
             assert issubclass(self.profile.__class__, alignment)
@@ -7300,7 +7299,7 @@ class p2ghit(gene):
             return self.compute_misc_sequence_data()
 
     def remove_misc_sequence_data(self):
-        """ Remove sequence data from memory. useful if the coordinates of the prediction changed in anyway. Use compute_misc_sequence_data to recompute the data """
+        """Remove sequence data from memory. useful if the coordinates of the prediction changed in anyway. Use compute_misc_sequence_data to recompute the data"""
         for index_to_remove in [
             index
             for index, f in enumerate(self.features)
@@ -7309,7 +7308,7 @@ class p2ghit(gene):
             self.features.pop(index_to_remove)
 
     def compute_misc_sequence_data(self):
-        """ This function loads some sequence data for lazy computing, and stores it into a genomic feature of this object. calling it is equivalent to force recomputing it, if data is already found"""
+        """This function loads some sequence data for lazy computing, and stores it into a genomic feature of this object. calling it is equivalent to force recomputing it, if data is already found"""
         ## removing misc_sequence_data object if already present.
         self.remove_misc_sequence_data()
         ## preparing to fetch just a single time all necessary sequence
@@ -7344,11 +7343,12 @@ class p2ghit(gene):
         return self.features[-1]
 
     def subsequence(self, start, length, include_introns=False):
-        """ Lazy computed subsequence. It should be used to get the sequence of the gene or any subportion, such as CDS, three prime etc. 
-    Start is 1-based, and everything is nucleotide based. So for example, .subsequence(1, 3) reports the first codon in the prediction.  
-    Negative start positions can be used to get the five prime sequence. start==0 is the nt right before the first coding position, etx. So for example, .subsequence(-99, 100) reports 100 nt upstream of the p2g. Large values of length will result in getting the sequence at 3' UTR. 
-    IMPORTANT NOTE: the function will crash raising an exception if the sequence which you're trying to fetch is not available in the misc_sequence_data, which is controlled by three_prime_length and five_prime_length parameters. So if five_prime_length is 0, you cannot use this function to get the upstream sequence.
-  Only the coding sequence is considered normally, if include_introns is active, the positions are relative to the whole gene structures, from the first coding letter to the last. """
+        """Lazy computed subsequence. It should be used to get the sequence of the gene or any subportion, such as CDS, three prime etc.
+          Start is 1-based, and everything is nucleotide based. So for example, .subsequence(1, 3) reports the first codon in the prediction.
+          Negative start positions can be used to get the five prime sequence. start==0 is the nt right before the first coding position, etx. So for example, .subsequence(-99, 100) reports 100 nt upstream of the p2g. Large values of length will result in getting the sequence at 3' UTR.
+          IMPORTANT NOTE: the function will crash raising an exception if the sequence which you're trying to fetch is not available in the misc_sequence_data, which is controlled by three_prime_length and five_prime_length parameters. So if five_prime_length is 0, you cannot use this function to get the upstream sequence.
+        Only the coding sequence is considered normally, if include_introns is active, the positions are relative to the whole gene structures, from the first coding letter to the last.
+        """
         subseq_upstream = ""
         subseq_downstream = ""
         subseq_middle = ""
@@ -7378,7 +7378,7 @@ class p2ghit(gene):
         return subseq
 
     def sequence_of_internal_gene(self, s, trying_recomputing_misc_data=False):
-        """ Get the sequence for a gene object s, that must be included within the boundaries of the misc_sequence_data available """
+        """Get the sequence for a gene object s, that must be included within the boundaries of the misc_sequence_data available"""
         g = self.get_misc_sequence_data()
         if (
             s.boundaries()[0] < g.boundaries()[0]
@@ -7402,7 +7402,7 @@ class p2ghit(gene):
         return out_seq
 
     def splice_site_sequences(self):
-        """ Returns the splice sites for this prediction. A list of elements is reported, one for each intron (bigger than 5 bp), each element is 4 letters long and is composed by the first 2 bp of the intron plus the last 2bp."""
+        """Returns the splice sites for this prediction. A list of elements is reported, one for each intron (bigger than 5 bp), each element is 4 letters long and is composed by the first 2 bp of the intron plus the last 2bp."""
         out_list = []
         introns_g = self.introns(minimal=True)
         for intron_index in range(len(introns_g.exons)):
@@ -7413,7 +7413,7 @@ class p2ghit(gene):
         return out_list
 
     def frameshift_sequences(self):
-        """ Returns the sequences of the insertions causing frameshifts for this prediction. A list of sequence elements is reported, one for each "intron" smaller than 6 bp."""
+        """Returns the sequences of the insertions causing frameshifts for this prediction. A list of sequence elements is reported, one for each "intron" smaller than 6 bp."""
         out_list = []
         introns_g = self.introns(minimal=True)
         ### splice sites and frameshifts
@@ -7425,7 +7425,7 @@ class p2ghit(gene):
         return out_list
 
     def three_prime_coding_tail(self):
-        """ Returns [nt_seq, aa_translation, length_of_three_prime] of the three_prime sequence until the first stop codon included.  For a complete prediction, it would return a stop codon and an "*" as translation. """
+        """Returns [nt_seq, aa_translation, length_of_three_prime] of the three_prime sequence until the first stop codon included.  For a complete prediction, it would return a stop codon and an "*" as translation."""
         t = self.three_prime()
         if t is None:
             return [None, None, 0]
@@ -7443,23 +7443,23 @@ class p2ghit(gene):
         return [seq_until_stop, translation, len(seq)]
 
     def remove_terminal_uga(self, distance_from_end_of_prediction=0):
-        """ This function serves to correct a unwanted behaviour which is a consequences of the scoring schemes used for selenoproteins. Genewise (I don't yet if exonerate does it as well) sometimes includes a terminal UGA in the prediction, aligned to a amino acid which is not U in the query. This function detects and remove this codon from the prediction. Only one codon can be removed. The variable distance_from_end_of_prediction determines the maximum distance of the removed UGA from the end of coding sequence predicted (0= can be only the last codon of CDS)
-    
-    GPGGKTFVSLLDMPRPFTKLKALDVEALAEEVLAALKE
-    |||  /||/ |||||  |/ ||//  | /|/ ||| 
-    VHGGKEVLSLVGMPRPFKSLRELDMDEAATQVVEALK*
-    gcggaggctcggaccctaaccgcgaggggacggggtat
-    taggaattcttgtcgctagtgatataacccattactag
-    ttacagcacagtgttgcatttagtgtgtttagggagga
+        """This function serves to correct a unwanted behaviour which is a consequences of the scoring schemes used for selenoproteins. Genewise (I don't yet if exonerate does it as well) sometimes includes a terminal UGA in the prediction, aligned to a amino acid which is not U in the query. This function detects and remove this codon from the prediction. Only one codon can be removed. The variable distance_from_end_of_prediction determines the maximum distance of the removed UGA from the end of coding sequence predicted (0= can be only the last codon of CDS)
 
-    ----> 
+        GPGGKTFVSLLDMPRPFTKLKALDVEALAEEVLAALKE
+        |||  /||/ |||||  |/ ||//  | /|/ |||
+        VHGGKEVLSLVGMPRPFKSLRELDMDEAATQVVEALK*
+        gcggaggctcggaccctaaccgcgaggggacggggtat
+        taggaattcttgtcgctagtgatataacccattactag
+        ttacagcacagtgttgcatttagtgtgtttagggagga
 
-    GPGGKTFVSLLDMPRPFTKLKALDVEALAEEVLAALK
-    |||  /||/ |||||  |/ ||//  | /|/ ||| 
-    VHGGKEVLSLVGMPRPFKSLRELDMDEAATQVVEALK
-    gcggaggctcggaccctaaccgcgaggggacggggta
-    taggaattcttgtcgctagtgatataacccattacta
-    ttacagcacagtgttgcatttagtgtgtttagggagg     """
+        ---->
+
+        GPGGKTFVSLLDMPRPFTKLKALDVEALAEEVLAALK
+        |||  /||/ |||||  |/ ||//  | /|/ |||
+        VHGGKEVLSLVGMPRPFKSLRELDMDEAATQVVEALK
+        gcggaggctcggaccctaaccgcgaggggacggggta
+        taggaattcttgtcgctagtgatataacccattacta
+        ttacagcacagtgttgcatttagtgtgtttagggagg"""
 
         for index_ali in range(
             self.alignment.length() - 1,
@@ -7535,7 +7535,7 @@ class p2ghit(gene):
                     )
 
     def clean_inframe_stop_codons(self, max_codons_removed=10, silent=False):
-        """This methods analyze the prediction and, if there's stop codons in the target (predicted Sec, which are coded as Us, are not considered here), it tries to clean it from the prediction: so if they are close to a intron boundary, or to the start or end of prediction, the prediction is cut to remove the stop codons. """
+        """This methods analyze the prediction and, if there's stop codons in the target (predicted Sec, which are coded as Us, are not considered here), it tries to clean it from the prediction: so if they are close to a intron boundary, or to the start or end of prediction, the prediction is cut to remove the stop codons."""
         n_stop_codons_removed = 0
         if self.frameshifts():
             return  ## function gives problem wwhen prediction has frameshifts
@@ -7564,7 +7564,6 @@ class p2ghit(gene):
                                 + 1
                                 <= 5
                             ):  # excluding frameshifts
-
                                 intron = introns.get_exon(intron_index)
                                 d = intron.is_downstream_of(this_aa_codon)
                                 u = intron.is_upstream_of(this_aa_codon)
@@ -7576,7 +7575,7 @@ class p2ghit(gene):
                                     introns_index_and_distances_and_direction.append(
                                         [intron_index, -1, "boundary"]
                                     )  # -1 is to ensure it will be first after sorting
-                                elif d: #old_p2g.__dict__
+                                elif d:  # old_p2g.__dict__
                                     introns_index_and_distances_and_direction.append(
                                         [intron_index, d - 1, "downstream"]
                                     )
@@ -7593,7 +7592,6 @@ class p2ghit(gene):
                             distance,
                             direction,
                         ) = introns_index_and_distances_and_direction[0]
-
 
                         if distance <= max_codons_removed * 3:
                             n_stop_codons_removed += 1
@@ -7752,11 +7750,11 @@ class p2ghit(gene):
                     + ") : skipping !",
                     1,
                 )
-                #raise err
+                # raise err
                 # if opt['debug']: raise
 
     def clean_unaligned_tails(self):
-        """This function checks if there are unaligned portion of query or target at the N or C terminal and clean the prediction by removing them. """
+        """This function checks if there are unaligned portion of query or target at the N or C terminal and clean the prediction by removing them."""
         removed_something = False
         index = 0  # end of n-.terminal tail of unaliged query
         while (
@@ -7819,7 +7817,7 @@ class p2ghit(gene):
             return self.clean_unaligned_tails()
 
     def exclude_large_introns(self, max_intron_length=140000, silent=False):
-        """ Examine the prediction for the presence of large introns. If any is present, remove them by keeping the side with the largest codin sequence predicted """
+        """Examine the prediction for the presence of large introns. If any is present, remove them by keeping the side with the largest codin sequence predicted"""
         introns = self.introns(minimal=True)
         original_cols_alignment = self.alignment.length()
         for intron_index, (intron_start, intron_end) in enumerate(introns.exons):
@@ -7932,7 +7930,7 @@ class p2ghit(gene):
     def complete_at_three_prime(
         self, max_extension=10, max_query_unaligned=30, stops=None, silent=False
     ):
-        """ function to modify inplace the prediction to try adding some sequence at the 3' to the coding sequence prediction, if the number of aminoacids that would be added is <= max_extension, and if there's no strange character (anything different from ACGT); also, there must be at the most max_query_left aminoacids unaligned on the right side of the query   """
+        """function to modify inplace the prediction to try adding some sequence at the 3' to the coding sequence prediction, if the number of aminoacids that would be added is <= max_extension, and if there's no strange character (anything different from ACGT); also, there must be at the most max_query_left aminoacids unaligned on the right side of the query"""
         if stops is None:
             codon_table = get_genetic_code_table()
             stops = set([codon for codon in codon_table if codon_table[codon] == "*"])
@@ -7997,8 +7995,9 @@ class p2ghit(gene):
         starts=None,
         silent=False,
     ):
-        """function to modify inplace the prediction to try adding some coding sequence at the 5', until the first methionine. This is done only if the extension is <= max_extension, and if there's no strange character (anything different from ACGT), and no stop codon is found before Met, and if there's at the most max_query_left aminoacid unaligned on the left side of the query. 
-    If full==True, the function choose the leftmost possible ATG instead of the first one  """
+        """function to modify inplace the prediction to try adding some coding sequence at the 5', until the first methionine. This is done only if the extension is <= max_extension, and if there's no strange character (anything different from ACGT), and no stop codon is found before Met, and if there's at the most max_query_left aminoacid unaligned on the left side of the query.
+        If full==True, the function choose the leftmost possible ATG instead of the first one
+        """
         if stops is None:
             codon_table = get_genetic_code_table()
             stops = set([codon for codon in codon_table if codon_table[codon] == "*"])
@@ -8072,12 +8071,12 @@ def load_p2g(
     input_file, profile_ali=False, profiles_filenames_hash=False, silent=False
 ):
     """Loads an p2g output of selenoprofiles into a p2ghit object identical to the one that generated it.  inputfile can be a filehandler, a string with the path to the file to load, or a string with the file content.  It is necessary to have the profile that generated this prediction loaded before running this function. variable profiles_hash must be defined and include the profile for this prediction or an exception will be raised. Two alternative ways to provide the profile are: directly with the variable profile_ali, or with the hash profiles_filenames_hash, which has as keys the filenames loaded and as values the profile objects.
-  NB: it is also necessary to define the variables chromosome_lengths (hash of: chromosome_name -> integer length) and three_prime_length (integer) using the function set_MMlib_var :
-  set_MMlib_var('chromosome_lengths', chromosome_lengths)
-  set_MMlib_var('three_prime_length', three_prime_length)
-  silent==True avoids warnings being printed
-  OLD FUNCTION! MAYBE IT DOESN'T WORK
-  """
+    NB: it is also necessary to define the variables chromosome_lengths (hash of: chromosome_name -> integer length) and three_prime_length (integer) using the function set_MMlib_var :
+    set_MMlib_var('chromosome_lengths', chromosome_lengths)
+    set_MMlib_var('three_prime_length', three_prime_length)
+    silent==True avoids warnings being printed
+    OLD FUNCTION! MAYBE IT DOESN'T WORK
+    """
     try:
         profiles_hash = get_MMlib_var("profiles_hash")
     except:
@@ -8224,7 +8223,7 @@ def load_p2g(
 
 
 class empty_p2g(p2ghit):
-    """ Puppet class for certain cases."""
+    """Puppet class for certain cases."""
 
 
 ##########
@@ -8232,10 +8231,11 @@ class empty_p2g(p2ghit):
 
 
 class blasthit(p2ghit):
-    """ Class to keep two genes object: one is on the target (the self object), the other one is on the query (self.query). 
-  Should be initiated like b=blasthit(blast_parsed_line, program='tblastn'); but it should read automatically any format.
-  Also, it can accept as first argument a filename as well as a blast_parsed_line. 
-  If you want to save memory and not keep the alignments in the object, you can initiate a blasthit with dont_keep_ali=1 as keyword arg (NOT TESTED!)  """
+    """Class to keep two genes object: one is on the target (the self object), the other one is on the query (self.query).
+    Should be initiated like b=blasthit(blast_parsed_line, program='tblastn'); but it should read automatically any format.
+    Also, it can accept as first argument a filename as well as a blast_parsed_line.
+    If you want to save memory and not keep the alignments in the object, you can initiate a blasthit with dont_keep_ali=1 as keyword arg (NOT TESTED!)
+    """
 
     def load_blaster(self, line, dont_keep_ali=None, id=None, keep_lengths=None):
         dont_keep_ali = dont_keep_ali or self["dont_keep_ali"]
@@ -8287,7 +8287,7 @@ class blasthit(p2ghit):
             )
 
     def pretty_summary(self, chars_per_line=60):
-        """returns a human, blast-like readable summary from a blaster_parser line referred to a single blast HSP    """
+        """returns a human, blast-like readable summary from a blaster_parser line referred to a single blast HSP"""
         if not self.alignment.nseq():
             raise Exception(
                 "blasthit->pretty_summary ERROR the alignment was not saved, can't show summary for blasthit "
@@ -8368,7 +8368,10 @@ class blasthit(p2ghit):
         if strand_q == "-":
             q_start, q_end = q_end, q_start
         length_field = 8 + max(
-            len(str(t_start)), len(str(t_end)), len(str(q_start)), len(str(q_end)),
+            len(str(t_start)),
+            len(str(t_end)),
+            len(str(q_start)),
+            len(str(q_end)),
         )
         c = 0
         q_line = "Query: " + str(q_start)
@@ -8406,7 +8409,7 @@ class blasthit(p2ghit):
         return out
 
     def set_query_to_master(self, clusters_relative_positions, queries_alignment):
-        """ This function changes the query attribute of the protein (being one the BLAST_QUERY of one of the cluster of the profile) to the sequence of the BLAST_QUERY_MASTER in the profile. It uses a hash of relative positions such as the one returned by the function clusters_relative_positions of profile_alignment"""
+        """This function changes the query attribute of the protein (being one the BLAST_QUERY of one of the cluster of the profile) to the sequence of the BLAST_QUERY_MASTER in the profile. It uses a hash of relative positions such as the one returned by the function clusters_relative_positions of profile_alignment"""
         new_query = gene()
         new_query.chromosome = "BLAST_QUERY_MASTER"
         new_query_start = clusters_relative_positions[self.query.chromosome][
@@ -8429,7 +8432,7 @@ class blasthit(p2ghit):
         return
 
     def place_selenocysteine(self):
-        """ This function parses the blast output and put Us for selenocysteine: all * in query are replaced, and in the target all UGAs aligned to such positions are replaced """
+        """This function parses the blast output and put Us for selenocysteine: all * in query are replaced, and in the target all UGAs aligned to such positions are replaced"""
         for pos in range(len(self.alignment.seq_of("q"))):
             if self.alignment.seq_of("q")[pos] in "U*":
                 self.alignment.set_sequence(
@@ -8458,9 +8461,9 @@ class blasthit(p2ghit):
                         )
 
     def remove_internal_introns(self, min_length=18, silent=False):
-        """ This function detects and remove the portion of blast hits which corresponds to an intron. In fact it happens often, for small introns and for flanking exons which are in the same frame respect to the full chromosome sequence , that the blast HSP extends over it. Such blast hits presents large portions of target not aligned to query. Often this target portion is full of stop codons as well. 
-    The argument min_length is the minimum number of consecutive aligned nucleotides that will be called intron.
-    """
+        """This function detects and remove the portion of blast hits which corresponds to an intron. In fact it happens often, for small introns and for flanking exons which are in the same frame respect to the full chromosome sequence , that the blast HSP extends over it. Such blast hits presents large portions of target not aligned to query. Often this target portion is full of stop codons as well.
+        The argument min_length is the minimum number of consecutive aligned nucleotides that will be called intron.
+        """
         min_length_in_aa = min_length // 3
         seq_query = self.alignment.seq_of("q")
         seq_target = self.alignment.seq_of("t")
@@ -8507,11 +8510,11 @@ class blasthit(p2ghit):
 
 
 class superblasthit(blasthit):
-    """ This class is a particular blasthit, which is actually a collection of blasthits. It derives from the merge_by_colinearity method applied to blasthits.
-  The purpose of this class is to manage the exceptions that arise from the fact that it does not have a single exon, it generally has more. 
-  The coordinates of exons on both self (target) and query are produced by the union_with method. The alignment is produced adding "x" to fill the unaligned positions of query.
-  Each superblasthit has by default a .merged list attribute storing all blasthits that are stored inside it. Delete this attribute if you don't plan to use it to save memory usage.
-  """
+    """This class is a particular blasthit, which is actually a collection of blasthits. It derives from the merge_by_colinearity method applied to blasthits.
+    The purpose of this class is to manage the exceptions that arise from the fact that it does not have a single exon, it generally has more.
+    The coordinates of exons on both self (target) and query are produced by the union_with method. The alignment is produced adding "x" to fill the unaligned positions of query.
+    Each superblasthit has by default a .merged list attribute storing all blasthits that are stored inside it. Delete this attribute if you don't plan to use it to save memory usage.
+    """
 
     def __init__(self):
         blasthit.__init__(self)
@@ -8520,7 +8523,7 @@ class superblasthit(blasthit):
         )  # contains the blast hits merged in this. to avoid using much memory, just delete this.
 
     def pretty_summary(self, chars_per_line=60, description="SUPEREXON"):
-        """ Overrides the function of the parent class to print the summary of all blast hits merged into this one."""
+        """Overrides the function of the parent class to print the summary of all blast hits merged into this one."""
         o = "##### " + description + " " + self.id + " ##### \n"
         chars_header = len(o)
         for index, blast_h in enumerate(self.merged):
@@ -8532,7 +8535,7 @@ class superblasthit(blasthit):
 
 
 class parse_blast_tab(parser):
-    """ Read blast hits (without .alignment)"""
+    """Read blast hits (without .alignment)"""
 
     def parse_next(self):
         if not self.last_line:
@@ -8566,7 +8569,7 @@ class parse_blast_tab(parser):
 
 
 class parse_blaster(parser):
-    """ Parse a blaster_parser output file, which was used to scan a blast output. blasthit instances are returned on each next() call. Define dont_keep_ali=1 when calling the parser to ignore the alignments in the blast output."""
+    """Parse a blaster_parser output file, which was used to scan a blast output. blasthit instances are returned on each next() call. Define dont_keep_ali=1 when calling the parser to ignore the alignments in the blast output."""
 
     def parse_next(self):
         g = blasthit()
@@ -8580,9 +8583,9 @@ class parse_blaster(parser):
 
 
 class parse_blast(parser):
-    """ Parse a ncbi blast output file, which is passed through blaster_parser to. blasthit instances are returned on each next() call. Define dont_keep_ali=1 when calling the parser to ignore the alignments in the blast output.
-  When initialising, add keyargs full_target=1 or full_query=1 to have complete names instead of just the first word. You can use full=1 to have both
-  """
+    """Parse a ncbi blast output file, which is passed through blaster_parser to. blasthit instances are returned on each next() call. Define dont_keep_ali=1 when calling the parser to ignore the alignments in the blast output.
+    When initialising, add keyargs full_target=1 or full_query=1 to have complete names instead of just the first word. You can use full=1 to have both
+    """
 
     def load(self, filename=""):
         if not filename:
@@ -8658,15 +8661,15 @@ class parse_blast(parser):
 
 
 class exoneratehit(p2ghit):
-    """ This class handles the exonerate output predictions """
+    """This class handles the exonerate output predictions"""
 
 
 class superexoneratehit(exoneratehit):
-    """ This class handles the superexonerate hits, meaning sets of exonerate prediction merged by colinearity into a single one. 
-  These class is loaded typically from a exonerate output file which was generated by cyclic_exonerate, so it has a seed gene object which was used to initiate the procedure.
-  Only the best scoring exoneratehit (in case, extended by the merging procedure) which overlaps the original seed is loaded. The original seed information is read from a specially formatted comment line, the first one of the file. 
-  In case you don't have the comment line in the file, you can still specify the seed with the seed option in the load method.
-  """
+    """This class handles the superexonerate hits, meaning sets of exonerate prediction merged by colinearity into a single one.
+    These class is loaded typically from a exonerate output file which was generated by cyclic_exonerate, so it has a seed gene object which was used to initiate the procedure.
+    Only the best scoring exoneratehit (in case, extended by the merging procedure) which overlaps the original seed is loaded. The original seed information is read from a specially formatted comment line, the first one of the file.
+    In case you don't have the comment line in the file, you can still specify the seed with the seed option in the load method.
+    """
 
     def __init__(self, **keyargs):
         exoneratehit.__init__(self)  # not tested!
@@ -8675,7 +8678,7 @@ class superexoneratehit(exoneratehit):
         )  # contains the exonerate hits merged in this. to avoid using much memory, just delete this.
 
     def load(self, filename, seed="", query_full_sequence="", merge_multiple=True):
-        """ see doc string of the class"""
+        """see doc string of the class"""
         self.__init__()  # flushing data
         check_file_presence(filename, "exonerate file")
         fileh = open(filename, "r")
@@ -8752,7 +8755,7 @@ class superexoneratehit(exoneratehit):
     def cds(
         self, **keyargs
     ):  # **keyargs are not used. but we accept them to allow compatibility with the cds function in the upper class p2ghit
-        """ This returns the coding sequence of the entire prediction. Frameshifts nucleotide are excluded so that the translation of the cds is always equal to the predicted protein sequence"""
+        """This returns the coding sequence of the entire prediction. Frameshifts nucleotide are excluded so that the translation of the cds is always equal to the predicted protein sequence"""
         # if self.merged:
         #  out=''
         #  for e in self.merged:
@@ -8763,9 +8766,9 @@ class superexoneratehit(exoneratehit):
 
 
 class parse_exonerate(parser):
-    """ Parse an exonerate file and returns a exoneratehit object for each prediction inside. 
-  The target names obtained by fastasubseq are recognized and set to absolute coordinates. Also the target names obtained through the method from gene class "fasta_sequence", with title set to "fasta_title", are recognized (they are used in selenoprofiles).
-  """
+    """Parse an exonerate file and returns a exoneratehit object for each prediction inside.
+    The target names obtained by fastasubseq are recognized and set to absolute coordinates. Also the target names obtained through the method from gene class "fasta_sequence", with title set to "fasta_title", are recognized (they are used in selenoprofiles).
+    """
 
     def load(self, filename=""):
         if not filename:
@@ -9089,7 +9092,7 @@ class parse_exonerate(parser):
 ##########
 # GENEWISE
 class genewisehit(p2ghit):
-    """ This class handles the genewise output prediction, as output by the command: genewise  -pretty -sum -gff """
+    """This class handles the genewise output prediction, as output by the command: genewise  -pretty -sum -gff"""
 
     def __init__(self, filename=""):
         p2ghit.__init__(self)
@@ -9102,17 +9105,17 @@ class genewisehit(p2ghit):
         self.__dict__ = g.__dict__.copy()
 
     def check_alignment(self):
-        """ This functions checks whether the alignment shown by genewise have some wrong characteristics and it correct them.
-    For example sometimes genewise outputs alignments ending like:
-gi|160896338|re  135 TKFLVGRDGQVIRRYAPQDAPAKLSTDIEAALAL                
-                     TK+LV  DG   +RY+    P  +  DI AAL                  
-                     TKWLV-VDGTPTKRYSYDVKPEAIEADIAAAL--                
-scaffold_6[posi10424 aatcg gggacaactttggacggagggagggt                  
-                     cagtt tagcccagacaatacactacatccct                  
-                     gggcc cccggggccccccgcgccgcccccgg                  
+        """This functions checks whether the alignment shown by genewise have some wrong characteristics and it correct them.
+            For example sometimes genewise outputs alignments ending like:
+        gi|160896338|re  135 TKFLVGRDGQVIRRYAPQDAPAKLSTDIEAALAL
+                             TK+LV  DG   +RY+    P  +  DI AAL
+                             TKWLV-VDGTPTKRYSYDVKPEAIEADIAAAL--
+        scaffold_6[posi10424 aatcg gggacaactttggacggagggagggt
+                             cagtt tagcccagacaatacactacatccct
+                             gggcc cccggggccccccgcgccgcccccgg
 
-    With the last two positions which are not informative and actually are not even reported in the gff they provide
-    """
+            With the last two positions which are not informative and actually are not even reported in the gff they provide
+        """
         if (
             self.alignment.titles()
         ):  # may also be empty, when no alignment overlapping the seed is found. In this case, we have nothing to do here
@@ -9124,9 +9127,10 @@ scaffold_6[posi10424 aatcg gggacaactttggacggagggagggt
 
 
 class parse_genewise(parser):
-    """ Parse a genewise output produced with -pretty -gff -sum and return a genewise object with all useful information.
-  The target names obtained through the method from gene class "fasta_sequence", with title set to "fasta_title", are recognized (they are used in selenoprofiles).
-  NB: if a seed description is found in the first commented lines, this is loaded and its overlaps with the genewise hit is tested: if there is not overlap, an empty genewise object is returned, with an .error_message attribute filled with  "Not overlapping with seed" """
+    """Parse a genewise output produced with -pretty -gff -sum and return a genewise object with all useful information.
+    The target names obtained through the method from gene class "fasta_sequence", with title set to "fasta_title", are recognized (they are used in selenoprofiles).
+    NB: if a seed description is found in the first commented lines, this is loaded and its overlaps with the genewise hit is tested: if there is not overlap, an empty genewise object is returned, with an .error_message attribute filled with  "Not overlapping with seed"
+    """
 
     def __init__(self, filename="", **keyargs):
         self.skip_comments = False  # necessary not to skip the first lines
@@ -9365,8 +9369,23 @@ class parse_genewise(parser):
         # genewise output routine has definitely some problems. the gff doens't always correspond to the aligment output. Here I correct this
         if g.length() > len(g.protein() * 3):
             g = g.subseq(1, len(g.protein() * 3))
-        if frameshifts_data and not len(frameshifts_data) != len(
-            [1 for st, end in g.introns().exons if end - st + 1 < 7]
+
+        if g.strand == "+":
+            intron_lengths = [
+                (g.exons[intron_index + 1][0] - g.exons[intron_index][1] - 1)
+                for intron_index in range(len(g.exons) - 1)
+            ]
+        else:
+            intron_lengths = [
+                (g.exons[intron_index][0] - g.exons[intron_index + 1][1] - 1)
+                for intron_index in range(len(g.exons) - 1)
+            ]
+
+        if (
+            frameshifts_data
+            and not any([il < 0 for il in intron_lengths])
+            and not len(frameshifts_data)
+            != len([1 for st, end in g.introns().exons if end - st + 1 < 7])
         ):
             # correcting genewise bug! extending introns for certain frameshifts. anyway it must not interfer with another bug correction (below) so I put the condition above to tell which one is screwing us now.
             current_frameshift_index = -1
@@ -9387,15 +9406,18 @@ class parse_genewise(parser):
                         elif g.strand == "-":
                             g.exons[intron_index][0] -= nt_need_to_add
 
-        if g.length() != 3 * len(g.protein()):
+        if g.length() != 3 * len(g.protein()) or any([il < 0 for il in intron_lengths]):
             try:
+                if any([il < 0 for il in intron_lengths]):
+                    # weird behavior of genewise in which you have CDS exon overlapping; giving up on these # 2023
+                    raise Exception("negative frameshift")
+
                 current_exon_index = 0
                 target_non_gaps = 0
                 total_exon_length = g.exons[0][1] - g.exons[0][0] + 1
                 for ali_pos in range(g.alignment.length()):
                     aa_target = g.alignment.seq_of("t")[ali_pos]
                     if aa_target != "-":
-
                         codon_obj = g.subseq(target_non_gaps * 3 + 1, 3)
                         codon = upper(codon_obj.fasta_sequence()[1])
                         if (
@@ -9445,44 +9467,44 @@ class parse_genewise(parser):
 ##########
 # SECIS or generic features
 class p2g_feature(gene):
-    """ Generic class for a feature of a prediction: it can be a label for a signal sequence, or a secondary structure, anything. It is a subclass of gene so you can check overlaps and stuff, if you use the .exons attributes. Otherwise it can be used even in simpler way, just to label predictions. Important methods that must be defined:
-  - dump_text()            --> returns a text containing all information relevant to the object, which is used to store the obj in the sqlite database
-  - load_dumped_text(txt, [p2g])  --> load that text back into the self object. To be used on an empty instance of this class. Note that a .parent attribute is already added when loading fromt he database, pointing to the relevant p2ghit
-  - output()               --> used to output this object in the p2g output (only if included_in_output, see below)
-  - gff( **keyargs)        --> used to output the feature in the gff output (only if included_in_gff, see below); if the feature attributes inherited from the gene class are used (.exons, .chromosome, .strand etc), this is not even necessary, as a native gff method is defined. The **keyargs are needed for compatibility
-  Important class (not instances!) attributes:
-  - included_in_output boolean, if true, the output() method is used to include this in p2g output. if this is false, there's no need to define the method output
-  - included_in_gff    boolean, if true, the feature will be included in the gff file, with a line for each feature instance
-  - program            string,     shown in the gff tag for this features in gff output
-  - gff_add            list of strings.  Each element is an attribute name (must be present in all feature objects) that you want to be added in the last field of the gff for this kind of feature. You can use also methods, in this case, use M:method_name
-  """
+    """Generic class for a feature of a prediction: it can be a label for a signal sequence, or a secondary structure, anything. It is a subclass of gene so you can check overlaps and stuff, if you use the .exons attributes. Otherwise it can be used even in simpler way, just to label predictions. Important methods that must be defined:
+    - dump_text()            --> returns a text containing all information relevant to the object, which is used to store the obj in the sqlite database
+    - load_dumped_text(txt, [p2g])  --> load that text back into the self object. To be used on an empty instance of this class. Note that a .parent attribute is already added when loading fromt he database, pointing to the relevant p2ghit
+    - output()               --> used to output this object in the p2g output (only if included_in_output, see below)
+    - gff( **keyargs)        --> used to output the feature in the gff output (only if included_in_gff, see below); if the feature attributes inherited from the gene class are used (.exons, .chromosome, .strand etc), this is not even necessary, as a native gff method is defined. The **keyargs are needed for compatibility
+    Important class (not instances!) attributes:
+    - included_in_output boolean, if true, the output() method is used to include this in p2g output. if this is false, there's no need to define the method output
+    - included_in_gff    boolean, if true, the feature will be included in the gff file, with a line for each feature instance
+    - program            string,     shown in the gff tag for this features in gff output
+    - gff_add            list of strings.  Each element is an attribute name (must be present in all feature objects) that you want to be added in the last field of the gff for this kind of feature. You can use also methods, in this case, use M:method_name
+    """
 
 
 class protein_motif(p2g_feature):
-    """ protein motif is an example of a p2g_feature, to annotate the positions of a certain motif defined as a perl-style regexp.  The motif is defined in the line following this, as a class attribute. In the example, the redox box (CXXC) is the motif. 
-      Attributes:
-      - start      start of the protein motif in the protein sequence (1-based, included)
-      - end        end of protein motif in the protein sequence (1-based, included)
-      - sequence   motif sequence 
-  """
+    """protein motif is an example of a p2g_feature, to annotate the positions of a certain motif defined as a perl-style regexp.  The motif is defined in the line following this, as a class attribute. In the example, the redox box (CXXC) is the motif.
+    Attributes:
+    - start      start of the protein motif in the protein sequence (1-based, included)
+    - end        end of protein motif in the protein sequence (1-based, included)
+    - sequence   motif sequence
+    """
 
     motif = re.compile("C..C")
     included_in_output = True
     included_in_gff = True
 
     def dump_text(self):
-        """ Returns a string with all the information for this feature. This string is stored in the sqlite database. """
+        """Returns a string with all the information for this feature. This string is stored in the sqlite database."""
         return str(self.start) + ":" + str(self.end) + ":" + self.sequence
 
     def load_dumped_text(self, txt):
-        """ Reverse the dump_text method: gets a string as input, and loads the self object with the information found in that string. """
+        """Reverse the dump_text method: gets a string as input, and loads the self object with the information found in that string."""
         start, end, sequence = txt.split(":")
         self.start = int(start)
         self.end = int(end)
         self.sequence = sequence
 
     def output(self):
-        """ Returns a string. This will be added to the p2g output of the prediction to which this feature is linked -- if class attribute included_in_output is True"""
+        """Returns a string. This will be added to the p2g output of the prediction to which this feature is linked -- if class attribute included_in_output is True"""
         return (
             "Motif: "
             + self.sequence
@@ -9504,7 +9526,7 @@ class protein_motif(p2g_feature):
         return gene.gff(motif_gene_object, **keyargs)
 
     def reset(self):
-        """ This method is called when the linked prediction is modified, to allow to recompute some or all attributes of the feature. In this case, we are removing all features of this class, and annotating them again with the same method used to add them in first place: annotate_protein_motif"""
+        """This method is called when the linked prediction is modified, to allow to recompute some or all attributes of the feature. In this case, we are removing all features of this class, and annotating them again with the same method used to add them in first place: annotate_protein_motif"""
         ##removing instances of this class
         for index_to_remove in [
             index
@@ -9517,9 +9539,9 @@ class protein_motif(p2g_feature):
 
 
 def annotate_protein_motif(p, silent=False):
-    """p is a p2ghit. This is an example of method to annotate the p2g_feature protein_motif. To use, add this to the main configuration file:  
-  ACTION.post_filtering.annotate_motif =    if x.filtered == 'kept':  annotate_protein_motif(x)   
-  """
+    """p is a p2ghit. This is an example of method to annotate the p2g_feature protein_motif. To use, add this to the main configuration file:
+    ACTION.post_filtering.annotate_motif =    if x.filtered == 'kept':  annotate_protein_motif(x)
+    """
     s = protein_motif.motif.search(
         p.protein()
     )  ##using search method of re.RegexObject  --  protein_motif.motif is such an object
@@ -9547,7 +9569,7 @@ def annotate_protein_motif(p, silent=False):
 
 
 class misc_sequence_data(p2g_feature):
-    """ Hidden feature to store the sequence information about the sequence at the 3' of the prediction, until the first stop codon. It is loaded by method compute_misc_sequence_data """
+    """Hidden feature to store the sequence information about the sequence at the 3' of the prediction, until the first stop codon. It is loaded by method compute_misc_sequence_data"""
 
     included_in_output = False
     included_in_gff = False
@@ -9593,7 +9615,7 @@ class misc_sequence_data(p2g_feature):
 
 
 class bsecis(p2g_feature):
-    """ Class for SECISearch3/Seblastian secis predictions. Instanciated just with method load_secis (see below) """
+    """Class for SECISearch3/Seblastian secis predictions. Instanciated just with method load_secis (see below)"""
 
     included_in_output = True
     included_in_gff = True
@@ -9647,7 +9669,7 @@ class bsecis(p2g_feature):
     output = summary
 
     def dump_text(self):
-        """see above, function to save the object in a db """
+        """see above, function to save the object in a db"""
         o = self.header()
         o += "#" + self.model_name + " " + str(self.infernal_score)
         o += (
@@ -9693,7 +9715,7 @@ class bsecis(p2g_feature):
 
 
 def load_bsecis(bseblastian_outfile):
-    """ Loads all secis instances found in a seblastian_outfile  (the one normally with extension output.all_secis) """
+    """Loads all secis instances found in a seblastian_outfile  (the one normally with extension output.all_secis)"""
     out_list = []
     current_id = 1
     file_h = open(bseblastian_outfile)
@@ -9767,7 +9789,7 @@ def load_bsecis(bseblastian_outfile):
 
 
 class secis(p2g_feature):
-    """ Class for SECISearch3/Seblastian secis predictions. Instanciated just with method load_secis (see below) """
+    """Class for SECISearch3/Seblastian secis predictions. Instanciated just with method load_secis (see below)"""
 
     included_in_output = True
     included_in_gff = True
@@ -9810,7 +9832,7 @@ class secis(p2g_feature):
     output = summary
 
     def distance_from_sec_uga(self):
-        """ Return the distance from the (last) sec uga (not counting predicted introns) """
+        """Return the distance from the (last) sec uga (not counting predicted introns)"""
         try:
             self.parent
             u_pos_in_target_seq = self.parent.protein().rfind("U")
@@ -9823,7 +9845,7 @@ class secis(p2g_feature):
             # sys.exc_clear()  #2022 #traceback
 
     def distance_from_cds(self):
-        """ Return the distance from the last codon of the coding sequence predicted by selenoprofiles. 0 would mean that the secis begins right after the last codon. """
+        """Return the distance from the last codon of the coding sequence predicted by selenoprofiles. 0 would mean that the secis begins right after the last codon."""
         try:
             self.parent
             return self.parent.is_upstream_of(self) - 1
@@ -9832,7 +9854,7 @@ class secis(p2g_feature):
             # sys.exc_clear()  #2022 #traceback
 
     def dump_text(self):
-        """see above, function to save the object in a db """
+        """see above, function to save the object in a db"""
         o = self.header()
         o += "#" + self.grade + " " + str(self.energy) + " " + str(self.type)
         o += (
@@ -9871,7 +9893,7 @@ class secis(p2g_feature):
         self.annotation_line = splt[4]
 
     def infernal_score(self):
-        """ Returns a float with the infernal score of the prediction. Note: it will return None if the score is not found in the .found_by_line attribute"""
+        """Returns a float with the infernal score of the prediction. Note: it will return None if the score is not found in the .found_by_line attribute"""
         if "Infernal" in self.found_by_line:
             score = float(
                 self.found_by_line.split("Infernal")[1]
@@ -9884,7 +9906,7 @@ class secis(p2g_feature):
         return score
 
     def covels_score(self):
-        """ Returns a float with the covels score of the prediction. Note: it will return None if the score is not found in the .found_by_line attribute"""
+        """Returns a float with the covels score of the prediction. Note: it will return None if the score is not found in the .found_by_line attribute"""
         if "Covels" in self.found_by_line:
             score = float(
                 self.found_by_line.split("Covels")[1]
@@ -9898,7 +9920,7 @@ class secis(p2g_feature):
 
 
 def load_secis(seblastian_outfile):
-    """ Loads all secis instances found in a seblastian_outfile  (the one normally with extension output.all_secis) """
+    """Loads all secis instances found in a seblastian_outfile  (the one normally with extension output.all_secis)"""
     out_list = []
     current_id = 1
     file_h = open(seblastian_outfile)
@@ -9971,8 +9993,8 @@ def load_secis(seblastian_outfile):
 
 
 def Secisearch3(p2g, three_prime_length=-1, silent=False, full=False):
-    """ Performs a complete secisearch3 with seblastian. Parse secis and restore their coordinates cosindering their parent gene so that they are absolute. Add the secis to the .features list of the p2g object. If silent!=True, it prints a message for every SECIS found.   If three_prime_length is -1, the value specified in the main config file (or in the command line) is used.
-  If full==True, all methods are run with seblastian, to ensure maximal sensitivity """
+    """Performs a complete secisearch3 with seblastian. Parse secis and restore their coordinates cosindering their parent gene so that they are absolute. Add the secis to the .features list of the p2g object. If silent!=True, it prints a message for every SECIS found.   If three_prime_length is -1, the value specified in the main config file (or in the command line) is used.
+    If full==True, all methods are run with seblastian, to ensure maximal sensitivity"""
     # cutting 3' UTR
     three_prime_file = temp_folder + "three_prime_for_secisearch.fa"
     three_prime_text = p2g.three_prime(length=three_prime_length)
@@ -10050,7 +10072,7 @@ def Secisearch3(p2g, three_prime_length=-1, silent=False, full=False):
 
 
 def bSecisearch(p2g, silent=False, full=False):
-    """ Performs a complete bsecisearch searche with bseblastian (crash if not installed). Parse secis and restore their coordinates cosindering their parent gene so that they are absolute. Add the secis to the .features list of the p2g object. If silent!=True, it prints a message for every bSECIS found.    """
+    """Performs a complete bsecisearch searche with bseblastian (crash if not installed). Parse secis and restore their coordinates cosindering their parent gene so that they are absolute. Add the secis to the .features list of the p2g object. If silent!=True, it prints a message for every bSECIS found."""
     # cutting 3' UTR
     cds_seq = p2g.cds()
     prot_seq = p2g.protein()
@@ -10177,12 +10199,12 @@ def bSecisearch(p2g, silent=False, full=False):
 
 
 def gene_ontology(obo_file=""):
-    """ Returns a GeneOntologyNX class, loaded from the obo_file provided or from the one defined in the configuration file as "GO_obo_file".
-  This class is from http://gitorious.org/annotation/annotation/trees/master
-  The two methods used here are: 
-  get_term_by_id(go_id)         -> returns a GOTerm class object 
-  get_all_parents_ids(go_id)    -> returns a list of strings (GO_ids)   
-  """
+    """Returns a GeneOntologyNX class, loaded from the obo_file provided or from the one defined in the configuration file as "GO_obo_file".
+    This class is from http://gitorious.org/annotation/annotation/trees/master
+    The two methods used here are:
+    get_term_by_id(go_id)         -> returns a GOTerm class object
+    get_all_parents_ids(go_id)    -> returns a list of strings (GO_ids)
+    """
 
     if not "gene_ontology_data" in globals():
         # checking if necessary module is loaded
@@ -10207,12 +10229,12 @@ def gene_ontology(obo_file=""):
 
 
 def set_selenoprofiles_var(varname, value):
-    """ Utility to set a variable inside the selenoprofiles module from an external python program which is importing it"""
+    """Utility to set a variable inside the selenoprofiles module from an external python program which is importing it"""
     globals()[varname] = value
 
 
 def get_selenoprofiles_var(varname):
-    """ Utility to get a variable inside the selenoprofiles module from an external python program which is importing it"""
+    """Utility to get a variable inside the selenoprofiles module from an external python program which is importing it"""
     return globals()[varname]
 
 
@@ -10222,20 +10244,20 @@ def uniq_id_for_file(ffile):
 
 ####
 class notracebackException(Exception):
-    """ When this exception are raised, the traceback is not printed, just the message it contains"""
+    """When this exception are raised, the traceback is not printed, just the message it contains"""
 
 
 class lazycomputationException(Exception):
-    """ This exception is raised when lazy computation cannot be applied, as a flag for: compute it again!"""
+    """This exception is raised when lazy computation cannot be applied, as a flag for: compute it again!"""
 
 
 class skipprofileException(Exception):
-    """ When this exception is raised, the pipelines print the error and shifts to the next profile"""
+    """When this exception is raised, the pipelines print the error and shifts to the next profile"""
 
 
 #######################################################################################################################################
 def myhook(errclass, errvalue, errtraceback):
-    """ Shows errors only when we want them"""
+    """Shows errors only when we want them"""
     if "opt" in globals() and opt["debug"] and "temp_folder" in globals():
         printerr(
             "-debug : an error occurred. You may check temp folder "
@@ -10269,7 +10291,7 @@ sys.excepthook = myhook
 
 
 def close_program():
-    """ Utility to perform operation at the end of the computation, even in case the pipeline crashes"""
+    """Utility to perform operation at the end of the computation, even in case the pipeline crashes"""
     global allowed_output_formats
     if "temp_folder" in globals():
         try:
@@ -10297,4 +10319,3 @@ if __name__ == "__main__":
         close_program()
     except:
         close_program()
-
