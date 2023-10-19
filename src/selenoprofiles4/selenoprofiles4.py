@@ -1581,6 +1581,37 @@ def main():
         write("\nselenoprofiles database completed.   Date: " + bbash("date"), 1)
         sys.exit()
 
+    if len(sys.argv) > 1 and sys.argv[1] == "orthology":
+        from .selenoprofiles_orthology import (
+            main as run_orthology,
+            def_opt as def_opt_orthology,
+            help_msg as help_msg_orthology,
+        )
+
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles orthology\n", 1)
+
+        ortho_opt = easyterm.command_line_options(
+            def_opt_orthology,
+            help_msg_orthology,
+            ["cmd"],  # just to accept "drawer"
+            # advanced_help_msg={"full": help_msg_full_..., None: ""},
+        )
+
+        if not ortho_opt["ap"]:
+            # getting selenoprofiles_data_dir
+            opt = easyterm.read_config_file(config_filename)
+            opt["selenoprofiles_install_dir"] = selenoprofiles_install_dir
+            opt.resolve_links()
+            opt = opt_expand_tilde(opt)
+
+            ortho_opt["ap"] = opt["selenoprofiles_data_dir"]+'/'+'selenoprotein_profiles/'
+
+        run_orthology(ortho_opt)
+
+        write("\nselenoprofiles orthology completed.   Date: " + bbash("date"), 1)
+        sys.exit()
+
     ######
     if len(sys.argv) > 1 and sys.argv[1] == "join":
         from .selenoprofiles_join_alignments import (
