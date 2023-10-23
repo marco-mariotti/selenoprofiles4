@@ -112,33 +112,31 @@ def candidate_score_similarity(ali, family, opt):
             # In case it is, we add the anchor sequence to the subfamily list
             subfam_dict[subfam].append(anc)
 
-        df_dict = {"Candidate": [], "Subfamily": [], "Similarity": []}
-
-        cand_only_ali=cand_ali[ names_filtered, :]
+        cand_only_ali = cand_ali[names_filtered, :]
 
         # Initialize a list where we will save the results
         df_list = []
 
         # Automatic build and process of subalignments
         for i in list(subfam_dict.keys()):
-          # Instead of iterating, we get the sequences from specific subfamily
-          names_sbf = subfam_dict.get(i, [])
-          # Subfamily alignment
-          sbf_ali = cand_ali[ names_sbf, :]
-          # Compute score similarity
-          sbf_sim_df=sbf_ali.score_similarity(targets=cand_only_ali,gaps=opt["g"],metrics=opt["m"],weights = opt["w"])
-          # Saving the score as subfamily name
-          sbf_sim_df.columns = [i]
-          # Df save to later concat
-          df_list.append(sbf_sim_df)
+            # Instead of iterating, we get the sequences from specific subfamily
+            names_sbf = subfam_dict.get(i, [])
+            # Subfamily alignment
+            sbf_ali = cand_ali[names_sbf, :]
+            # Compute score similarity
+            sbf_sim_df = sbf_ali.score_similarity(
+                targets=cand_only_ali, gaps=opt["g"], metrics=opt["m"], weights=opt["w"]
+            )
+            # Saving the score as subfamily name
+            sbf_sim_df.columns = [i]
+            # Df save to later concat
+            df_list.append(sbf_sim_df)
 
     else:
         names = ali.names()
         # We want to get rid of profile sequences
         names_filtered = [
-            item
-            for item in names
-            if is_selenoprofiles_output_title(ali.get_desc(item))
+            item for item in names if is_selenoprofiles_output_title(ali.get_desc(item))
         ]
 
         # We select only the anchor sequences to produce subfamily alignments
@@ -150,13 +148,15 @@ def candidate_score_similarity(ali, family, opt):
 
         # Saving candidate alignment only
         cand_only_ali = ali[names_filtered, :]
-        # Saving profile alignment 
+        # Saving profile alignment
         prof_ali = ali[anchor_names, :]
 
         df_list = []
         # Computing score similarity
-        sbf_ali = prof_ali.score_similarity(targets=cand_only_ali,gaps=opt["g"],metrics=opt["m"],weights = opt["w"])
-        #Renaming as selenoprotein family
+        sbf_ali = prof_ali.score_similarity(
+            targets=cand_only_ali, gaps=opt["g"], metrics=opt["m"], weights=opt["w"]
+        )
+        # Renaming as selenoprotein family
         sbf_ali.columns = [family]
         # Save df to concat
         df_list.append(sbf_ali)
@@ -169,8 +169,10 @@ def candidate_score_similarity(ali, family, opt):
     max_val = result_df.max(axis=1)
 
     # Create an output dataframe containing the candidate+subfamily+similarity
-    df_cand = pd.DataFrame({'Candidate': result_df.index, 'Similarity': max_val, 'Subfamily': max_col})
-    df_cand.reset_index(drop = True, inplace = True)
+    df_cand = pd.DataFrame(
+        {"Candidate": result_df.index, "Similarity": max_val, "Subfamily": max_col}
+    )
+    df_cand.reset_index(drop=True, inplace=True)
 
     return df_cand
 
