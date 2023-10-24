@@ -112,125 +112,67 @@ def candidate_score_similarity(ali, family, opt):
             # In case it is, we add the anchor sequence to the subfamily list
             subfam_dict[subfam].append(anc)
 
-        df_dict = {"Candidate": [], "Subfamily": [], "Similarity": []}
+        cand_only_ali = cand_ali[names_filtered, :]
 
-        ##### pseudocode:
-        
-        # ## precompute candidate subalignment   ...
-        # cand_only_ali=cand_ali[ candNames, :]
+        # Initialize a list where we will save the results
+        df_list = []
 
-        # sim_df_list=[]
-        # for subfam in subfamilies:
-        #     #precompute subfam alig
-        #     sbf_ali = cand_ali[ subfam_names, :]
-
-        #     sbf_sim_df=sbf_ali.score_similarity(
-        #         targets=cand_only_ali,
-        #         gaps... )
-        #     # rename  sbf_sim_df first and only col to subfam name
-        #     sim_df_list.append( sbf_sim_df )
-
-        # full_sim= pd.concat(sim_df_list, axis=1)
-        # # index: cand seq names
-        # # cols: one per subfam, each containing the score similarity
-
-
-        
-            
-            
-        
-        for cand in names_filtered:
-            # Automatic build and process of subalignments
-            for i in list(subfam_dict.keys()):
-                # Instead of iterating, we get the sequences from specific subfamily
-                names_sbf = subfam_dict.get(i, [])
-                names_sbf_copy = names_sbf.copy()
-                # Add to the end of the alignment the candidate sequence
-                names_sbf_copy.append(cand)
-
-                # Generate the alignment for subfamily
-                Sbf_alignment = cand_ali[names_sbf_copy, :].trim_gaps(1)
-
-                # Compute the scoring similarity matrix
-                a = Sbf_alignment[:-1, :].score_similarity(
-                    targets=Sbf_alignment[[cand], :],
-                    gaps=opt["g"],
-                    metrics=opt["m"],
-                    weights=opt["w"],
-                )
-
-                # Rename the index according to subfamily
-                a = a.rename(index={(cand): (i)})
-
-                # Save it to a dict
-                df_dict["Candidate"].append(cand)
-                df_dict["Subfamily"].append(i)
-                metrics_name = a.columns[0]
-                df_dict["Similarity"].append(a[metrics_name].values[0])
+        # Automatic build and process of subalignments
+        for i in list(subfam_dict.keys()):
+            # Instead of iterating, we get the sequences from specific subfamily
+            names_sbf = subfam_dict.get(i, [])
+            # Subfamily alignment
+            sbf_ali = cand_ali[names_sbf, :]
+            # Compute score similarity
+            sbf_sim_df = sbf_ali.score_similarity(
+                targets=cand_only_ali, gaps=opt["g"], metrics=opt["m"], weights=opt["w"]
+            )
+            # Saving the score as subfamily name
+            sbf_sim_df.columns = [i]
+            # Df save to later concat
+            df_list.append(sbf_sim_df)
 
     else:
-        profile_ali_filename = anchor_path + family + ".fa"
-        # Calling the anchor alignment & candidate alignment
-        ref_ali = alignment(profile_ali_filename)
-
-        candidates_2 = alignment()
-        for name, seq in ali:
-            candidates_2.add(name + " " + ali.get_desc(name), seq)
-
-        # Run it
-        joined_ali = ref_ali.transfer_alignment(candidates_2, dont_shrink=True)
-        # Removing gap columns
-        joined_ali.shrink()
-        # Converting alignment to Alignment from Pyaln
-        cand_ali = Alignment(
-            [(name, joined_ali.seq_of(name)) for name in joined_ali.titles()]
-        )
-
-        names = cand_ali.names()
+        names = ali.names()
         # We want to get rid of profile sequences
         names_filtered = [
-            item
-            for item in names
-            if is_selenoprofiles_output_title(cand_ali.get_desc(item))
+            item for item in names if is_selenoprofiles_output_title(ali.get_desc(item))
         ]
 
         # We select only the anchor sequences to produce subfamily alignments
-        anchor_names = []
-        for name in ref_ali.titles():
-            anchor_names.append(name.split(" ")[0])
+        anchor_names = [
+            item
+            for item in names
+            if not is_selenoprofiles_output_title(ali.get_desc(item))
+        ]
 
-        df_dict = {"Candidate": [], "Subfamily": [], "Similarity": []}
-        # Compute score similarity
-        for cand in names_filtered:
-            anchor_names.append(cand)
+        # Saving candidate alignment only
+        cand_only_ali = ali[names_filtered, :]
+        # Saving profile alignment
+        prof_ali = ali[anchor_names, :]
 
-            # Creating alignment of anchor+candidate
-            alig_c = cand_ali[anchor_names, :]
-            a = alig_c[:-1, :].score_similarity(
-                targets=alig_c[[cand], :],
-                gaps=[opt["g"]],
-                metrics=opt["m"],
-                weights=opt["w"],
-            )
-            # Rename the index according to subfamily
-            a = a.rename(index={(cand): (family)})
-            # Save it to a dict
-            df_dict["Candidate"].append(cand)
-            df_dict["Subfamily"].append(family)
-            metrics_name = a.columns[0]
-            df_dict["Similarity"].append(a[metrics_name].values[0])
+        df_list = []
+        # Computing score similarity
+        sbf_ali = prof_ali.score_similarity(
+            targets=cand_only_ali, gaps=opt["g"], metrics=opt["m"], weights=opt["w"]
+        )
+        # Renaming as selenoprotein family
+        sbf_ali.columns = [family]
+        # Save df to concat
+        df_list.append(sbf_ali)
 
     # Save to output file the scoring similarity matrix
-    score_subaln = pd.DataFrame.from_dict(df_dict)
-    # Get the maximum score for each candidate
-    max_idx = score_subaln.loc[score_subaln.groupby("Candidate")["Similarity"].idxmax()]
-    max_idx.columns = ["Candidate", "Subfamily", "Similarity"]
+    result_df = pd.concat(df_list, axis=1)
 
-    # TEMPORAL selection of candidates
-    df_cand = max_idx[max_idx["Candidate"].isin(ali.names())]
+    # Get the value and the column name with the highest score
+    max_col = result_df.idxmax(axis=1)
+    max_val = result_df.max(axis=1)
 
-    # #Adding species name (Gives a warning -- Talk with Marco)
-    # df_cand["Species"] = df_cand["Candidate"].apply(lambda x: x.split(".")[3])
+    # Create an output dataframe containing the candidate+subfamily+similarity
+    df_cand = pd.DataFrame(
+        {"Candidate": result_df.index, "Similarity": max_val, "Subfamily": max_col}
+    )
+    df_cand.reset_index(drop=True, inplace=True)
 
     return df_cand
 
