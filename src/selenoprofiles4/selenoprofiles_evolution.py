@@ -35,6 +35,7 @@ Output columns:
 -switch  decides whether to keep or not selenoprotein homologs
 -exp     provide own expectation table
 -map     map manually species to lineage. Avoids using NCBI_DB. User needs to provide a species /t lineage table.
+-pexp    print the expectation table
 
 """
 
