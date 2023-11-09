@@ -1,6 +1,15 @@
 Getting started
 ---------------
 
+Quickstart
+==========
+
+To predict selenoproteins and selenocysteine machinery proteins in a metazoan genome, use::
+
+  selenoprofiles -o outfolder -t genome.fasta -s "species name" -p metazoa,machinery -output_gtf_file all_predictions.gtf
+
+It will generate all_predictions.gtf, besides other output files in outfolder/species_name.genome/output/
+
 
 Command line structure
 ======================
