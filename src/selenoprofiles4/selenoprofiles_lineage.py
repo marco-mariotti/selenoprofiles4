@@ -27,7 +27,7 @@ Output columns:
 
 ### Output
 -of    output folder. Default: current directory.
--o     suffix of the output file. Default: .evolution.
+-o     suffix of the output file. Default: .lineage.
 -temp  temporal folder to save intermediate files.
 -a     optional output .ali file. Requires the input .ali file used in selenoprofiles orthology. Outputs an alignment of the
        filtered sequences.
@@ -43,7 +43,7 @@ Output columns:
 
 def_opt = {
     "i": [],
-    "o": ".evolution.",
+    "o": ".lineage.",
     "of": "./",
     "temp": "temp",
     "exp": "/Lobster/mtico/expectation_table/Expectation_table_2.csv",
@@ -51,7 +51,7 @@ def_opt = {
     "a": "",
     "map": 0,
     "pexp": 0,
-    "l":0
+    "l": 0,
 }
 
 
@@ -63,18 +63,23 @@ def is_selenoprofiles_output_title(title):
         and "strand:" in title
     )
 
-def species2lineage(df,d,opt):
-    unique_species = df['Species'].unique()
+
+def species2lineage(df, d, opt):
+    unique_species = df["Species"].unique()
     if not all(species in d for species in unique_species):
-	## We need taxonomy lineages to be able to compare with expectation table. So we are going to use ncbi_taxonomy.
+        ## We need taxonomy lineages to be able to compare with expectation table. So we are going to use ncbi_taxonomy.
         # To NCBI format
         df["Species"] = df["Species"].str.capitalize()
-        df["Species"].to_csv(opt["temp"] + "/species_list.csv", header=None, index=False)
-        args = ncbi_taxonomy_tree.parse_opts("-n temp/species_list.csv -u --lineage -temp temp/ ")
+        df["Species"].to_csv(
+            opt["temp"] + "/species_list.csv", header=None, index=False
+        )
+        args = ncbi_taxonomy_tree.parse_opts(
+            "-n temp/species_list.csv -u --lineage -temp temp/ "
+        )
         lineage_annotated_tree = ncbi_taxonomy_tree.main(args)
 
         # Getting the lineage for each node
-        missing={}
+        missing = {}
         for species in df["Species"]:
             try:
                 unmasked_species = species.replace("_", " ")
@@ -85,30 +90,31 @@ def species2lineage(df,d,opt):
                 missing[species] = 1
         return d
     else:
-      return d
+        return d
+
 
 # Function used to obtain the lineage for each specie
 def assign_lineage(species, taxonomy_lineages, mapping_df):
     if species not in taxonomy_lineages.keys():
-            # Code for those species which are sus_scrofa_hampshire to search only for sus_scrofa
-            if len(species.split("_")) == 3:
-                sp_words = species.split("_")
-                shortened_sp = "_".join(sp_words[:-1])
-                # In case shortened_sp does not exist in the lineage dictionary
-                try:
-                    lineage_list = [
-                        item.strip(";")
-                        for item in taxonomy_lineages[shortened_sp].split(" ")
-                    ]
-                    for lineage in lineage_list:
-                        if lineage in mapping_df["Lineage"].values:
-                            return lineage
-                except KeyError:
-                    raise Exception(f"'{shortened_sp}' not found in the taxonomy lineage")
-                    return 0
-            else:
-                raise Exception(f"'{species}' not found in the taxonomy lineage")
+        # Code for those species which are sus_scrofa_hampshire to search only for sus_scrofa
+        if len(species.split("_")) == 3:
+            sp_words = species.split("_")
+            shortened_sp = "_".join(sp_words[:-1])
+            # In case shortened_sp does not exist in the lineage dictionary
+            try:
+                lineage_list = [
+                    item.strip(";")
+                    for item in taxonomy_lineages[shortened_sp].split(" ")
+                ]
+                for lineage in lineage_list:
+                    if lineage in mapping_df["Lineage"].values:
+                        return lineage
+            except KeyError:
+                raise Exception(f"'{shortened_sp}' not found in the taxonomy lineage")
                 return 0
+        else:
+            raise Exception(f"'{species}' not found in the taxonomy lineage")
+            return 0
 
     else:
         # If species is present
@@ -118,6 +124,7 @@ def assign_lineage(species, taxonomy_lineages, mapping_df):
         for lineage in lineage_list:
             if lineage in mapping_df["Lineage"].values:
                 return lineage
+
 
 # This function is used for creating a description for discarded sequences
 def create_discard_description(row):
@@ -162,12 +169,9 @@ def expectations(table, family, opt, d):
     )
     # Check if the user wants to manually map species to lineage
     if not opt["map"]:
-
         # We add a lineage column to the df in order to be able to compare with the expectations
         sorted_df["Lineage"] = sorted_df["Species"].apply(
-            lambda x: assign_lineage(
-                x, d, expectation_table
-            )
+            lambda x: assign_lineage(x, d, expectation_table)
         )
 
     else:
@@ -185,18 +189,21 @@ def expectations(table, family, opt, d):
 
     ## Counting missing predictions
     # Counting the number of rows per species + subfamily
-    grouped_counts = joined_sec.groupby(["Species", "Subfamily"]).size().reset_index(name='count')
+    grouped_counts = (
+        joined_sec.groupby(["Species", "Subfamily"]).size().reset_index(name="count")
+    )
     # Merging it to the previous df
     test = pd.merge(joined_sec, grouped_counts, on=["Species", "Subfamily"], how="left")
     # Determining if rows are missing or not
-    test ['Missings'] = test.apply(
-     lambda row: row.get(row["Subfamily"], 0) > row["count"], axis=1)
+    test["Missings"] = test.apply(
+        lambda row: row.get(row["Subfamily"], 0) > row["count"], axis=1
+    )
     # Getting the rows which are Missing
     new_rows = test[test["Missings"]].copy()
     # Just maintaining Species & Subfamily : other values NA
     new_rows.loc[:, new_rows.columns.difference(["Species", "Subfamily"])] = np.nan
     # Adding Pass_filter to false
-    new_rows['Pass_filter'] = False
+    new_rows["Pass_filter"] = False
 
     # Adding to the end missing predictions
     joined_sec = pd.concat([joined_sec, new_rows], ignore_index=True, sort=False)
@@ -212,13 +219,20 @@ def expectations(table, family, opt, d):
     )
 
     if opt["l"]:
-      final_table = joined_sec[
-        ["Candidate", "Subfamily", "Similarity", "Species", "Lineage", "Pass_filter"]
-      ]
+        final_table = joined_sec[
+            [
+                "Candidate",
+                "Subfamily",
+                "Similarity",
+                "Species",
+                "Lineage",
+                "Pass_filter",
+            ]
+        ]
     else:
-      final_table = joined_sec[
-        ["Candidate", "Subfamily", "Similarity", "Species", "Pass_filter"]
-      ]
+        final_table = joined_sec[
+            ["Candidate", "Subfamily", "Similarity", "Species", "Pass_filter"]
+        ]
 
     # We are going to add description to our table
     final_table["Discard_description"] = final_table.apply(
@@ -229,11 +243,7 @@ def expectations(table, family, opt, d):
 
 
 def main(args={}):
-
-    if not args:
-      opt = command_line_options(def_opt, help_msg)
-    else:
-      opt = args
+    opt = args
     sp2lin = {}
 
     # Iterate through each family alignment
@@ -244,7 +254,7 @@ def main(args={}):
         # Read the selenoprotein family input file
         candidates = pd.read_csv(sp, sep="\t")
         # Creating here species to lineage
-        species2lineage(candidates,sp2lin,opt)
+        species2lineage(candidates, sp2lin, opt)
         # Execute the filter
         out = expectations(candidates, fam, opt, sp2lin)
 
@@ -271,5 +281,5 @@ def main(args={}):
         ali_filt.write(fileformat="fasta", to_file=outfile)
 
 
-if __name__ == "__main__":
-    main(	)
+# if __name__ == "__main__":
+#    main(	)

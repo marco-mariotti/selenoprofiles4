@@ -59,3 +59,82 @@ When frameshifts are present, they are shown as vertical red lines
 .. figure:: images/drawer.example2.png 
    :width: 450
 
+Classify results: selenoprofiles orthology
+++++++++++++++++++++++++++++++++++++++++++
+
+The *selenoprofiles orthology* utility is designed to classify results from the *joined ali* files. This classification 
+is based on orthologous groups, providing insights into the organization of selenoprotein families. See its usage with::
+
+  selenoprofiles orthology -h
+
+As output, it produces one tsv file per input file, classifying the subfamily of each selenoprofiles prediction.
+
+Output columns:
+ * **\Candidate**   sequence ID in selenoprofiles format (family.numericID.label.species.target_name)
+ * **\Subfamily**   subfamily assigned to this sequence
+ * **\Similarity**  similarity score between this sequence and the built-in "anchor" subfamily sequences
+The output of selenoprofiles orthology can be used as input of selenoprofiles evolution (run: selenoprofiles evolution -h)
+
+To classify any candidate sequence, we created a series of reference alignments for each multimember family containing
+up to 10 sequences per subfamily. For subfamily assignment, candidate sequences are then aligned to reference alignments 
+and classified according to the similarity score with every subfamily. The similarity score quantifies how much target 
+sequences “fit” in a certain (sub)alignment. Each candidate is assigned to the subfamily with the highest similarity score.
+
+For families with only a single member, the sequence similarity score is assessed against the overall family profile. 
+This ensures a comprehensive and accurate classification, even for families with a more straightforward structure.
+
+Here's a minimal command line::
+
+  selenoprofiles orthology -i fam1.ali [fam2.ali ... famN.ali]  [other options]
+
+These are the compulsory arguments:
+
+ * **\-i**  input alignment file from selenoprofiles join utility.
+
+Optional arguments::
+ * **\-of** output folder, will be created if non-existing.
+ * **\-o**  suffix of the output file. Default: .orthology.
+ * **\-g**  how to take into account gaps when comparing sequences. Possible values: {y,n,t,a} Default: n
+ * **\-m**  which similarity score metrics is used. Possible values: {i, w} Default: w
+ * **\-w**  if AWSI is computed (-m w), define weights per alignment column. Possible values: {m, i, q} Default: m
+
+For meaning of values, see https://pyaln.readthedocs.io/en/latest/alignment.html#pyaln.Alignment.score_similarity
+
+Filtering results: selenoprofiles lineage
++++++++++++++++++++++++++++++++++++++++++
+
+The *selenoprofiles lineage* utility is designed to exclude non-expected genes predicted by Selenoprofiles. This filtering 
+is based on expectations of the various vertebrate lineages from Mariotti et al [1]. See its usage with ::
+
+  selenoprofiles lineage -h
+
+This utility takes the .tsv files produced by selenoprofiles orthology as input. As output, it produces one tsv file per
+input file, filtering non-expected predictions.
+
+Output columns:
+ * **\Candidate**            sequence ID in selenoprofiles format (family.numericID.label.species.target_name)
+ * **\Subfamily**            subfamily assigned to this sequence
+ * **\Similarity**           similarity score between this sequence and the built-in "anchor" subfamily sequences
+ * **\Species**              species name of the predicted sequence
+ * **\Pass_filter**          boolean column indicating if the sequence is expected or not
+ * **\Discard_description**  column that provides an explanation for why the filter criteria were not met
+
+Here's a minimal command line::
+
+  selenoprofiles lineage -i fam1.orthology.tsv [fam2.orthology.tsv ... famN.orthology.tsv]  [other options]
+
+These are the compulsory arguments:
+ * **\-i**  selenoprotein family fam.orthology.tsv file(s) produced by selenoprofiles orthology (run: selenoprofiles orthology -h)
+
+Optional arguments:
+ * **\-of**   output folder. Default: current directory.
+ * **\-o**    suffix of the output file. Default: .lineage.
+ * **\-temp** temporal folder to save intermediate files.
+ * **\-a**    optional output .ali file. Requires the input .ali file used in selenoprofiles orthology. Outputs an alignment of the filtered sequences.
+ * **\-all**  decides whether to keep or not selenoprotein homologs
+ * **\-exp**  provide own expectation table
+ * **\-map**  map manually species to lineage. Avoids using NCBI_DB. User needs to provide a species /t lineage table.
+ * **\-pexp** print the expectation table
+ * **\-l**    include lineage in the output table
+ 
+1. Mariotti, M. et al. Composition and Evolution of the Vertebrate and Mammalian Selenoproteomes. PLoS One 7, e33066 (2012).
