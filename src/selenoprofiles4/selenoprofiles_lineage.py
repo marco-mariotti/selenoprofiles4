@@ -161,6 +161,9 @@ def expectations(table, family, opt, d):
         # candidates['Subfamily']=candidates['Subfamily'].replace(['GPX5','GPX7','GPX8'],'0')
         candidates.replace(["GPX1B", "GPX3B"], ["GPX1", "GPX3"], inplace=True)
 
+    elif family == "SelW":
+        candidates.replace(["SelW1", "SelW2"], ["SelW","SelW"], inplace=True)
+
     # First group by subfamily and species name to index best values
     sorted_df = candidates.sort_values(by=["Species", "Subfamily", "Similarity"])
     # Now assign index best by sort position
@@ -177,10 +180,10 @@ def expectations(table, family, opt, d):
     else:
         inp = sorted_df
         manual_tab = pd.read_csv(opt["map"])
-        sorted_df = pd.merge(inp, manual_tab, on="Linage", how="outer")
+        sorted_df = pd.merge(inp, manual_tab, on="Linage", how="inner")
 
     # Merging df to compare subfamilies
-    joined = pd.merge(sorted_df, expectation_table, on="Lineage", how="outer")
+    joined = pd.merge(sorted_df, expectation_table, on="Lineage", how="inner")
     # Comparing Expected values to Index best similarity scores
     joined_sec = joined.astype({"Index_best": "int"})
     joined_sec["Pass_filter"] = joined_sec.apply(
@@ -250,7 +253,7 @@ def main(args={}):
     for sp in opt["i"]:
         filename = os.path.basename(sp)
         # Get the selenoprotein family name (in case it is GPx.candidate_matrix.csv)
-        fam = filename.split("_")[0]
+        fam = filename.split(".")[0]
         # Read the selenoprotein family input file
         candidates = pd.read_csv(sp, sep="\t")
         # Creating here species to lineage
