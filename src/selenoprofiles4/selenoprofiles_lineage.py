@@ -46,12 +46,14 @@ def_opt = {
     "o": ".lineage.",
     "of": "./",
     "temp": "temp",
-    "exp": "/Lobster/mtico/expectation_table/Expectation_table_2.csv",
+    "exp": "",
     "switch": 0,
-    "a": "",
+    "a": [],
     "map": 0,
     "pexp": 0,
     "l": 0,
+    "cmd": "lineage",
+    "ann": "",
 }
 
 
@@ -63,6 +65,10 @@ def is_selenoprofiles_output_title(title):
         and "strand:" in title
     )
 
+def rename(self,d):
+   self._ord = [d[n] if n in d else n for n in self._ord]
+   self._seqs={d.get(n, n):s for n,s in self._seqs.items()}
+   self._desc={d.get(n, n):des for n,des in self._desc.items()}
 
 def species2lineage(df, d, opt):
     unique_species = df["Species"].unique()
@@ -111,10 +117,10 @@ def assign_lineage(species, taxonomy_lineages, mapping_df):
                         return lineage
             except KeyError:
                 raise Exception(f"'{shortened_sp}' not found in the taxonomy lineage")
-                return 0
+
         else:
             raise Exception(f"'{species}' not found in the taxonomy lineage")
-            return 0
+
 
     else:
         # If species is present
@@ -268,20 +274,95 @@ def main(args={}):
         write(f"--> writing output: {outfile}", 1)
         out.to_csv(outfile, sep="\t", index=False)
 
-    if opt["a"]:
-        ali = Alignment(opt["a"], fileformat="fasta")
-        # List to save true selenocysteines + profile seqs
-        filt_names = [
-            item
-            for item in ali.names()
-            if not is_selenoprofiles_output_title(ali.get_desc(item))
-        ]
-        prof_cand = filt_names + out[out["Pass_filter"] == True]["Candidate"].tolist()
-        # Creating alignment file
-        ali_filt = ali[prof_cand, :]
-        # Saving output
-        outfile = opt["of"].rstrip("/") + "/" + fam + "." + opt["o"].strip(".") + ".ali"
-        ali_filt.write(fileformat="fasta", to_file=outfile)
+        # Creating sp drawer input
+        if (len(opt["a"]) > 0) and (len(opt["ann"]) > 0):
+            annotation = pd.read_csv(opt['ann'],sep="\t",header=None)
+            # Reading the alignment
+            for aln in opt['a']:
+              if fam in aln:
+                ali = Alignment(aln, fileformat="fasta")
+
+            # Producing ann + filt
+            final_df = pd.DataFrame()
+            # Producing tsv file from lineage output + annotations 
+            missing_sp = out[out['Candidate'].isna()]
+            out['Candidate'] = out['Candidate'].str.split('.').str[:4].str.join('.')
+            merged_df = pd.merge(annotation, out, left_on=0, right_on='Candidate', how='inner')
+            final_df = pd.concat([merged_df, missing_sp]) # DI_filtered.tsv / annotations
+
+            # Creating names+seqs for missing predicitons
+            names = []
+            seqs = []
+            for index, row in final_df[final_df[0].isna()].iterrows():
+                subfamily_letters = ''.join([c for c in row['Subfamily'] if c.isalpha()])
+                subfamily_numbers = ''.join([c for c in row['Subfamily'] if c.isdigit()])
+                species= row['Species']
+                species_lower = species[0].lower() + species[1:]
+                hyper_str = "-"*(ali.ali_length()-1) + "A" # Sequence str
+                #name = f"{subfamily_letters}.{subfamily_numbers}.Missing.{species}.unfiltered" # Name str
+                name = f"{row['Subfamily']}.{subfamily_numbers}.Missing.{species_lower}.{species}_target.unfiltered chromosome:Missing strand:+ positions:1-50,60-110,120-170"
+                names.append(name)
+                seqs.append(hyper_str)
+
+            # Getting those names in alignment which are in the annotations  
+            #matching = [name for name in ali.names() if any(str(subs) in str(name) for subs in annotations['0'] if pd.notna(subs))]
+            f_dict = {}
+            matching = []
+            for name in ali.names():
+               for subs in final_df[0]:
+                   if pd.notna(subs) and (str(subs) in str(name)) and ((str(subs)+'_') not in str(name)):
+                       matching.append(name)
+                       if final_df.loc[final_df[0]==subs,'Pass_filter'].bool():
+                           f_dict[name] = name+'.unfiltered'
+                       else:
+                           f_dict[name] = name+'.filtered'
+                       break
+
+            ali_f = ali[matching,:]
+            # Adding missing sequences
+            for i in range(len(seqs)):
+                ali_f.add_seq(names[i],seqs[i])
+
+            rename(ali_f,f_dict)
+            # Changing selenocysteine by readthrough, arginine, unaligned
+            seq_dict = {}
+            replace_dict={
+                row[0]: "arginine" if row[2] == "Well" else "readthrough" if row[2] == "Missannotation" else "unaligned"
+                for index, row in final_df.iterrows()
+            }
+            replace_dict.popitem()
+
+
+            #Replacing each selenocysteine by readthrough, arginine, unaligned
+            for name in ali_f.names():
+                for key in replace_dict.keys():
+                    if (key in name) and ((key + "_") not in name):
+                        new_name=name.replace("selenocysteine",replace_dict[key])
+                        new_name_2 = new_name.replace(fam,final_df['Subfamily'][final_df[0] == key].values[0])
+                        seq_dict[name]=new_name_2
+
+            rename(ali_f,seq_dict)
+
+            # Saving output
+            outfile = opt["of"].rstrip("/") + "/" + fam + "." + opt["o"].strip(".") + ".drawer.ali"
+            ali_f.write(fileformat="fasta", to_file=outfile)
+
+        elif opt["a"]:
+            ali = Alignment(opt["a"], fileformat="fasta")
+            # List to save true selenocysteines + profile seqs
+            filt_names = [
+                item
+                for item in ali.names()
+                if not is_selenoprofiles_output_title(ali.get_desc(item))
+            ]
+            prof_cand = filt_names + out[out["Pass_filter"] == True]["Candidate"].tolist()
+            # Creating alignment file
+            ali_filt = ali[prof_cand, :]
+            # Saving output
+            outfile = opt["of"].rstrip("/") + "/" + fam + "." + opt["o"].strip(".") + ".ali"
+            ali_filt.write(fileformat="fasta", to_file=outfile)
+
+
 
 
 # if __name__ == "__main__":
