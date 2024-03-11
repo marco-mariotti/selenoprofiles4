@@ -3559,6 +3559,7 @@ merge_genes(gene_list)       merge a list of genes to remove redundancy. It has 
     self.phases=[]
     self.id=None
     self.sec_pos=[]
+    self.filter=None
     if load_file and tag:      self.load(load_file, tag)
     elif load_file:            self.load(load_file)  
     for k in other_features:   self[k]=other_features[k]

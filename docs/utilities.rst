@@ -1,4 +1,4 @@
-Searching multiple species
+Selenoprofiles tools
 ==========================
 
 Selenoprofiles was designed for comparative studies across multiples species.
@@ -138,3 +138,36 @@ Optional arguments:
  * **\-l**    include lineage in the output table
  
 1. Mariotti, M. et al. Composition and Evolution of the Vertebrate and Mammalian Selenoproteomes. PLoS One 7, e33066 (2012).
+
+Assessing annotations: selenoprofiles assess
+++++++++++++++++++++++++++++++++++++++++++++
+
+The *selenoprofiles assess* utility evaluates genome annotations using selenoprofiles predictions as bona fide selenoprotein annotation. 
+See its usage with::
+
+  selenoprofiles assess -h
+
+This tool has three different inputs: selenoprofiles gtf file, genome gff file and genome fasta file. It produces two outputs: A tsv file with 
+the annotation for each genome transcript and a tsv file with the annotation for each genome gene. 
+
+Here's a minimal command line:
+
+  selenoprofiles assess -s selenoprofiles.gtf -e genome.gtf -f genome.fa [other options]
+
+These are the compulsory arguments:
+ * **\-s**  selenoprofiles predictions in gtf or gff format
+ * **\-e**  genome annotations in gff or gff3 format
+ * **\-f**  genome fasta file
+
+Optional arguments:
+
+ * **\-o**    Specify the name of the output tsv table containing annotation for each genome transcript.
+ * **\-agg**  Specify the name of the output tsv aggregate table containing annotation for each gene.
+ * **\-cs**   Specify the name of selenoprofiles column which will be taken as ID to work with. Default is transcript_id.
+ * **\-cg**   Specify the name of input genome's column which will be taken as ID to work with. Default is ID.
+ * **\-stop** Specify if stop codons are removed and how. Three options available: 'auto', 'all' and 'no'. Default is 'auto'.
+
+      - **'auto'** In case some genome transcripts have stop codons and some not. Searches for transcripts with stop codons and removes them.
+      - **'all'** The last three positions from each genome transcript are removed, without performing any search.
+      - **'no'** Assumes there are no stop codons in genome transcripts, so they aren't removed.
+

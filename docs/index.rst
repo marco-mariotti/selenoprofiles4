@@ -27,7 +27,7 @@ To install selenoprofiles, get started or learn advanced usage, check the docume
    installation
    get_started
    citation
-   multiple_targets
+   utilities
    workflow
    user_profiles
    pipeline_detailed

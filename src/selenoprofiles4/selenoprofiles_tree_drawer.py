@@ -154,6 +154,7 @@ def_opt = {  #'temp':'/home/mmariotti/temp', 'common':0,
     "img_w": -1,
     "cmd": "drawer",
     "i": [],
+    "filter":False
 }
 
 
@@ -177,7 +178,8 @@ color_tuples=[
     ("tRNA",  "#C5D51B", "yellow" ),
     ("glycine",  "#FFB20B", "bright orange" ),
     ("leucine",  "#834D1A", "brown" ),
-    ("tRNA?",  "#7A850D", "dark yellow" )
+    ("tRNA?",  "#7A850D", "dark yellow" ),
+    ("Missing","#FFFF66","light salmon")
     ]
 
 label_to_color={x[0]:x[1] for x in color_tuples}
@@ -214,6 +216,7 @@ ordered_labels = [
     "readthrough",
     "tRNA",
     "tRNA?",
+    "Missing"
 ]
 
 common_names = {
@@ -316,32 +319,76 @@ class NumberedBoxFace(faces.Face):
         for boxdata_index in range(len(self.list)):
             boxdata = self.list[boxdata_index]
             if boxdata:
-                number, hexcolor = boxdata
-                colored_box = QGraphicsRectItem(
-                    numbered_box_width * boxdata_index,
-                    0,
-                    numbered_box_width,
-                    numbered_box_height,
-                )
-                colored_box.setBrush(QBrush(QColor(hexcolor)))
-                text_in_box = QGraphicsSimpleTextItem()
-                # printerr("***"+str(number), 1)
-                text_in_box.setText(str(number))
-                font = text_in_box.font()
-                font.setPointSize(opt["nsize"])
-                text_in_box.setFont(font)  # setting default text size
-                reduce_font_if_necessary(
-                    text_in_box,
-                    numbered_box_width - 1,
-                    numbered_box_height,
-                    category="numbered box",
-                )
-                text_in_box.setZValue(
-                    1
-                )  # default is 0, this is to be sure it is on top of colored box
-                text_in_box.setPos(boxdata_index * numbered_box_width + 1, 0)
-                colored_box.setParentItem(self.item)
-                text_in_box.setParentItem(self.item)
+                number, hexcolor, filter = boxdata
+                if filter == "filtered": # Should be only filtered
+                    if number !=0:
+                        colored_box = QGraphicsRectItem(
+                            numbered_box_width * boxdata_index,
+                            0,
+                            numbered_box_width,
+                            numbered_box_height,
+                        )
+                        colored_box.setBrush(QBrush(QColor(hexcolor)))
+                        text_in_box = QGraphicsSimpleTextItem()
+                        # printerr("***"+str(number), 1)
+                        text_in_box.setText(str(number))
+                        # Adding line 1
+                        cross_brick_1 = QGraphicsLineItem(numbered_box_width* boxdata_index, numbered_box_height, numbered_box_width*boxdata_index+numbered_box_width,0)
+                        pen = QPen(QColor("#F40000"))
+                        pen.setWidth(3)
+                        cross_brick_1.setPen(pen)
+                        # Adding line 2
+                        cross_brick_2 = QGraphicsLineItem(numbered_box_width*boxdata_index, 0, numbered_box_width*boxdata_index+numbered_box_width, numbered_box_height)
+                        pen = QPen(QColor("#F40000"))
+                        pen.setWidth(3)
+                        cross_brick_2.setPen(pen)
+
+                        font = text_in_box.font()
+                        font.setPointSize(opt["nsize"])
+                        text_in_box.setFont(font)  # setting default text size
+                        reduce_font_if_necessary(
+                            text_in_box,
+                            numbered_box_width - 1,
+                            numbered_box_height,
+                            category="numbered box",
+                        )
+                        text_in_box.setZValue(
+                            1
+                        )  # default is 0, this is to be sure it is on top of colored box
+                        text_in_box.setPos(boxdata_index * numbered_box_width + 1, 0)
+                        colored_box.setParentItem(self.item)
+                        text_in_box.setParentItem(self.item)
+                        cross_brick_1.setParentItem(self.item)
+                        cross_brick_2.setParentItem(self.item)
+                # unfiltered
+                else:
+                  if number!=0:
+                    colored_box = QGraphicsRectItem(
+                        numbered_box_width * boxdata_index,
+                        0,
+                        numbered_box_width,
+                        numbered_box_height,
+                    )
+                    colored_box.setBrush(QBrush(QColor(hexcolor)))
+                    text_in_box = QGraphicsSimpleTextItem()
+                    # printerr("***"+str(number), 1)
+                    text_in_box.setText(str(number))
+                    font = text_in_box.font()
+                    font.setPointSize(opt["nsize"])
+                    text_in_box.setFont(font)  # setting default text size
+                    reduce_font_if_necessary(
+                        text_in_box,
+                        numbered_box_width - 1,
+                        numbered_box_height,
+                        category="numbered box",
+                    )
+                    text_in_box.setZValue(
+                        1
+                    )  # default is 0, this is to be sure it is on top of colored box
+                    text_in_box.setPos(boxdata_index * numbered_box_width + 1, 0)
+                    colored_box.setParentItem(self.item)
+                    text_in_box.setParentItem(self.item)
+
 
     def _width(self):
         return self.item.rect().width()
@@ -435,6 +482,11 @@ class GeneFace(faces.Face):
         gene_brick.setBrush(QBrush(QColor(self.gene.color())))
         gene_brick.setParentItem(self.item)
 
+        if self.gene.label == "Missing":
+            gene_brick = QGraphicsRectItem(offset_for_id, 0, gene_brick_width, gene_brick_height)
+            gene_brick.setBrush(QBrush(QColor(self.gene.color())))
+            gene_brick.setParentItem(self.item)
+
         # drawing lines for introns
         if not opt["I"] and len(self.gene.exons) > 1:
             cds_so_far = 0
@@ -451,20 +503,39 @@ class GeneFace(faces.Face):
                     intron_length = (
                         start - self.gene.exons[exon_index + 1][1] - 1
                     )  #######
-                x_intron = (
-                    self.gene.relative_position_in_ali_of(aa_so_far) * gene_brick_width
-                    + offset_for_id
-                )
-                line_intron = QGraphicsLineItem(
-                    x_intron, 1, x_intron, gene_brick_height - 2
-                )
+                if not self.gene.label == "Missing":
+                    x_intron = (
+                        self.gene.relative_position_in_ali_of(aa_so_far) * gene_brick_width
+                        + offset_for_id
+                    )
+                    line_intron = QGraphicsLineItem(
+                        x_intron, 1, x_intron, gene_brick_height - 2
+                    )
 
-                color = opt["intron_color"]  # '#FFFFFF' #white
-                if intron_length <= 5:
-                    color = "#EE0000"  # red for frameshifts
-                line_intron.setPen(QPen(QColor(color)))
-                line_intron.setZValue(1)
-                line_intron.setParentItem(gene_brick)
+                    color = opt["intron_color"]  # '#FFFFFF' #white
+                    if intron_length <= 5:
+                        color = "#EE0000"  # red for frameshifts
+                    line_intron.setPen(QPen(QColor(color)))
+                    line_intron.setZValue(1)
+                    line_intron.setParentItem(gene_brick)
+
+        # Adding cross for filtered species
+        if opt["filter"]:
+          if self.gene.filter == "filtered":
+            # Adding line 1
+            cross_brick_1 = QGraphicsLineItem(offset_for_id, 0, offset_for_id+gene_brick_width, gene_brick_height)
+            pen = QPen(QColor("#F40000"))
+            pen.setWidth(5)
+            cross_brick_1.setPen(pen)
+            cross_brick_1.setParentItem(gene_brick)
+            # Adding line 2
+            cross_brick_2 = QGraphicsLineItem(offset_for_id, gene_brick_height, offset_for_id+gene_brick_width, 0)
+            pen = QPen(QColor("#F40000"))
+            pen.setWidth(5)
+            cross_brick_2.setPen(pen)
+            cross_brick_2.setParentItem(gene_brick)
+
+
 
         if opt["f"]:
             for feature_name in self.gene.graphical_features:
@@ -485,6 +556,7 @@ class GeneFace(faces.Face):
                     line_feature.setParentItem(gene_brick)
 
         if not opt["T"]:
+          if self.gene.filter != "filtered":
             ## text for chromosome
             obj = QGraphicsSimpleTextItem()
             obj.setPos(offset_for_id + 1, 0)
@@ -523,7 +595,7 @@ def is_selenoprofiles_title(title):
         "chromosome:" in title
         and "strand:" in title
         and "positions:" in title
-        and title.split()[0].count(".") in [4, 2]
+        and title.split()[0].count(".") in [5,4,2]
     ):
         return True
     return False
@@ -565,6 +637,7 @@ class limited_p2ghit(gene):
         self.species = species(species_name)
         # self.program= header.split('prediction_program:')[1].split()[0]
         self.label = self.id.split(".")[2]
+        self.filter = self.id.split(".")[5]
         self.profile_name = self.id.split(".")[0]
         if len(self.id.split(".")) >= 5:
             self.target_name = self.id.split(".")[-1]
@@ -859,10 +932,13 @@ def main(args):
                         print("ignoring species not found: " + species_name)
 
         if any_title_was_included:
-            families_order.append(profile_ali.name)
-            title_face = faces.TextFace(family, fsize=opt["tsize"])
-            title_face.hz_align = 1
-            tree_style.aligned_header.add_face(title_face, column=len(families_order))
+            sorted_l = sorted(list(labels_seen_for_family_hash.keys()))
+            for family in sorted_l:
+              if family not in families_order:
+                families_order.append(family)
+                title_face = faces.TextFace(family, fsize=opt["tsize"])
+                title_face.hz_align = 1
+                tree_style.aligned_header.add_face(title_face, column=len(families_order))
         else:
             printerr(
                 "WARNING no single title was included for alignment: " + ali_file, 1
@@ -1045,25 +1121,39 @@ def mylayout(node):
                     count_per_label = {}
                     for gene_index in range(len(node.columns[family])):
                         x = node.columns[family][gene_index]
-                        if x.label not in count_per_label:
-                            count_per_label[x.label] = 0
-                        count_per_label[x.label] += 1
+                        key = (x.label, x.filter)
+                        if key not in count_per_label:
+                            count_per_label[key] = 0
+                        count_per_label[key]+=1
 
                     # create rectangle with width of: box_width * len(labels_seen_for_family_hash[family].keys())
-
                     list_to_build_numbered_box = []
                     if not opt["c"]:
                         for label in ordered_labels:
                             if label in labels_seen_for_family_hash[family]:
-                                if label not in count_per_label:
+                                key_unfiltered = (label, "unfiltered")
+                                key_filtered = (label, "filtered")
+                                if key_unfiltered not in count_per_label and key_filtered not in count_per_label:
                                     list_to_build_numbered_box.append([])
                                 else:
+                                    count_unfiltered = count_per_label.get(key_unfiltered, 0)
+                                    count_filtered = count_per_label.get(key_filtered, 0)
                                     list_to_build_numbered_box.append(
                                         [
-                                            count_per_label[label],
+                                            count_unfiltered,
                                             label_to_color.setdefault(
                                                 label, label_to_color["unknown"]
                                             ),
+                                            "unfiltered",
+                                        ]
+                                    )
+                                    list_to_build_numbered_box.append(
+                                        [
+                                            count_filtered,
+                                            label_to_color.setdefault(
+                                                label, label_to_color["unknown"]
+                                            ),
+                                            "filtered",
                                         ]
                                     )
                     else:  # condensating boxes in max n columns. possible labels are defined by explicit_labels option
@@ -1111,48 +1201,48 @@ def mylayout(node):
                 ####################### NORMAL MODE
                 if family in node.columns:
                     if opt["F"]:
-                        familyNameFace = faces.TextFace(family, fgcolor="#000000")
-                        familyNameFace.margin_left = 2
-                        familyNameFace.margin_right = 2
-                        faces.add_face_to_node(
-                            familyNameFace, node, column=column_index, aligned=True
-                        )
+                          familyNameFace = faces.TextFace(family, fgcolor="#000000")
+                          familyNameFace.margin_left = 2
+                          familyNameFace.margin_right = 2
+                          faces.add_face_to_node(
+                              familyNameFace, node, column=column_index, aligned=True
+                          )
 
                     list_of_genes = node.columns[family]
                     try:
-                        list_of_genes.sort(
-                            key=lambda x: ordered_labels.index(x.label)
-                        )  # this list will host the ordered list of genes to draw in this species. The ordered is determined by the appearances of labels in ordered_labels
+                          list_of_genes.sort(
+                              key=lambda x: ordered_labels.index(x.label)
+                          )  # this list will host the ordered list of genes to draw in this species. The ordered is determined by the appearances of labels in ordered_labels
                     except:
-                        for g in list_of_genes:
-                            if not g.label in ordered_labels:
-                                print(
-                                    " WARNING label "
-                                    + g.label
-                                    + " was not found among the known ones. "
-                                )
+                          for g in list_of_genes:
+                              if not g.label in ordered_labels:
+                                  print(
+                                      " WARNING label "
+                                      + g.label
+                                      + " was not found among the known ones. "
+                                  )
 
                     for gene_index in range(len(list_of_genes)):
-                        x = list_of_genes[gene_index]
-                        gene_face = GeneFace(x)
-                        gene_face.margin_left = 5
-                        gene_face.margin_right = 5
-                        faces.add_face_to_node(
-                            gene_face, node, column=column_index, aligned=True
-                        )
+                          x = list_of_genes[gene_index]
+                          gene_face = GeneFace(x)
+                          gene_face.margin_left = 5
+                          gene_face.margin_right = 5
+                          faces.add_face_to_node(
+                              gene_face, node, column=column_index, aligned=True
+                          )
 
-                #            if opt['ali']:
+                    #            if opt['ali']:
 
-                # add separator?
+                    # add separator?
 
-                else:
-                    if opt["F"]:
-                        emptyFamilyNameFace = faces.TextFace(family, fgcolor="#FFFFFF")
-                        emptyFamilyNameFace.margin_left = 2
-                        emptyFamilyNameFace.margin_right = 2
-                        faces.add_face_to_node(
-                            emptyFamilyNameFace, node, column=column_index, aligned=True
-                        )
+                    else:
+                      if opt["F"]:
+                          emptyFamilyNameFace = faces.TextFace(family, fgcolor="#FFFFFF")
+                          emptyFamilyNameFace.margin_left = 2
+                          emptyFamilyNameFace.margin_right = 2
+                          faces.add_face_to_node(
+                              emptyFamilyNameFace, node, column=column_index, aligned=True
+                          )
 
             column_index += 1
 

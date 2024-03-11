@@ -1581,6 +1581,7 @@ def main():
         write("\nselenoprofiles database completed.   Date: " + bbash("date"), 1)
         sys.exit()
 
+    # Orthology
     if len(sys.argv) > 1 and sys.argv[1] == "orthology":
         from .selenoprofiles_orthology import (
             main as run_orthology,
@@ -1610,6 +1611,60 @@ def main():
         run_orthology(ortho_opt)
 
         write("\nselenoprofiles orthology completed.   Date: " + bbash("date"), 1)
+        sys.exit()
+
+    # Lineage
+    if len(sys.argv) > 1 and sys.argv[1] == "lineage":
+        from .selenoprofiles_lineage import (
+            main as run_lineage,
+            def_opt as def_opt_lineage,
+            help_msg as help_msg_lineage,
+        )
+
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles lineage", 1)
+
+        lin_opt = easyterm.command_line_options(
+            def_opt_lineage,
+            help_msg_lineage,
+            ["cmd"],  # just to accept "drawer"
+            # advanced_help_msg={"full": help_msg_full_..., None: ""},
+        )
+
+        if not lin_opt["exp"]:
+            # Getting expectation table
+            opt = easyterm.read_config_file(config_filename)
+            opt["selenoprofiles_install_dir"] = selenoprofiles_install_dir
+            opt.resolve_links()
+            opt = opt_expand_tilde(opt)
+
+            lin_opt["exp"] = opt["selenoprofiles_data_dir"]+'/'+'selenoprotein_profiles/Expectation_table.csv'
+
+        run_lineage(lin_opt)
+
+        write("\nselenoprofiles lineage completed.   Date: " + bbash("date"), 1)
+        sys.exit()
+
+    # Assess annotations
+    if len(sys.argv) > 1 and sys.argv[1] == "assess":
+        from .selenoprofiles_assess import (
+            main as run_assess,
+            def_opt as def_opt_assess,
+            help_msg as help_msg_assess,
+        )
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles assess", 1)
+
+        ass_opt = easyterm.command_line_options(
+            def_opt_assess,
+            help_msg_assess,
+            ["cmd"],  # just to accept "drawer"
+            # advanced_help_msg={"full": help_msg_full_..., None: ""},
+        )
+
+        run_assess(ass_opt)
+
+        write("\nselenoprofiles assess completed.   Date: " + bbash("date"), 1)
         sys.exit()
 
     ######
