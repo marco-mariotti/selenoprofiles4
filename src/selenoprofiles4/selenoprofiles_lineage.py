@@ -51,7 +51,7 @@ def_opt = {
     "a": [],
     "map": 0,
     "pexp": 0,
-    "l": 0,
+    "l": False,
     "cmd": "lineage",
     "ann": "",
 }
@@ -201,21 +201,42 @@ def expectations(table, family, opt, d):
     grouped_counts = (
         joined_sec.groupby(["Species", "Subfamily"]).size().reset_index(name="count")
     )
+    fam_cols = [ col for col in joined_sec.columns.tolist() if family in col]
+
+    missing = pd.DataFrame(columns=['Species', 'Subfamily', 'Count'])
+
     # Merging it to the previous df
     test = pd.merge(joined_sec, grouped_counts, on=["Species", "Subfamily"], how="left")
     # Determining if rows are missing or not
     test["Missings"] = test.apply(
         lambda row: row.get(row["Subfamily"], 0) > row["count"], axis=1
     )
+    # We have a problem, we are not taking into account those subfamilies which are not in that species but they should be
+    processed_species = set()
+    for _, row in test.iterrows():
+     species = row['Species']
+     subfamily = row['Subfamily']
+     if species not in processed_species:
+         processed_species.add(species)
+         missing_fam_cols = [col for col in fam_cols if col not in test['Subfamily'][test['Species']==species].unique()]
+         # If any value is missing, add a single row to the missing DataFrame
+         for col in missing_fam_cols:
+             count_value = row[col]
+             missing = missing.append({'Species': species, 'Subfamily': col, 'Count': count_value}, ignore_index=True)
+
     # Getting the rows which are Missing
     new_rows = test[test["Missings"]].copy()
     # Just maintaining Species & Subfamily : other values NA
     new_rows.loc[:, new_rows.columns.difference(["Species", "Subfamily"])] = np.nan
+    # We are concatenating the missings from subfamilies present and not present
+    result_df = pd.concat([new_rows.set_index(['Species', 'Subfamily']),
+                     missing.set_index(['Species', 'Subfamily'])], axis=0).reset_index()
+
     # Adding Pass_filter to false
-    new_rows["Pass_filter"] = False
+    result_df["Pass_filter"] = False
 
     # Adding to the end missing predictions
-    joined_sec = pd.concat([joined_sec, new_rows], ignore_index=True, sort=False)
+    joined_sec = pd.concat([joined_sec, result_df], ignore_index=True, sort=False)
 
     joined_sec["Pass_filter"] |= ~joined_sec["Subfamily"].isin(joined_sec.columns)
 
