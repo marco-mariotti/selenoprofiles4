@@ -595,7 +595,7 @@ def is_selenoprofiles_title(title):
         "chromosome:" in title
         and "strand:" in title
         and "positions:" in title
-        and title.split()[0].count(".") in [5,4,2]
+        and title.split()[0].count(".") in [6,5,4,2]
     ):
         return True
     return False
