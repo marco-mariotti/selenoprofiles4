@@ -51,9 +51,9 @@ def_opt = {
     "a": [],
     "map": 0,
     "pexp": 0,
-    "l": False,
     "cmd": "lineage",
     "ann": "",
+    "l":False,
 }
 
 
@@ -117,10 +117,8 @@ def assign_lineage(species, taxonomy_lineages, mapping_df):
                         return lineage
             except KeyError:
                 raise Exception(f"'{shortened_sp}' not found in the taxonomy lineage")
-
         else:
             raise Exception(f"'{species}' not found in the taxonomy lineage")
-
 
     else:
         # If species is present
@@ -207,13 +205,9 @@ def expectations(table, family, opt, d):
 
     # Merging it to the previous df
     test = pd.merge(joined_sec, grouped_counts, on=["Species", "Subfamily"], how="left")
-    # Determining if rows are missing or not
-    test["Missings"] = test.apply(
-        lambda row: row.get(row["Subfamily"], 0) > row["count"], axis=1
-    )
     # We have a problem, we are not taking into account those subfamilies which are not in that species but they should be
     processed_species = set()
-    for _, row in test.iterrows():
+    for index, row in test.iterrows():
      species = row['Species']
      subfamily = row['Subfamily']
      if species not in processed_species:
@@ -223,20 +217,20 @@ def expectations(table, family, opt, d):
          for col in missing_fam_cols:
              count_value = row[col]
              missing = missing.append({'Species': species, 'Subfamily': col, 'Count': count_value}, ignore_index=True)
-
-    # Getting the rows which are Missing
-    new_rows = test[test["Missings"]].copy()
-    # Just maintaining Species & Subfamily : other values NA
-    new_rows.loc[:, new_rows.columns.difference(["Species", "Subfamily"])] = np.nan
-    # We are concatenating the missings from subfamilies present and not present
-    result_df = pd.concat([new_rows.set_index(['Species', 'Subfamily']),
-                     missing.set_index(['Species', 'Subfamily'])], axis=0).reset_index()
+         # Checking if rows are missing in nonmultimember families
+         first_entry = (test['Species'] == row['Species']) & (test['Subfamily'] == row['Subfamily']) & (test.index <= index)
+         if first_entry.any() and (int(row[subfamily]) > row['count']):
+            # Calculate the difference
+            difference = int(row[subfamily]) - row['count']
+            # Append rows to missing_1 based on the difference
+            for i in range(difference):
+                missing = missing.append({'Species': row['Species'], 'Subfamily': row['Subfamily'], 'Count': i}, ignore_index=True)
 
     # Adding Pass_filter to false
-    result_df["Pass_filter"] = False
+    missing["Pass_filter"] = False
 
     # Adding to the end missing predictions
-    joined_sec = pd.concat([joined_sec, result_df], ignore_index=True, sort=False)
+    joined_sec = pd.concat([joined_sec, missing], ignore_index=True, sort=False)
 
     joined_sec["Pass_filter"] |= ~joined_sec["Subfamily"].isin(joined_sec.columns)
 
@@ -273,6 +267,7 @@ def expectations(table, family, opt, d):
 
 
 def main(args={}):
+
     opt = args
     sp2lin = {}
 
@@ -295,7 +290,7 @@ def main(args={}):
         write(f"--> writing output: {outfile}", 1)
         out.to_csv(outfile, sep="\t", index=False)
 
-        # Creating sp drawer input
+        # Creating sp drawwer input
         if (len(opt["a"]) > 0) and (len(opt["ann"]) > 0):
             annotation = pd.read_csv(opt['ann'],sep="\t",header=None)
             # Reading the alignment
@@ -314,14 +309,23 @@ def main(args={}):
             # Creating names+seqs for missing predicitons
             names = []
             seqs = []
+            occurrences = {}
             for index, row in final_df[final_df[0].isna()].iterrows():
                 subfamily_letters = ''.join([c for c in row['Subfamily'] if c.isalpha()])
                 subfamily_numbers = ''.join([c for c in row['Subfamily'] if c.isdigit()])
                 species= row['Species']
+                subfamily = row['Subfamily']
                 species_lower = species[0].lower() + species[1:]
                 hyper_str = "-"*(ali.ali_length()-1) + "A" # Sequence str
                 #name = f"{subfamily_letters}.{subfamily_numbers}.Missing.{species}.unfiltered" # Name str
-                name = f"{row['Subfamily']}.{subfamily_numbers}.Missing.{species_lower}.{species}_target.unfiltered chromosome:Missing strand:+ positions:1-50,60-110,120-170"
+                key = (species, subfamily_letters)
+                if key in occurrences:
+                    occurrences[key] += 1
+                    name = f"{subfamily_letters}.{subfamily_numbers}.Missing.{occurrences[key]}.{species_lower}.{species}_target.unfiltered chromosome:Missing strand:+ positions:1-50,60-110,120-170"
+                else:
+                    occurrences[key] = 1
+                    name = f"{subfamily}.{subfamily_numbers}.Missing.{species_lower}.{species}_target.unfiltered chromosome:Missing strand:+ positions:1-50,60-110,120-170"
+
                 names.append(name)
                 seqs.append(hyper_str)
 
@@ -351,13 +355,13 @@ def main(args={}):
                 row[0]: "arginine" if row[2] == "Well" else "readthrough" if row[2] == "Missannotation" else "unaligned"
                 for index, row in final_df.iterrows()
             }
-            replace_dict.popitem()
+            #replace_dict.popitem() # Why??
 
 
             #Replacing each selenocysteine by readthrough, arginine, unaligned
             for name in ali_f.names():
                 for key in replace_dict.keys():
-                    if (key in name) and ((key + "_") not in name):
+                    if (str(key) in str(name)) and ((str(key) + "_") not in str(name)):
                         new_name=name.replace("selenocysteine",replace_dict[key])
                         new_name_2 = new_name.replace(fam,final_df['Subfamily'][final_df[0] == key].values[0])
                         seq_dict[name]=new_name_2
@@ -386,5 +390,5 @@ def main(args={}):
 
 
 
-# if __name__ == "__main__":
+#if __name__ == "__main__":
 #    main(	)
