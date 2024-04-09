@@ -48,6 +48,12 @@ Some of them have additional dependencies which are not strictly required for se
 
      conda install -c etetoolkit ete3
 
+ - selenoprofiles assess requires pyranges and pyfaidx. Install them with::
+
+     pip install pyranges
+
+     conda install -c bioconda pyfaidx
+
  - selenoprofiles build offers a graphical interface which requires pylab. Install it with::
 
      conda install matplotlib

@@ -4,6 +4,17 @@ import pandas as pd
 import numpy as np
 from easyterm import command_line_options
 
+try:
+    import pyranges as pr
+    import pyfaidx
+
+except:
+    # printerr
+    raise notracebackException(
+        "ERROR pyranges & pyfaidx must be installed to use selenoprofiles assess! Try this command:\npip install pyranges\n\nor follow instructions at https://pyranges.readthedocs.io/en/latest/installation.html"
+    )
+
+
 help_msg = """This program obtains two tables containing the annotations for all selenoprotein predicted genes from Selenoprofiles of the input genome.
 
 ### Input/Output:
