@@ -116,9 +116,11 @@ def assign_lineage(species, taxonomy_lineages, mapping_df):
                     if lineage in mapping_df["Lineage"].values:
                         return lineage
             except KeyError:
-                raise Exception(f"'{shortened_sp}' not found in the taxonomy lineage")
+                #raise Exception(f"'{shortened_sp}' not found in the taxonomy lineage")
+                return 0
         else:
-            raise Exception(f"'{species}' not found in the taxonomy lineage")
+            #raise Exception(f"'{species}' not found in the taxonomy lineage")
+            return 0
 
     else:
         # If species is present
@@ -199,32 +201,74 @@ def expectations(table, family, opt, d):
     grouped_counts = (
         joined_sec.groupby(["Species", "Subfamily"]).size().reset_index(name="count")
     )
-    fam_cols = [ col for col in joined_sec.columns.tolist() if family in col]
-
+    if family in ['GPx','DI','TXNRD']:
+        fam_cols = [ col for col in joined_sec.columns.tolist() if family.upper() in col]
+    else:
+        fam_cols = [ col for col in joined_sec.columns.tolist() if family in col]
     missing = pd.DataFrame(columns=['Species', 'Subfamily', 'Count'])
 
     # Merging it to the previous df
     test = pd.merge(joined_sec, grouped_counts, on=["Species", "Subfamily"], how="left")
     # We have a problem, we are not taking into account those subfamilies which are not in that species but they should be
-    processed_species = set()
+    seen_species = {}
     for index, row in test.iterrows():
-     species = row['Species']
-     subfamily = row['Subfamily']
-     if species not in processed_species:
-         processed_species.add(species)
-         missing_fam_cols = [col for col in fam_cols if col not in test['Subfamily'][test['Species']==species].unique()]
-         # If any value is missing, add a single row to the missing DataFrame
-         for col in missing_fam_cols:
-             count_value = row[col]
-             missing = missing.append({'Species': species, 'Subfamily': col, 'Count': count_value}, ignore_index=True)
-         # Checking if rows are missing in nonmultimember families
-         first_entry = (test['Species'] == row['Species']) & (test['Subfamily'] == row['Subfamily']) & (test.index <= index)
-         if first_entry.any() and (int(row[subfamily]) > row['count']):
-            # Calculate the difference
-            difference = int(row[subfamily]) - row['count']
-            # Append rows to missing_1 based on the difference
-            for i in range(difference):
+      species = row['Species']
+      subfamily = row['Subfamily']
+      if species not in seen_species:
+         seen_species[species] = []
+         if subfamily not in seen_species[species]:
+           seen_species[species].append(subfamily)
+           temp_sp = test[(test['Species'] == species)]
+           missing_fam_cols = [col for col in fam_cols if col not in temp_sp['Subfamily'][temp_sp['Species']==species].unique()]
+           # If any value is missing, add a single row to the missing DataFrame
+           for col in missing_fam_cols:
+               count_value = row[col]
+               for i in range(count_value):
+                    missing = missing.append({'Species': species, 'Subfamily': col, 'Count': i}, ignore_index=True)
+
+           # Checking if rows are missing in nonmultimember families
+           temp = test[(test['Species'] == species) & (test['Subfamily'] == subfamily)]
+           expected_count = temp[subfamily].unique()[0]
+           actual = temp['count'].unique()[0]
+           if int(expected_count) > actual:
+              # Calculate the difference
+              difference = int(expected_count) - actual
+              for i in range(difference):
                 missing = missing.append({'Species': row['Species'], 'Subfamily': row['Subfamily'], 'Count': i}, ignore_index=True)
+      else:
+         if subfamily not in seen_species[species]:
+           seen_species[species].append(subfamily)
+           # Checking if rows are missing in nonmultimember families
+           temp = test[(test['Species'] == species) & (test['Subfamily'] == subfamily)]
+           expected_count = temp[subfamily].unique()[0]
+           actual = temp['count'].unique()[0]
+           if int(expected_count) > actual:
+              # Calculate the difference
+              difference = int(expected_count) - actual
+              for i in range(difference):
+                missing = missing.append({'Species': row['Species'], 'Subfamily': row['Subfamily'], 'Count': i}, ignore_index=True)
+
+    # Now we need to add the missings for those species absent in the current file
+    absent = {species : d[species] for species in d if species not in test['Species'].unique()}
+    # Creating artificial df to assign lineage
+    abs_df = pd.DataFrame(list(absent.keys()), columns=['Species'])
+    # Now we can assign lineage
+    abs_df['Lineage'] = abs_df['Species'].apply(
+            lambda x: assign_lineage(x, absent, expectation_table)
+    )
+    # Joining absents with expectation
+    abs_join = pd.merge(abs_df, expectation_table, on="Lineage", how="inner")
+    # Creating missing sequences
+    # If any value is missing, add a single row to the missing DataFrame
+    for _,row in abs_join.iterrows():
+        species = row['Species']
+        for col in fam_cols:
+            count_value = row[col]
+            for i in range(count_value):
+                missing = missing.append({'Species': species, 
+                'Subfamily': col, 
+                'Count': i}, ignore_index=True
+                )
 
     # Adding Pass_filter to false
     missing["Pass_filter"] = False
@@ -321,10 +365,10 @@ def main(args={}):
                 key = (species, subfamily_letters)
                 if key in occurrences:
                     occurrences[key] += 1
-                    name = f"{subfamily_letters}.{subfamily_numbers}.Missing.{occurrences[key]}.{species_lower}.{species}_target.unfiltered chromosome:Missing strand:+ positions:1-50,60-110,120-170"
+                    name = f"{subfamily}.{subfamily_numbers}.Missing.{species_lower}.{species}_target{occurrences[key]}.unfiltered chromosome:Missing strand:+ positions:1-50,60-110,120-170"
                 else:
                     occurrences[key] = 1
-                    name = f"{subfamily}.{subfamily_numbers}.Missing.{species_lower}.{species}_target.unfiltered chromosome:Missing strand:+ positions:1-50,60-110,120-170"
+                    name = f"{subfamily}.{subfamily_numbers}.Missing.{species_lower}.{species}_target{occurrences[key]}.unfiltered chromosome:Missing strand:+ positions:1-50,60-110,120-170"
 
                 names.append(name)
                 seqs.append(hyper_str)
@@ -344,6 +388,7 @@ def main(args={}):
                        break
 
             ali_f = ali[matching,:]
+
             # Adding missing sequences
             for i in range(len(seqs)):
                 ali_f.add_seq(names[i],seqs[i])
@@ -355,15 +400,21 @@ def main(args={}):
                 row[0]: "arginine" if row[2] == "Well" else "readthrough" if row[2] == "Missannotation" else "unaligned"
                 for index, row in final_df.iterrows()
             }
-            #replace_dict.popitem() # Why??
 
+            # There are some families with empty series at the end
+            last_key, last_value = list(replace_dict.items())[-1]
+            if str(last_key) == 'nan':
+               replace_dict.popitem()
 
             #Replacing each selenocysteine by readthrough, arginine, unaligned
             for name in ali_f.names():
                 for key in replace_dict.keys():
                     if (str(key) in str(name)) and ((str(key) + "_") not in str(name)):
                         new_name=name.replace("selenocysteine",replace_dict[key])
-                        new_name_2 = new_name.replace(fam,final_df['Subfamily'][final_df[0] == key].values[0])
+                        if fam != "TXNRD":
+                          new_name_2 = new_name.replace(fam,final_df['Subfamily'][final_df[0] == key].values[0])
+                        else:
+                          new_name_2 = new_name.replace("TR",final_df['Subfamily'][final_df[0] == key].values[0])
                         seq_dict[name]=new_name_2
 
             rename(ali_f,seq_dict)
@@ -391,4 +442,4 @@ def main(args={}):
 
 
 #if __name__ == "__main__":
-#    main(	)
+ #   main(	)
