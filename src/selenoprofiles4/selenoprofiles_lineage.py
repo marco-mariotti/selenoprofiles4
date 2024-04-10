@@ -116,11 +116,9 @@ def assign_lineage(species, taxonomy_lineages, mapping_df):
                     if lineage in mapping_df["Lineage"].values:
                         return lineage
             except KeyError:
-                #raise Exception(f"'{shortened_sp}' not found in the taxonomy lineage")
-                return 0
+                raise Exception(f"'{shortened_sp}' not found in the taxonomy lineage")
         else:
-            #raise Exception(f"'{species}' not found in the taxonomy lineage")
-            return 0
+            raise Exception(f"'{species}' not found in the taxonomy lineage")
 
     else:
         # If species is present
