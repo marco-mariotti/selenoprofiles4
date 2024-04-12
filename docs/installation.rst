@@ -1,5 +1,32 @@
 Installation
-------------
+============
+
+Docker installation
+-------------------
+Docker installation contains all information available from selenoprofiles, including optional dependencies (see below).
+To use Docker for running Selenoprofiles, you should follow the next steps:
+
+1. **Pull the Docker image**:
+
+   You can find the Docker image for Selenoprofiles on Docker Hub. To pull the image, run the following command:
+
+   .. code-block:: bash
+
+      docker pull maxtico/container_selenoprofiles:latest
+
+2. **Run the Docker container**:
+
+   Once you've pulled the Docker image, you can run the Selenoprofiles package inside the Docker container. Use the following command:
+
+   .. code-block:: bash
+
+      docker run maxtico/container_selenoprofiles:latest <selenoprofiles_command>
+
+For more information on using selenoprofiles Docker, refer to the documentation: 
+https://hub.docker.com/repository/docker/maxtico/container_selenoprofiles/
+
+Conda installation
+------------------
 
 We recommend to use the conda package manager to install selenoprofiles4
 (check `this page to install conda <https://docs.conda.io/en/latest/miniconda.html>`_).
@@ -47,6 +74,12 @@ Some of them have additional dependencies which are not strictly required for se
  - selenoprofiles drawer requires ete3. Install it with::
 
      conda install -c etetoolkit ete3
+
+ - selenoprofiles assess requires pyranges and pyfaidx. Install them with::
+
+     pip install pyranges
+
+     conda install -c bioconda pyfaidx
 
  - selenoprofiles build offers a graphical interface which requires pylab. Install it with::
 
