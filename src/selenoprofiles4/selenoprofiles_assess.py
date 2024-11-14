@@ -147,6 +147,22 @@ def calculate_frame(self, by):
     # Drop __index__ column
     self.apply(lambda df: df.drop(["__index__"], axis=1, inplace=True))
 
+def filter_rows(row):
+    # If Feature is "Selenocysteine" and Strand not matches
+    if row["Feature"] == "Selenocysteine" and row["Strand"] != row["Strand_ens"]:
+        # Mark all columns ending with "_ens" as -1
+        for col in row.index:
+            if col.endswith("_ens"):
+                row[col] = -1
+            elif col.endswith("Strand_ens"):
+                row[col] = row["Strand"]
+        return row
+    # Otherwise, keep only rows where Strand matches
+    elif row["Strand"] == row["Strand_ens"]:
+        return row
+    else:
+        # Discard the row
+        return None
 
 def ass_ann(df,sec):
    """Assesses the genome annotation from selenoprofiles predictions.
@@ -222,7 +238,7 @@ def ass_ann(df,sec):
 
            # Checking for - strand
            elif (temp_df["Strand_Sec"] == "-").all():
-                if (temp_df["End_Sec"] == temp_df["Start_ens_all"]).any() and not (temp_df["Start_Sec"]<temp_df["End_ens_all"]).any():
+                if (temp_df["End_Sec"] == temp_df["Start_ens_all"]).any() and not (temp_df["Start_Sec"]>temp_df["End_ens_all"]).any():
                    df["Type_annotation"] = "Stop codon"
 
                 # For skipped cases
@@ -249,11 +265,8 @@ def ass_ann(df,sec):
 
 
 def main(args={}):
-    if not args:
-        opt = command_line_options(def_opt, help_msg)
 
-    else:
-        opt = args
+    opt = args
 
     if (opt["s"] == None) | (opt["e"] == None) | (opt["f"] == None):
         raise NoTracebackError("ERROR options -s/-e/-f are compulsory!")
@@ -405,6 +418,12 @@ def main(args={}):
     # Join the ensembl transcript + selenocysteine position in a new pyranges
     annotation = sel_cor.join(ens_cor, how="left", suffix="_ens", report_overlap=True)
 
+    # Filtering for different strand cases
+    annotation = annotation.as_df()
+    annotation = annotation.apply(filter_rows, axis=1).dropna()
+    annotation = pr.PyRanges(annotation, int64 = True)
+
+
     # Useful for out_of_frame cases
     cds = annotation[annotation.Feature == "CDS"]
     sec = annotation[annotation.Feature == "Selenocysteine"]
@@ -483,12 +502,13 @@ def main(args={}):
             else:
                 return df
 
-    min_df2 = min_df.groupby('transcript_id', as_index=False).apply(lambda x: fn(x))
+    min_df_reset = min_df.reset_index(drop=True)
+    min_df2 = min_df_reset.groupby('transcript_id', as_index=False).apply(lambda x: fn(x))
     min_df2.reset_index(drop=True, inplace=True)
     min_df2.drop("Feature", axis=1, inplace=True)
 
     # Type annotation + hierarchy value
-    agg_df = min_df.groupby('transcript_id', as_index=False).apply(lambda x: fn(x))
+    agg_df = min_df_reset.groupby('transcript_id', as_index=False).apply(lambda x: fn(x))
     agg_df["Type_annotation"] = agg_df["Type_annotation"].replace(
         ["Upstream", "Downstream", "Stop codon", "Out of frame", "Skipped", "Spliced"],
         "Missannotation",
@@ -502,10 +522,14 @@ def main(args={}):
     agg = agg_df.groupby('transcript_id').first()
     agg = agg[["transcript_id_ens", "Type_annotation"]]
 
+    # Removing non-selenocysteine predictions
+    min_df2 = min_df2[min_df2["transcript_id"].str.contains("selenocysteine")]
+    agg = agg[agg.index.str.contains("selenocysteine")]
+
     # Saving to an output file
     min_df2.to_csv(opt["o"], sep="\t", index=False)
     agg.to_csv(opt["agg"], sep="\t")
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()

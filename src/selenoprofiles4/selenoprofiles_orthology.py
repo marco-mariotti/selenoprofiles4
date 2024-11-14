@@ -174,6 +174,7 @@ def candidate_score_similarity(ali, family, opt):
     )
     df_cand.reset_index(drop=True, inplace=True)
 
+    df_cand["Species"] = df_cand["Candidate"].str.split(".").str[3]
     return df_cand
 
 

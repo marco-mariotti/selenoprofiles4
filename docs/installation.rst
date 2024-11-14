@@ -85,4 +85,6 @@ Some of them have additional dependencies which are not strictly required for se
 
      conda install matplotlib
 
-     
+- selenoprofiles orthology required pyaln. Install it with::
+
+     pip install pyaln   
