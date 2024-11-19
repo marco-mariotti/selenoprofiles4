@@ -71,5 +71,7 @@ Optional dependencies for selenoprofiles utilities
 Selenoprofiles comes with some utilities: join, build, assess, orthology, lineage, drawer, database.
 Some of them have additional dependencies which are not strictly required for selenoprofiles and are not automatically installed:
 
+   .. code-block::
+
      pip install selenoprofiles4[addons]
 
