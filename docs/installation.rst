@@ -68,28 +68,8 @@ Check the :doc:`get_started` page to start using selenoprofiles.
 Optional dependencies for selenoprofiles utilities
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Selenoprofiles comes with some utilities: join, build, drawer, database.
+Selenoprofiles comes with some utilities: join, build, assess, orthology, lineage, drawer, database.
 Some of them have additional dependencies which are not strictly required for selenoprofiles and are not automatically installed:
 
- - selenoprofiles drawer requires ete3. Install it with::
+     pip install selenoprofiles4[addons]
 
-     conda install -c etetoolkit ete3
-
- - selenoprofiles assess requires pyranges, pyfaidx and numpy. Install them with::
-
-     pip install pyranges1
-
-     conda install -c bioconda pyfaidx
-     
-
- - selenoprofiles build offers a graphical interface which requires pylab. Install it with::
-
-     conda install matplotlib
-
-- selenoprofiles orthology requires pyaln. Install it with::
-
-     pip install pyaln   
-
-- selenoprofiles lineage requires ncbi-db. Install it with::
-
-     pip install ncbi-db
