@@ -75,16 +75,21 @@ Some of them have additional dependencies which are not strictly required for se
 
      conda install -c etetoolkit ete3
 
- - selenoprofiles assess requires pyranges and pyfaidx. Install them with::
+ - selenoprofiles assess requires pyranges, pyfaidx and numpy. Install them with::
 
-     pip install pyranges
+     pip install pyranges1
 
      conda install -c bioconda pyfaidx
+     
 
  - selenoprofiles build offers a graphical interface which requires pylab. Install it with::
 
      conda install matplotlib
 
-- selenoprofiles orthology required pyaln. Install it with::
+- selenoprofiles orthology requires pyaln. Install it with::
 
      pip install pyaln   
+
+- selenoprofiles lineage requires ncbi-db. Install it with::
+
+     pip install ncbi-db

@@ -1606,7 +1606,7 @@ def main():
             opt.resolve_links()
             opt = opt_expand_tilde(opt)
 
-            ortho_opt["ap"] = opt["selenoprofiles_data_dir"]+'/'+'selenoprotein_profiles/'
+            ortho_opt["ap"] = opt["selenoprofiles_data_dir"]+'/'+'selenoprotein_profiles/anchor_alignments/'
 
         run_orthology(ortho_opt)
 

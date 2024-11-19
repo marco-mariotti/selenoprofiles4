@@ -14,7 +14,6 @@ except:
         "ERROR pyranges & pyfaidx must be installed to use selenoprofiles assess! Try this command:\npip install pyranges\n\nor follow instructions at https://pyranges.readthedocs.io/en/latest/installation.html"
     )
 
-
 help_msg = """This program obtains two tables containing the annotations for all selenoprotein predicted genes from Selenoprofiles of the input genome.
 
 ### Input/Output:
@@ -38,13 +37,6 @@ This script has been initially designed to work with Selenoprofiles GTF file for
 This script assumes each Selenoprofiles ID contains a described Selenocysteine position (Genomic intervals, strand...). This script compares genomic intervals between Selenoprofiles and genomes. 
 Thus, annotations are based on overlaps between Selenoprofiles predicted genes and genome transcripts.
 
-### Requirements:
-
-Pyranges version: 0.0.120
-Pandas version: 1.1.5
-Numpy version: 1.19.2
-Easyterm version: 0.7.2
-
 See https://github.com/maxtico/assess_annotation for more information.
 """
 
@@ -60,110 +52,6 @@ def_opt = {
     "cmd": "assess",
 }
 
-def calculate_frame(self, by):
-    """Assess the frame of each genomic interval, assuming all are coding sequences.
-
-    The input Pyranges contains an added "Frame" column, which determines the base of the CDS that is the first base of a codon.
-    Resulting values are in range between "0" and "2" included. "0" indicates that the first base of the CDS is the first base of a codon,
-    "1" indicates the second base and "2" indicates the third base of the CDS.
-    "by" argument allows to calculate the frame for each transcript.
-
-       Parameters
-       ----------
-       by : str or list of str
-
-          Column(s) to group by to calculate the frame for each transcript.
-
-       Returns
-       -------
-       PyRanges
-           The function does not return anything because it adds a "Frame" column inplace.
-
-
-       Examples
-       --------
-       >>> p= pr.from_dict({"Chromosome": [1,1,1,2,2],
-       ...                  "Strand": ["+","+","+","-","-"],
-       ...                  "Start": [1,31,52,101,201],
-       ...                  "End": [10,45,90,130,218],
-       ...                  "transcript_id": ["t1","t1","t1","t2","t2"] })
-       >>> p
-       +--------------+--------------+-----------+-----------+-----------------+
-       |   Chromosome | Strand       |     Start |       End | transcript_id   |
-       |   (category) | (category)   |   (int32) |   (int32) | (object)        |
-       |--------------+--------------+-----------+-----------+-----------------|
-       |            1 | +            |         1 |        10 | t1              |
-       |            1 | +            |        31 |        45 | t1              |
-       |            1 | +            |        52 |        90 | t1              |
-       |            2 | -            |       101 |       130 | t2              |
-       |            2 | -            |       201 |       218 | t2              |
-       +--------------+--------------+-----------+-----------+-----------------+
-       Stranded PyRanges object has 5 rows and 5 columns from 2 chromosomes.
-       For printing, the PyRanges was sorted on Chromosome and Strand.
-
-       >>> p.calculate_frame(by='transcript_id')
-       +--------------+--------------+-----------+-----------+-----------------+-----------+
-       |   Chromosome | Strand       |     Start |       End | transcript_id   |     Frame |
-       |   (category) | (category)   |   (int32) |   (int32) | (object)        |   (int32) |
-       |--------------+--------------+-----------+-----------+-----------------+-----------|
-       |            1 | +            |         1 |        10 | t1              |         0 |
-       |            1 | +            |        31 |        45 | t1              |         0 |
-       |            1 | +            |        52 |        90 | t1              |         2 |
-       |            2 | -            |       101 |       130 | t2              |         2 |
-       |            2 | -            |       201 |       218 | t2              |         0 |
-       +--------------+--------------+-----------+-----------+-----------------+-----------+
-       Stranded PyRanges object has 5 rows and 6 columns from 2 chromosomes.
-       For printing, the PyRanges was sorted on Chromosome and Strand.
-
-    """
-    # Column to save the initial index
-    self.__index__ = np.arange(len(self))
-
-    # Filtering for desired columns
-    if type(by) == list:
-        l = by
-    else:
-        l = by.split()
-    sorted_p = self[["Strand", "__index__"] + l]
-
-    # Sorting by 5' (Intervals on + are sorted by ascending order and - are sorted by descending order)
-    sorted_p = sorted_p.sort(by="5")
-
-    # Creating a column saving the length for the intervals (for selenoprofiles and ensembl)
-    sorted_p.__length__ = sorted_p.End - sorted_p.Start
-
-    # Creating a column saving the cummulative length for the intervals
-    for k, df in sorted_p:
-        sorted_p.dfs[k]["__cumsum__"] = df.groupby(by=by).__length__.cumsum()
-
-    # Creating a frame column
-    sorted_p.Frame = (sorted_p.__cumsum__ - sorted_p.__length__) % 3
-
-    # Appending the Frame of sorted_p by the index of p
-    sorted_p = sorted_p.apply(lambda df: df.sort_values(by="__index__"))
-
-    self.Frame = sorted_p.Frame
-
-    # Drop __index__ column
-    self.apply(lambda df: df.drop(["__index__"], axis=1, inplace=True))
-
-def filter_rows(row):
-    # If Feature is "Selenocysteine" and Strand not matches
-    if row["Feature"] == "Selenocysteine" and row["Strand"] != row["Strand_ens"]:
-        # Mark all columns ending with "_ens" as -1
-        for col in row.index:
-            if col.endswith("_ens"):
-                row[col] = -1
-            elif col.endswith("Strand_ens"):
-                row[col] = row["Strand"]
-        return row
-    # Otherwise, keep only rows where Strand matches
-    elif row["Strand"] == row["Strand_ens"]:
-        return row
-    else:
-        # Discard the row
-        return None
-
 def ass_ann(df,sec):
    """Assesses the genome annotation from selenoprofiles predictions.
    It takes as input a df which has normal and _ens columns (Normal for selenoprotein predictions and _ens for genome transcripts.
@@ -178,20 +66,19 @@ def ass_ann(df,sec):
    # Get the selenocysteines for our specific transcript_id_ens
    Sp_sec = Sec[Sec["transcript_id_ens"].isin(df["transcript_id_ens"])]
 
-   if (df["Strand"] == df["Strand_ens"]).all():
-       # Condition for missing transcripts
-       if (df["transcript_id_ens"] == "-1").all():
+   # Condition for missing transcripts
+   if (df["transcript_id_ens"] == "-1").all():
            df["Type_annotation"] = "Missing"
 
-       # Condition for out of frame transcripts
-       elif (
+   # Condition for out of frame transcripts
+   elif (
            (df["Feature"] == "CDS")
            & (df["Frame_genome"] != df["Frame_genome_ens"])
        ).any():
            df["Type_annotation"] = "Out of frame"
 
-       # Condition for well annotated transcripts
-       elif (
+   # Condition for well annotated transcripts
+   elif (
            not Sp_sec.empty
            and (
                (Sp_sec["Feature"] == "Selenocysteine")
@@ -200,15 +87,15 @@ def ass_ann(df,sec):
            ).all()):
            df["Type_annotation"] = "Well annotated"
 
-       elif (
+   elif (
            (df["Feature"] == "Selenocysteine")
            & (df["transcript_id_ens"] != "-1")
            & (df["Overlap"] != 3)
        ).any():
            df["Type_annotation"] = "Spliced"
 
-       # Check for different types of misannotations
-       else:
+   # Check for different types of misannotations
+   else:
            # Creating a temporary dataframe to store the df lines with the selenocysteine line/s
            temp_df = pd.merge(Sec, df, on='transcript_id', suffixes=("_Sec", "_all"))
 
@@ -258,8 +145,6 @@ def ass_ann(df,sec):
                 # For other cases
                 else:
                    df["Type_annotation"] = "Other"
-   else:
-      df["Type_annotation"] = "Other"
 
    return df
 
@@ -288,11 +173,9 @@ def main(args={}):
         seleno_pyr = pr.read_gff3(opt["s"])
 
     # Saving all the exons from ensembl genome
-    CDS_df = genome_pyr[genome_pyr.Feature.str.startswith("CDS")]
-    CDS_df = CDS_df.as_df()
+    CDS_df = genome_pyr[genome_pyr["Feature"].str.startswith("CDS")]
     CDS_df.rename(columns={opt["cg"]: "transcript_id_ens"}, inplace=True)
     CDS_df["Strand"] = CDS_df["Strand"].astype("string")
-    CDS_df = pr.PyRanges(CDS_df, int64=True)
 
     ##REMOVING STOP CODONS
     if opt["stop"] == "auto":
@@ -302,40 +185,37 @@ def main(args={}):
 
         # Getting the stop codons from the transcripts
         last_codons = CDS_df.spliced_subsequence(
-            -3, by="transcript_id_ens"
+            -3, transcript_id="transcript_id_ens"
         )  # Aqui selecciones els intervals de les ulimes tres posicions del gff3
 
         # We get the spliced sequence for each transcript
-        last_codons_seq = pr.get_transcript_sequence(
-            last_codons, path=opt["f"], group_by="transcript_id_ens"
+        last_codons_seq = last_codons.get_transcript_sequence(
+            transcript_id = "transcript_id_ens", path=opt["f"]
         )
 
         # Create a column to know which are stop codons and which not
-        last_codons_seq.Sequence = last_codons_seq.Sequence.str.upper()
-        has_stop = last_codons_seq.Sequence.isin({"TGA", "TAA", "TAG"})
+        last_codons_seq["Sequence"] = last_codons_seq["Sequence"].str.upper()
+        has_stop = last_codons_seq["Sequence"].isin({"TGA", "TAA", "TAG"})
 
         # Save the IDs of the sequences which contain stop codons
-        has_stop_ids = last_codons_seq[has_stop].transcript_id_ens
+        has_stop_ids = last_codons_seq.loc[has_stop,"transcript_id_ens"]
 
         # Removing those transcripts which contain stop codons
         nc_df = CDS_df[
-            CDS_df.transcript_id_ens.isin(has_stop_ids)
+            CDS_df["transcript_id_ens"].isin(has_stop_ids)
         ]  # Transcripts WITH stop codons
         sc_df = CDS_df[
-            ~(CDS_df.transcript_id_ens.isin(has_stop_ids))
+            ~(CDS_df["transcript_id_ens"].isin(has_stop_ids))
         ]  # Transcripts with NO stop codons
 
         # Removing the stop codons from the transcripts
-        no_stop_df = nc_df.spliced_subsequence(0, -3, by="transcript_id_ens")
+        no_stop_df = nc_df.spliced_subsequence(0, -3, transcript_id="transcript_id_ens")
 
-        no_stop_df = no_stop_df.as_df()
-        sc_df = sc_df.as_df()
         # Concatenation of the two dataframes in a single ENSEMBL GFF in order to apply our conditions
         ensembl_nosc = pd.concat([sc_df, no_stop_df], ignore_index=True)
-        ensembl_nosc = pr.PyRanges(ensembl_nosc)
 
     elif opt["stop"] == "all":
-        ensembl_nosc = CDS_df.spliced_subsequence(-3, by="transcript_id_ens")
+        ensembl_nosc = CDS_df.spliced_subsequence(-3, transcript_id="transcript_id_ens")
 
     else:
         ensembl_nosc = CDS_df
@@ -346,28 +226,22 @@ def main(args={}):
     print("*******************************")
 
     # To work only with desired colums where ID is ensembl transcript ID and transcript_id is from Selenoprofile transcripts
-    seleno_pyr=seleno_pyr.as_df()
     seleno_pyr.rename(columns={opt["cs"]: "transcript_id"}, inplace=True)
-    seleno_pyr = pr.PyRanges(seleno_pyr, int64=True)
-    sel_cor = seleno_pyr[["Source", "Strand", "Feature", "transcript_id"]]
-    ens_cor = ensembl_nosc[["Source", "Strand", "Feature", "transcript_id_ens"]]
+    sel_cor = seleno_pyr[["Source","Chromosome","Start","End","Strand", "Feature", "transcript_id"]]
+    ens_cor = ensembl_nosc[["Source","Chromosome","Start","End","Strand", "Feature", "transcript_id_ens"]]
 
     # Converting ensembl Feature column into category type
-    ens_cor = ens_cor.as_df()
     ens_cor["Strand"] = ens_cor["Strand"].astype("string")
     ens_cor["Feature"] = ens_cor["Feature"].astype("category")
 
     # Renaming the transcript_id names from both dataframes
     ens_cor["transcript_id_ens"] = ens_cor["transcript_id_ens"].str.replace("CDS:", "")
-    ens_cor = pr.PyRanges(ens_cor, int64=True)
-    sel_cor = sel_cor.as_df()
     secs = sel_cor[sel_cor['transcript_id'].str.contains(":")]
     if secs.empty:
         sel_cor = pr.PyRanges(sel_cor, int64=True)
     else:
         secs['transcript_id'] = secs['transcript_id'].str.split(":", expand=True)[1]
         sel_cor.loc[(sel_cor.index.isin(secs.index)), 'transcript_id'] = secs['transcript_id']
-        sel_cor = pr.PyRanges(sel_cor, int64=True)
 
     # CALCULATING FRAMES
 
@@ -377,9 +251,8 @@ def main(args={}):
 
     ####Ensembl
     # Calculate frame for ensembl transcripts
-    calculate_frame(ens_cor, by="transcript_id_ens")
+    ens_cor = pr.orfs.calculate_frame(ens_cor, transcript_id="transcript_id_ens")
     # Creating genome frame
-    ens_cor = ens_cor.as_df()
     ens_cor.loc[ens_cor.Strand == "+", "Frame_genome"] = (
         ens_cor[ens_cor.Strand == "+"]["Start"]
         - ens_cor[ens_cor.Strand == "+"]["Frame"]
@@ -387,7 +260,6 @@ def main(args={}):
     ens_cor.loc[ens_cor.Strand == "-", "Frame_genome"] = (
         ens_cor[ens_cor.Strand == "-"]["End"] + ens_cor[ens_cor.Strand == "-"]["Frame"]
     ) % 3
-    ens_cor = pr.PyRanges(ens_cor, int64=True)
 
     ####Selenoprofiles
     # Dataframes only for CDS of selenoprofiles
@@ -395,14 +267,12 @@ def main(args={}):
     # Dataframe for storing Selenocysteines
     sel_Sec = sel_cor[sel_cor.Feature.str.startswith("Selenocysteine")]
     # Computing frames
-    calculate_frame(sel_CDS, by='transcript_id')
+    sel_CDS = pr.orfs.calculate_frame(sel_CDS, transcript_id="transcript_id")
     # Join Selenocysteines df with CDS+frame to assess Sec frame
-    sel_frame = sel_Sec.join(sel_CDS, suffix="_CDS")
-    sel_frame = sel_frame.as_df()
+    sel_frame = sel_Sec.join_ranges(sel_CDS, suffix="_CDS")
     # Now I have many useless columns, drop everything except the original ones df_sec and Frame (Filtering all the CDS columns)
     sel_frame = sel_frame.drop(sel_frame.filter(regex="_CDS").columns, axis=1)
     # Add output selenocysteines to sel_CDS
-    sel_CDS = sel_CDS.as_df()
     ## Now Frame is the frame of CDS intervals for those for which Feature == 'CDS', and for Selenocysteine features, it is the frame of the CDS interval that contains them
     sel_cor = pd.concat([sel_CDS, sel_frame])
     # Creating genome frame column
@@ -413,23 +283,16 @@ def main(args={}):
     sel_cor.loc[sel_cor.Strand == "-", "Frame_genome"] = (
         sel_cor[sel_cor.Strand == "-"]["End"] + sel_cor[sel_cor.Strand == "-"]["Frame"]
     ) % 3
-    sel_cor = pr.PyRanges(sel_cor, int64=True)
 
     # Join the ensembl transcript + selenocysteine position in a new pyranges
-    annotation = sel_cor.join(ens_cor, how="left", suffix="_ens", report_overlap=True)
-
-    # Filtering for different strand cases
-    annotation = annotation.as_df()
-    annotation = annotation.apply(filter_rows, axis=1).dropna()
-    annotation = pr.PyRanges(annotation, int64 = True)
-
+    sel_cor.reset_index(inplace=True)
+    annotation = sel_cor.join_ranges(ens_cor, join_type="left", suffix="_ens", report_overlap=True)
 
     # Useful for out_of_frame cases
     cds = annotation[annotation.Feature == "CDS"]
     sec = annotation[annotation.Feature == "Selenocysteine"]
 
     # ADD FILTER ON FRAME
-    annotation = annotation.as_df()
 
     # When filtering TAKING INTO ACCOUNT THE CASES OF OUT OF FRAME. We added selenocysteine conditions because imagine: We have an ensembl tid which overlaps with selid but have different frame, this one will be wrongly annotated
     annotation_final = annotation.loc[
@@ -442,8 +305,7 @@ def main(args={}):
 
     # Finding CDS which contain selenocysteines
     if sec.empty == False:
-        merge = cds.join(sec, suffix="_sel")
-        merge = merge.as_df()
+        merge = cds.join_ranges(sec, suffix="_sel")
 
         # Dropping columns
         result_clean = merge.drop(merge.filter(regex="_sel").columns, axis=1)
@@ -471,7 +333,7 @@ def main(args={}):
 
     # Creating a dataframe with Selenocysteines
     df_sec = annotation_final[annotation_final["Feature"] == "Selenocysteine"]
-    df_sec.reset_index(drop=True)
+    df_sec = df_sec.reset_index(drop=True)
 
     # Creating a new column (Type of annotation) to annotate the different types of transcripts
     annotation_final["Type_annotation"] = "0"
