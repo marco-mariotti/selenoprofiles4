@@ -146,6 +146,9 @@ selenoprofiles join     : collect and combine results previously obtained by run
 selenoprofiles drawer   : displays an overview of results on multiple targets using a species tree as backbone
 selenoprofiles build    : create custom profile alignment to be search with selenoprofiles
 selenoprofiles database : fix, inspect, edit the sqlite db used by selenoprofiles, or obtain fast output
+selenoprofiles orthology: assign subfamily names (e.g. GPx1 rather than GPx) for multimember families (vertebrates)
+selenoprofiles lineage  : filter predictions based on the expected selenoproteomes per lineage (vertebrates)
+selenoprofiles assess   : compare an input gene annotation with selenoprofiles output
 ### Note: every utility has it own help page; e.g. run: selenoprofiles build -h
 
 * System and global configuration
