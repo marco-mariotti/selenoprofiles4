@@ -5,7 +5,7 @@ from easyterm import command_line_options
 import os, subprocess, shlex
 from ncbi_db import ncbi_taxonomy_tree
 import numpy as np
-from MMlib3 import *
+from .MMlib3 import *
 
 help_msg = """selenoprofiles lineage: utility to exclude non-expected genes predicted by Selenoprofiles.
 
@@ -125,7 +125,7 @@ def assign_lineage(species, taxonomy_lineages, mapping_df):
         lineage_list = [
             item.strip(";") for item in taxonomy_lineages[species].split(" ")
         ]
-        for lineage in lineage_list:
+        for lineage in reversed(lineage_list):
             if lineage in mapping_df["Lineage"].values:
                 return lineage
 
@@ -180,14 +180,13 @@ def expectations(table, family, opt, d):
         sorted_df["Lineage"] = sorted_df["Species"].apply(
             lambda x: assign_lineage(x, d, expectation_table)
         )
+        joined = pd.merge(sorted_df, expectation_table, on="Lineage", how="inner")
 
     else:
         inp = sorted_df
         manual_tab = pd.read_csv(opt["map"])
-        sorted_df = pd.merge(inp, manual_tab, on="Linage", how="inner")
+        joined = pd.merge(inp, manual_tab, on="Species", how="inner")
 
-    # Merging df to compare subfamilies
-    joined = pd.merge(sorted_df, expectation_table, on="Lineage", how="inner")
     # Comparing Expected values to Index best similarity scores
     joined_sec = joined.astype({"Index_best": "int"})
     joined_sec["Pass_filter"] = joined_sec.apply(
@@ -311,6 +310,8 @@ def expectations(table, family, opt, d):
 def main(args={}):
 
     opt = args
+
+    os.makedirs("temp", exist_ok=True)
     sp2lin = {}
 
     # Iterate through each family alignment
