@@ -362,7 +362,10 @@ def load(config_filename, args={}, partial=False, override_args={}):
             elif "options" in category or "_db" in category:
                 function_text = '"""' + function_text + '"""'
             try:
-                exec("keywords[category][kword]=" + str(function_text))
+                if "tag" in category:
+                    keywords[category][kword]=literal_eval(str(function_text))
+                else:
+                    exec("keywords[category][kword]=" + str(function_text))
             except:
                 printerr(
                     "selenoprofiles ERROR can't assign function "
@@ -472,8 +475,11 @@ def load(config_filename, args={}, partial=False, override_args={}):
             elif "options" in category or "_db" in category:
                 function_text = '"""' + function_text + '"""'
             try:
-                # write(f'setting {category} {kword} = {function_text}', 1, how='reverse,magenta')
-                exec("keywords[category][kword]=" + str(function_text))
+                if "tag" in category:
+                    keywords[category][kword]=literal_eval(str(function_text))
+                else:
+                    # write(f'setting {category} {kword} = {function_text}', 1, how='reverse,magenta')
+                    exec("keywords[category][kword]=" + str(function_text))
             except:
                 printerr(
                     "selenoprofiles ERROR can't assign function "
@@ -589,9 +595,9 @@ def load(config_filename, args={}, partial=False, override_args={}):
         if opt["print_commands"]:
             set_MMlib_var("print_commands", 1)
 
-    if is_file(str(opt["selenoprofiles_data_dir"]) + "/version.txt"):
+    if is_file(str(opt["selenoprofiles_data_dir"]) + "/selenoprotein_profiles/version.txt"):
         profiles_version = (
-            open(str(opt["selenoprofiles_data_dir"]) + "/version.txt")
+            open(str(opt["selenoprofiles_data_dir"]) + "/selenoprotein_profiles/version.txt")
             .readline()
             .strip()
         )
@@ -3667,9 +3673,9 @@ def genewise(
         + error_file
     )
     bash(
-        "sed 's/Cells done \[[ ]*-*[0-9][0-9]*%\]//g' "
+        "sed 's/Cells done \\[[ ]*-*[0-9][0-9]*%\\]//g' "
         + error_file
-        + " |  sed 's/Cells [0-9]*%\\x08\[ [0-9]*\]//g' | sed  's/\[[0-9][0-9]*% done\]Before mid-j [0-9][0-9]* Cells done [0-9][0-9]*%\\x08//g' | sed 's/\[[0-9][0-9]*% done\]After[ ]* mid-j[ ]* [0-9][0-9]* Cells done [0-9][0-9]*%\\x08//g' |   sed 's/Explicit read off.*\[[0-9][0-9]*,[0-9][0-9]*\]\[[0-9][0-9]*,[0-9][0-9]*\]//g' | sed 's/\\x[0-9]*//g' | sed 's/ [ ]*/ /g'   > "
+        + " |  sed 's/Cells [0-9]*%\\x08\\[ [0-9]*\\]//g' | sed  's/\\[[0-9][0-9]*% done\\]Before mid-j [0-9][0-9]* Cells done [0-9][0-9]*%\\x08//g' | sed 's/\\[[0-9][0-9]*% done\\]After[ ]* mid-j[ ]* [0-9][0-9]* Cells done [0-9][0-9]*%\\x08//g' |   sed 's/Explicit read off.*\\[[0-9][0-9]*,[0-9][0-9]*\\]\\[[0-9][0-9]*,[0-9][0-9]*\\]//g' | sed 's/\\x[0-9]*//g' | sed 's/ [ ]*/ /g'   > "
         + error_file_cleaned
     )
     if b[0]:  # genewise exited with exit status != 0. Some error occured
