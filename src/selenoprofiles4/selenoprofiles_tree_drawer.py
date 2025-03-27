@@ -637,7 +637,7 @@ class limited_p2ghit(gene):
         self.species = species(species_name)
         # self.program= header.split('prediction_program:')[1].split()[0]
         self.label = self.id.split(".")[2]
-        self.filter = self.id.split(".")[5]
+        self.filter = self.id.split(".")[5] if len(self.id.split(".")) > 5 else ""
         self.profile_name = self.id.split(".")[0]
         if len(self.id.split(".")) >= 5:
             self.target_name = self.id.split(".")[-1]
