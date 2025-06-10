@@ -82,7 +82,8 @@ tags.DEFAULT                =    []
 tag_db.DEFAULT              =    {selenoprofiles_data_dir}/uniref50_seleno_sim.fasta
 uniref2go_db.DEFAULT        =    {selenoprofiles_data_dir}/gene_ontology/idmapping_uniref_GO.tab
 tag_blast_options.DEFAULT   =    -F "m S" -a {ncpus} -f 999  -e 1e-10 -M BLOSUM80 -G 9 -E 2 
-neutral_tags.DEFAULT        =    ["hypothet?ical","hypothet?ical conserved protein","PREDICTED","unnamed protein product","unknown","putative","(gi\|.*\| RIKEN cDNA .+ (gene)?(protein)? \[.+\].?)+$","(gi\|.*\| +([a-zA-Z0-9\-]+) \[Drosophila .+\].*)+","(gi\|.*\| +(AGAP[a-zA-Z0-9\-]+) \[Anopheles .+\].*)+","chromosome \w+ open reading frame \w+, isoform CRA","\wCG\d+(, isoform CRA_.+)? \[.+\]","(gi\|.*\| +SJ[a-zA-Z0-9\-]+ +(protein)? +\[Schistosoma japonicum].*)+","gi\|.*\| +MGC\d+ (protein )?\[Xenopus .+\]", "Uncharacterized protein"]
+neutral_tags.DEFAULT        =     ['hypothet?ical',  'hypothet?ical conserved protein',  'PREDICTED',  'unnamed protein product',  'unknown',  'putative',  '(gi\\|.*\\| RIKEN cDNA .+ (gene)?(protein)? \\[.+\\].?)+$',  '(gi\\|.*\\| +([a-zA-Z0-9\\-]+) \\[Drosophila .+\\].*)+',  '(gi\\|.*\\| +(AGAP[a-zA-Z0-9\\-]+) \\[Anopheles .+\\].*)+',  'chromosome \\w+ open reading frame \\w+, isoform CRA',  '\\wCG\\d+(, isoform CRA_.+)? \\[.+\\]',  '(gi\\|.*\\| +SJ[a-zA-Z0-9\\-]+ +(protein)? +\\[Schistosoma japonicum].*)+',  'gi\\|.*\\| +MGC\\d+ (protein )?\\[Xenopus .+\\]',  'Uncharacterized protein']
+
 #gene extensions for cyclic exonerate and genewise
 exonerate_extension = 200000
 genewise_extension  = 100

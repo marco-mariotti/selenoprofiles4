@@ -1,5 +1,6 @@
-Selenoprofiles tools
-==========================
+Selenoprofiles utilities
+========================
+Selenoprofiles comes with some utilities for specific use cases. Some require optional dependencies: see the Installation page.
 
 Selenoprofiles was designed for comparative studies across multiples species.
 
