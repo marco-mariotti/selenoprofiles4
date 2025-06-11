@@ -20,7 +20,7 @@ To use Docker for running Selenoprofiles, you should follow the next steps:
 
    .. code-block:: bash
 
-      docker run maxtico/container_selenoprofiles:latest <selenoprofiles_command>
+      docker run maxtico/selenoprofiles_container:latest <selenoprofiles_command>
 
 For more information on using selenoprofiles Docker, refer to the documentation: 
 https://hub.docker.com/repository/docker/maxtico/container_selenoprofiles/
