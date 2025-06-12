@@ -92,6 +92,10 @@ help_msg_full = (
 -sp_add + add annotation for each species from a tab delimited file, format: 'species TAB annotation'. 
           The annotations are appended next to the species name (aligned). 
           The special annotation COLOR#xxxxx can be provided to change the color of the species name to xxxxxx (RGB, hex)
+-node_color color backgrounds of certain nodes. 
+          Format of each line:  which_nodes:what_style    where:
+          i=NODEID; ID1&ID2 can be used to call an ancestor
+          what_style  can be  c=COLOR 
 
 * Text size:   
 -tsize +  specify size of text for titles
@@ -154,7 +158,8 @@ def_opt = {  #'temp':'/home/mmariotti/temp', 'common':0,
     "img_w": -1,
     "cmd": "drawer",
     "i": [],
-    "filter":False
+    "filter":False,
+    "node_color":"",
 }
 
 
@@ -319,50 +324,78 @@ class NumberedBoxFace(faces.Face):
         for boxdata_index in range(len(self.list)):
             boxdata = self.list[boxdata_index]
             if boxdata:
-                number, hexcolor, filter = boxdata
-                if filter == "filtered": # Should be only filtered
-                    if number !=0:
-                        colored_box = QGraphicsRectItem(
-                            numbered_box_width * boxdata_index,
-                            0,
-                            numbered_box_width,
-                            numbered_box_height,
-                        )
-                        colored_box.setBrush(QBrush(QColor(hexcolor)))
-                        text_in_box = QGraphicsSimpleTextItem()
-                        # printerr("***"+str(number), 1)
-                        text_in_box.setText(str(number))
-                        # Adding line 1
-                        cross_brick_1 = QGraphicsLineItem(numbered_box_width* boxdata_index, numbered_box_height, numbered_box_width*boxdata_index+numbered_box_width,0)
-                        pen = QPen(QColor("#F40000"))
-                        pen.setWidth(3)
-                        cross_brick_1.setPen(pen)
-                        # Adding line 2
-                        cross_brick_2 = QGraphicsLineItem(numbered_box_width*boxdata_index, 0, numbered_box_width*boxdata_index+numbered_box_width, numbered_box_height)
-                        pen = QPen(QColor("#F40000"))
-                        pen.setWidth(3)
-                        cross_brick_2.setPen(pen)
+                if opt["filter"]:
+                    number, hexcolor, filter = boxdata
+                    if filter == "filtered": # Should be only filtered
+                        if number !=0:
+                            colored_box = QGraphicsRectItem(
+                                numbered_box_width * boxdata_index,
+                                0,
+                                numbered_box_width,
+                                numbered_box_height,
+                            )
+                            colored_box.setBrush(QBrush(QColor(hexcolor)))
+                            text_in_box = QGraphicsSimpleTextItem()
+                            # printerr("***"+str(number), 1)
+                            text_in_box.setText(str(number))
+                            # Adding line 1
+                            cross_brick_1 = QGraphicsLineItem(numbered_box_width* boxdata_index, numbered_box_height, numbered_box_width*boxdata_index+numbered_box_width,0)
+                            pen = QPen(QColor("#F40000"))
+                            pen.setWidth(3)
+                            cross_brick_1.setPen(pen)
+                            # Adding line 2
+                            cross_brick_2 = QGraphicsLineItem(numbered_box_width*boxdata_index, 0, numbered_box_width*boxdata_index+numbered_box_width, numbered_box_height)
+                            pen = QPen(QColor("#F40000"))
+                            pen.setWidth(3)
+                            cross_brick_2.setPen(pen)
 
-                        font = text_in_box.font()
-                        font.setPointSize(opt["nsize"])
-                        text_in_box.setFont(font)  # setting default text size
-                        reduce_font_if_necessary(
-                            text_in_box,
-                            numbered_box_width - 1,
-                            numbered_box_height,
-                            category="numbered box",
-                        )
-                        text_in_box.setZValue(
-                            1
-                        )  # default is 0, this is to be sure it is on top of colored box
-                        text_in_box.setPos(boxdata_index * numbered_box_width + 1, 0)
-                        colored_box.setParentItem(self.item)
-                        text_in_box.setParentItem(self.item)
-                        cross_brick_1.setParentItem(self.item)
-                        cross_brick_2.setParentItem(self.item)
-                # unfiltered
+                            font = text_in_box.font()
+                            font.setPointSize(opt["nsize"])
+                            text_in_box.setFont(font)  # setting default text size
+                            reduce_font_if_necessary(
+                                text_in_box,
+                                numbered_box_width - 1,
+                                numbered_box_height,
+                                category="numbered box",
+                            )
+                            text_in_box.setZValue(
+                                1
+                            )  # default is 0, this is to be sure it is on top of colored box
+                            text_in_box.setPos(boxdata_index * numbered_box_width + 1, 0)
+                            colored_box.setParentItem(self.item)
+                            text_in_box.setParentItem(self.item)
+                            cross_brick_1.setParentItem(self.item)
+                            cross_brick_2.setParentItem(self.item)
+                    # unfiltered
+                    else:
+                        if number!=0:
+                            colored_box = QGraphicsRectItem(
+                                numbered_box_width * boxdata_index,
+                                0,
+                                numbered_box_width,
+                                numbered_box_height,
+                            )
+                            colored_box.setBrush(QBrush(QColor(hexcolor)))
+                            text_in_box = QGraphicsSimpleTextItem()
+                            # printerr("***"+str(number), 1)
+                            text_in_box.setText(str(number))
+                            font = text_in_box.font()
+                            font.setPointSize(opt["nsize"])
+                            text_in_box.setFont(font)  # setting default text size
+                            reduce_font_if_necessary(
+                                text_in_box,
+                                numbered_box_width - 1,
+                                numbered_box_height,
+                                category="numbered box",
+                            )
+                            text_in_box.setZValue(
+                                1
+                            )  # default is 0, this is to be sure it is on top of colored box
+                            text_in_box.setPos(boxdata_index * numbered_box_width + 1, 0)
+                            colored_box.setParentItem(self.item)
+                            text_in_box.setParentItem(self.item)
                 else:
-                  if number!=0:
+                    number, hexcolor = boxdata
                     colored_box = QGraphicsRectItem(
                         numbered_box_width * boxdata_index,
                         0,
@@ -637,7 +670,7 @@ class limited_p2ghit(gene):
         self.species = species(species_name)
         # self.program= header.split('prediction_program:')[1].split()[0]
         self.label = self.id.split(".")[2]
-        self.filter = self.id.split(".")[5]
+        self.filter = self.id.split(".")[5] if len(self.id.split(".")) > 5 else ""
         self.profile_name = self.id.split(".")[0]
         if len(self.id.split(".")) >= 5:
             self.target_name = self.id.split(".")[-1]
@@ -825,6 +858,40 @@ def main(args):
     tree_style.draw_aligned_faces_as_table = True
     tree_style.aligned_table_style = 1
     tree_style.show_leaf_name = False
+
+    global colored_subtrees
+    colored_subtrees = []   # list of (ancestor_node, color_string)
+    if opt["node_color"]:
+        for spec in opt["node_color"].split(","):
+            # split into the “targets” and the “style”
+            try:
+                target_part, style_part = spec.split(":", 1)
+            except ValueError:
+                raise Exception(f"Invalid node_color spec: '{spec}' — must be 'node1&node2:c=Color' or 'node1:c=Color'")
+            # extract color
+            if not style_part.startswith("c="):
+                raise Exception(f"Invalid style in node_color spec: '{style_part}' — must start with 'c='")
+            color = style_part.split("=", 1)[1]
+
+            # determine ancestor
+            if "&" in target_part:
+                name1, name2 = target_part.split("&", 1)
+                # find the two nodes
+                matches1 = t.search_nodes(name=name1)
+                matches2 = t.search_nodes(name=name2)
+                if not matches1 or not matches2:
+                    raise Exception(f"Cannot find nodes '{name1}' or '{name2}' in the tree")
+                n1, n2 = matches1[0], matches2[0]
+                anc = t.get_common_ancestor(n1, n2)
+            else:
+                # single node: color that node (and its entire subtree)
+                name = target_part
+                matches = t.search_nodes(name=name)
+                if not matches:
+                    raise Exception(f"Cannot find node '{name}' in the tree")
+                anc = matches[0]
+
+            colored_subtrees.append((anc, color))
 
     global explicit_labels
     explicit_labels = opt["explicit_labels"].split(",")
@@ -1066,6 +1133,12 @@ def mylayout(node):
     ## Phylogeny layout
     if node.is_leaf():
         ## Setting the leaf color name
+        bg = None
+        for anc, col in colored_subtrees:
+            # node being a leaf, check if its ancestor list includes anc
+            if node is anc or anc in node.get_ancestors():
+                bg = col
+                break
 
         # node.img_style['bgcolor']='#DDDDDD'
         column_index = 0
@@ -1089,9 +1162,17 @@ def mylayout(node):
             main_species, fgcolor=fgcolor, fsize=opt["ssize"]
         )  # species name!
         nameFace.vt_align = 1
-        faces.add_face_to_node(
-            nameFace, node, column=column_index, position="branch-right"
-        )
+
+        if bg:
+            node.img_style["bgcolor"] = bg
+            faces.add_face_to_node(
+                nameFace, node, column=column_index, position="branch-right"
+            )
+        else:
+            faces.add_face_to_node(
+                nameFace, node, column=column_index, position="branch-right"
+            )
+
         column_index += 1
 
         if hasattr(node, "species_attributes"):
@@ -1121,41 +1202,59 @@ def mylayout(node):
                     count_per_label = {}
                     for gene_index in range(len(node.columns[family])):
                         x = node.columns[family][gene_index]
-                        key = (x.label, x.filter)
-                        if key not in count_per_label:
-                            count_per_label[key] = 0
-                        count_per_label[key]+=1
+                        if opt["filter"]:
+                            key = (x.label, x.filter)
+                            if key not in count_per_label:
+                                count_per_label[key] = 0
+                            count_per_label[key]+=1
+                        else:
+                            if x.label not in count_per_label:
+                                count_per_label[x.label] = 0
+                            count_per_label[x.label] += 1
 
                     # create rectangle with width of: box_width * len(labels_seen_for_family_hash[family].keys())
                     list_to_build_numbered_box = []
                     if not opt["c"]:
                         for label in ordered_labels:
                             if label in labels_seen_for_family_hash[family]:
-                                key_unfiltered = (label, "unfiltered")
-                                key_filtered = (label, "filtered")
-                                if key_unfiltered not in count_per_label and key_filtered not in count_per_label:
-                                    list_to_build_numbered_box.append([])
+                                if opt["filter"]:
+                                    key_unfiltered = (label, "unfiltered")
+                                    key_filtered = (label, "filtered")
+                                    if key_unfiltered not in count_per_label and key_filtered not in count_per_label:
+                                        list_to_build_numbered_box.append([])
+                                    else:
+                                        count_unfiltered = count_per_label.get(key_unfiltered, 0)
+                                        count_filtered = count_per_label.get(key_filtered, 0)
+                                        list_to_build_numbered_box.append(
+                                            [
+                                                count_unfiltered,
+                                                label_to_color.setdefault(
+                                                    label, label_to_color["unknown"]
+                                                ),
+                                                "unfiltered",
+                                            ]
+                                        )
+                                        list_to_build_numbered_box.append(
+                                            [
+                                                count_filtered,
+                                                label_to_color.setdefault(
+                                                    label, label_to_color["unknown"]
+                                                ),
+                                                "filtered",
+                                            ]
+                                        )
                                 else:
-                                    count_unfiltered = count_per_label.get(key_unfiltered, 0)
-                                    count_filtered = count_per_label.get(key_filtered, 0)
-                                    list_to_build_numbered_box.append(
-                                        [
-                                            count_unfiltered,
-                                            label_to_color.setdefault(
+                                    if label not in count_per_label:
+                                        list_to_build_numbered_box.append([])
+                                    else:
+                                        list_to_build_numbered_box.append(
+                                            [
+                                                count_per_label[label],
+                                                label_to_color.setdefault(
                                                 label, label_to_color["unknown"]
-                                            ),
-                                            "unfiltered",
-                                        ]
-                                    )
-                                    list_to_build_numbered_box.append(
-                                        [
-                                            count_filtered,
-                                            label_to_color.setdefault(
-                                                label, label_to_color["unknown"]
-                                            ),
-                                            "filtered",
-                                        ]
-                                    )
+                                                ),
+                                            ]
+                                        )
                     else:  # condensating boxes in max n columns. possible labels are defined by explicit_labels option
 
                         count_per_label["others"] = 0

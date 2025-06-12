@@ -49,7 +49,7 @@ def_opt = {
     "exp": "",
     "switch": 0,
     "a": [],
-    "map": 0,
+    "map": "",
     "pexp": 0,
     "cmd": "lineage",
     "ann": "",
@@ -184,7 +184,7 @@ def expectations(table, family, opt, d):
 
     else:
         inp = sorted_df
-        manual_tab = pd.read_csv(opt["map"])
+        manual_tab = pd.read_csv(opt["map"],sep="\t")
         joined = pd.merge(inp, manual_tab, on="Species", how="inner")
 
     # Comparing Expected values to Index best similarity scores
@@ -202,7 +202,7 @@ def expectations(table, family, opt, d):
         fam_cols = [ col for col in joined_sec.columns.tolist() if family.upper() in col]
     else:
         fam_cols = [ col for col in joined_sec.columns.tolist() if family in col]
-    missing = pd.DataFrame(columns=['Species', 'Subfamily', 'Count'])
+    missing_rows = []
 
     # Merging it to the previous df
     test = pd.merge(joined_sec, grouped_counts, on=["Species", "Subfamily"], how="left")
@@ -221,7 +221,7 @@ def expectations(table, family, opt, d):
            for col in missing_fam_cols:
                count_value = row[col]
                for i in range(count_value):
-                    missing = missing.append({'Species': species, 'Subfamily': col, 'Count': i}, ignore_index=True)
+                    missing_rows.append({'Species': species, 'Subfamily': col, 'Count': i})
 
            # Checking if rows are missing in nonmultimember families
            temp = test[(test['Species'] == species) & (test['Subfamily'] == subfamily)]
@@ -231,7 +231,7 @@ def expectations(table, family, opt, d):
               # Calculate the difference
               difference = int(expected_count) - actual
               for i in range(difference):
-                missing = missing.append({'Species': row['Species'], 'Subfamily': row['Subfamily'], 'Count': i}, ignore_index=True)
+                missing_rows.append({'Species': row['Species'], 'Subfamily': row['Subfamily'], 'Count': i})
       else:
          if subfamily not in seen_species[species]:
            seen_species[species].append(subfamily)
@@ -243,7 +243,7 @@ def expectations(table, family, opt, d):
               # Calculate the difference
               difference = int(expected_count) - actual
               for i in range(difference):
-                missing = missing.append({'Species': row['Species'], 'Subfamily': row['Subfamily'], 'Count': i}, ignore_index=True)
+                missing_rows.append({'Species': row['Species'], 'Subfamily': row['Subfamily'], 'Count': i})
 
     # Now we need to add the missings for those species absent in the current file
     absent = {species : d[species] for species in d if species not in test['Species'].unique()}
@@ -262,11 +262,12 @@ def expectations(table, family, opt, d):
         for col in fam_cols:
             count_value = row[col]
             for i in range(count_value):
-                missing = missing.append({'Species': species, 
+                missing_rows.append({'Species': species, 
                 'Subfamily': col, 
-                'Count': i}, ignore_index=True
+                'Count': i}
                 )
-
+    # Final missing df
+    missing = pd.DataFrame(missing_rows)
     # Adding Pass_filter to false
     missing["Pass_filter"] = False
 

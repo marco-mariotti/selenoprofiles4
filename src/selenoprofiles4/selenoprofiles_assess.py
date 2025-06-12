@@ -169,6 +169,8 @@ def main(args={}):
 
     if ".gtf" in opt["s"]:
         seleno_pyr = pr.read_gtf(opt["s"])
+    elif ".gff" in opt["s"]:
+        seleno_pyr = pr.read_gff(opt["s"])
     else:
         seleno_pyr = pr.read_gff3(opt["s"])
 

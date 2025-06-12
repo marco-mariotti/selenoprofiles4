@@ -92,9 +92,9 @@ GO_obo_file            = {selenoprofiles_data_dir}/gene_ontology/gene_ontology_e
 
 ## defining built-in sets of families. follow the syntax to create custom sets
 families_set.prokarya = ahpd,ahpf,ars_s,arsc,bbd,cytc,dsre,duf1858,fesor,fmdb,frha,ftrb,gpx_b,grx,gst,hesb_like,imp,merp,mert,msra_b,mucd,nadh_ox,pp_sp1,prx,prx_like,rhor,rnfb,rnfc,rsam,seld,soret,tdip,ugc,ugsc,uos_hp3,usha,yeee,di_b,dsba,dsbg,fdha,frhd,frx,grda,grdb,hdra,prdb
-families_set.metazoa =  SPS,DI,Fep15,FrnE,GPx,MsrA,Sel15,SelKi,SelH,SelI,SelJ,SelK,SelL,SelM,SelN,SelO,SelP,SelR,SelS,SelU,TR,SelT,SelW,AhpC
+families_set.metazoa =  SEPHS2,DIO,SELENOE,FrnE,GPX,MsrA,SELENOF,SelKi,SELENOH,SELENOI,SELENOJ,SELENOK,SELENOL,SELENOM,SELENON,SELENOO,SELENOP,MSRB,SELENOS,SELENOU,TXNRD,SELENOT,SELENOW,AhpC
 families_set.protist =    EhSEP2,Lmsel1,Sel1,Sel2,Sel3,Sel4,SelQ,SelTryp,MSP,Ostsp1,Ostsp2,Ostsp3
-families_set.machinery  =  SPS,SBP2,SecS,eEFsec,pstk,secp43
+families_set.machinery  =  SEPHS2,SBP2,SecS,eEFsec,pstk,secp43
 families_set.eukarya   =  metazoa,protist
 families_set.se_traits   =  machinery,ybbb,yqeb,yqec
 
