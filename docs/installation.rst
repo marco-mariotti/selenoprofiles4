@@ -14,16 +14,25 @@ To use Docker for running Selenoprofiles, you should follow the next steps:
 
       docker pull maxtico/selenoprofiles_container:latest
 
-2. **Run the Docker container**:
+2. **Running Selenoprofiles on the Docker container**
 
-   Once you've pulled the Docker image, you can run the Selenoprofiles package inside the Docker container. Use the following command:
+  Once you've pulled the Docker image, you can run the Selenoprofiles package inside the Docker container.
+  In most cases, you’ll want to mount your working directory so results and input files can be accessed outside of the container. Here’s a complete example command:
 
-   .. code-block:: bash
+  .. code-block:: bash
 
-      docker run maxtico/selenoprofiles_container:latest <selenoprofiles_command>
+    docker run --rm -v $(pwd):/mnt maxtico/selenoprofiles_container:latest \
+      selenoprofiles \
+      -o /mnt/{selenoprofiles_output_folder} \
+      -t /mnt/{species_genome} \
+      -s {species} \
+      -p {profile} \
+      -output_gtf_file {gtf_file} \
+      -temp /mnt/{temp_folder}
+
 
 For more information on using selenoprofiles Docker, refer to the documentation: 
-https://hub.docker.com/repository/docker/maxtico/container_selenoprofiles/
+https://hub.docker.com/repository/docker/maxtico/selenoprofiles_container/
 
 Conda installation
 ------------------
