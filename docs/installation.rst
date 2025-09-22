@@ -3,7 +3,7 @@ Installation
 
 Docker installation
 -------------------
-Docker installation contains all information available from selenoprofiles, including optional dependencies (see below).
+The docker image of selenoprofiles contains a complete installation, including all optional dependencies (see below).
 To use Docker for running Selenoprofiles, you should follow the next steps:
 
 1. **Pull the Docker image**:
@@ -14,16 +14,30 @@ To use Docker for running Selenoprofiles, you should follow the next steps:
 
       docker pull maxtico/selenoprofiles_container:latest
 
-2. **Run the Docker container**:
+2. **Running Selenoprofiles on the Docker container**
 
-   Once you've pulled the Docker image, you can run the Selenoprofiles package inside the Docker container. Use the following command:
+  Once you've pulled the Docker image, you can run the Selenoprofiles package inside the Docker container.
+  In most cases, you’ll want to mount your working directory so results and input files can be accessed outside of the container. Here’s a complete example command:
 
-   .. code-block:: bash
+  .. code-block:: bash
 
-      docker run maxtico/selenoprofiles_container:latest <selenoprofiles_command>
+    docker run --rm -v $(pwd):/mnt maxtico/selenoprofiles_container:latest \
+      selenoprofiles \
+      -o /mnt/{selenoprofiles_output_folder} \
+      -t /mnt/{species_genome} \
+      -s {species} \
+      -p {profile} \
+      -temp /mnt/{temp_folder}
+
+  So, for example if your target "genome.fa" is in your current working directory, your command line may look like:
+
+  .. code-block:: bash
+  
+    docker run --rm -v $(pwd):/mnt maxtico/selenoprofiles_container:latest \
+        selenoprofiles -o /mnt/selenoprofiles_out -t /mnt/genome.fa -s Homo_sapiens -p metazoa -temp /mnt/temp
 
 For more information on using selenoprofiles Docker, refer to the documentation: 
-https://hub.docker.com/repository/docker/maxtico/container_selenoprofiles/
+https://hub.docker.com/r/maxtico/selenoprofiles_container/
 
 Conda installation
 ------------------

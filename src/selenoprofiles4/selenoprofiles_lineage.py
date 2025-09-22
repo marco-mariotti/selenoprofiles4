@@ -47,7 +47,6 @@ def_opt = {
     "of": "./",
     "temp": "temp",
     "exp": "",
-    "switch": 0,
     "a": [],
     "map": "",
     "pexp": 0,
@@ -424,19 +423,22 @@ def main(args={}):
             ali_f.write(fileformat="fasta", to_file=outfile)
 
         elif opt["a"]:
-            ali = Alignment(opt["a"], fileformat="fasta")
-            # List to save true selenocysteines + profile seqs
-            filt_names = [
-                item
-                for item in ali.names()
-                if not is_selenoprofiles_output_title(ali.get_desc(item))
-            ]
-            prof_cand = filt_names + out[out["Pass_filter"] == True]["Candidate"].tolist()
-            # Creating alignment file
-            ali_filt = ali[prof_cand, :]
-            # Saving output
-            outfile = opt["of"].rstrip("/") + "/" + fam + "." + opt["o"].strip(".") + ".ali"
-            ali_filt.write(fileformat="fasta", to_file=outfile)
+            ali = None
+            for aln in opt["a"]:
+                if fam in aln:
+                    ali = Alignment(aln, fileformat="fasta")
+                # List to save true selenocysteines + profile seqs
+                filt_names = [
+                    item
+                    for item in ali.names()
+                    if not is_selenoprofiles_output_title(ali.get_desc(item))
+                ]
+                prof_cand = filt_names + out[out["Pass_filter"] == True]["Candidate"].tolist()
+                # Creating alignment file
+                ali_filt = ali[prof_cand, :]
+                # Saving output
+                outfile = opt["of"].rstrip("/") + "/" + fam + "." + opt["o"].strip(".") + ".ali"
+                ali_filt.write(fileformat="fasta", to_file=outfile)
 
 
 
