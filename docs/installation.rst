@@ -3,7 +3,7 @@ Installation
 
 Docker installation
 -------------------
-Docker installation contains all information available from selenoprofiles, including optional dependencies (see below).
+The docker image of selenoprofiles contains a complete installation, including all optional dependencies (see below).
 To use Docker for running Selenoprofiles, you should follow the next steps:
 
 1. **Pull the Docker image**:
@@ -27,12 +27,17 @@ To use Docker for running Selenoprofiles, you should follow the next steps:
       -t /mnt/{species_genome} \
       -s {species} \
       -p {profile} \
-      -output_gtf_file {gtf_file} \
       -temp /mnt/{temp_folder}
 
+  So, for example if your target "genome.fa" is in your current working directory, your command line may look like:
+
+  .. code-block:: bash
+  
+    docker run --rm -v $(pwd):/mnt maxtico/selenoprofiles_container:latest \
+        selenoprofiles -o /mnt/selenoprofiles_out -t /mnt/genome.fa -s Homo_sapiens -p metazoa -temp /mnt/temp
 
 For more information on using selenoprofiles Docker, refer to the documentation: 
-https://hub.docker.com/repository/docker/maxtico/selenoprofiles_container/
+https://hub.docker.com/r/maxtico/selenoprofiles_container/
 
 Conda installation
 ------------------
