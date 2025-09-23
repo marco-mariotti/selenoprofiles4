@@ -186,21 +186,28 @@ def main(args={}):
         print("*******************************")
 
         # Getting the stop codons from the transcripts
-        last_codons = CDS_df.spliced_subsequence(
-            -3, transcript_id="transcript_id_ens"
+        last_codons = CDS_df.slice_ranges(
+            -3, group_by="transcript_id_ens"
         )  # Aqui selecciones els intervals de les ulimes tres posicions del gff3
 
         # We get the spliced sequence for each transcript
-        last_codons_seq = last_codons.get_transcript_sequence(
-            transcript_id = "transcript_id_ens", path=opt["f"]
+        last_codons_seq = last_codons.get_sequence(
+            group_by = "transcript_id_ens", path=opt["f"]
         )
+        # last_codons_seq is a Series
+        last_codons_seq_df = pd.DataFrame({
+            "transcript_id_ens": last_codons_seq.index,
+            "Sequence": last_codons_seq.values
+        })
+        # Set the index if you want to keep it as transcript_id_ens
+        last_codons_seq_df.set_index("transcript_id_ens", inplace=True)
 
         # Create a column to know which are stop codons and which not
-        last_codons_seq["Sequence"] = last_codons_seq["Sequence"].str.upper()
-        has_stop = last_codons_seq["Sequence"].isin({"TGA", "TAA", "TAG"})
+        last_codons_seq_df["Sequence"] = last_codons_seq_df["Sequence"].str.upper()
+        has_stop = last_codons_seq_df["Sequence"].isin({"TGA", "TAA", "TAG"})
 
         # Save the IDs of the sequences which contain stop codons
-        has_stop_ids = last_codons_seq.loc[has_stop,"transcript_id_ens"]
+        has_stop_ids = last_codons_seq.index[has_stop]
 
         # Removing those transcripts which contain stop codons
         nc_df = CDS_df[
@@ -211,13 +218,13 @@ def main(args={}):
         ]  # Transcripts with NO stop codons
 
         # Removing the stop codons from the transcripts
-        no_stop_df = nc_df.spliced_subsequence(0, -3, transcript_id="transcript_id_ens")
+        no_stop_df = nc_df.slice_ranges(0, -3, group_by="transcript_id_ens")
 
         # Concatenation of the two dataframes in a single ENSEMBL GFF in order to apply our conditions
         ensembl_nosc = pd.concat([sc_df, no_stop_df], ignore_index=True)
 
     elif opt["stop"] == "all":
-        ensembl_nosc = CDS_df.spliced_subsequence(-3, transcript_id="transcript_id_ens")
+        ensembl_nosc = CDS_df.slice_ranges(-3, group_by="transcript_id_ens")
 
     else:
         ensembl_nosc = CDS_df
@@ -253,7 +260,7 @@ def main(args={}):
 
     ####Ensembl
     # Calculate frame for ensembl transcripts
-    ens_cor = pr.orfs.calculate_frame(ens_cor, transcript_id="transcript_id_ens")
+    ens_cor = pr.orfs.calculate_frame(ens_cor, group_by="transcript_id_ens")
     # Creating genome frame
     ens_cor.loc[ens_cor.Strand == "+", "Frame_genome"] = (
         ens_cor[ens_cor.Strand == "+"]["Start"]
@@ -269,9 +276,9 @@ def main(args={}):
     # Dataframe for storing Selenocysteines
     sel_Sec = sel_cor[sel_cor.Feature.str.startswith("Selenocysteine")]
     # Computing frames
-    sel_CDS = pr.orfs.calculate_frame(sel_CDS, transcript_id="transcript_id")
+    sel_CDS = pr.orfs.calculate_frame(sel_CDS, group_by="transcript_id")
     # Join Selenocysteines df with CDS+frame to assess Sec frame
-    sel_frame = sel_Sec.join_ranges(sel_CDS, suffix="_CDS")
+    sel_frame = sel_Sec.join_overlaps(sel_CDS, suffix="_CDS")
     # Now I have many useless columns, drop everything except the original ones df_sec and Frame (Filtering all the CDS columns)
     sel_frame = sel_frame.drop(sel_frame.filter(regex="_CDS").columns, axis=1)
     # Add output selenocysteines to sel_CDS
@@ -288,7 +295,7 @@ def main(args={}):
 
     # Join the ensembl transcript + selenocysteine position in a new pyranges
     sel_cor.reset_index(inplace=True)
-    annotation = sel_cor.join_ranges(ens_cor, join_type="left", suffix="_ens", report_overlap=True)
+    annotation = sel_cor.join_overlaps(ens_cor, join_type="left", suffix="_ens", report_overlap_column='Overlap')
 
     # Useful for out_of_frame cases
     cds = annotation[annotation.Feature == "CDS"]
@@ -307,7 +314,7 @@ def main(args={}):
 
     # Finding CDS which contain selenocysteines
     if sec.empty == False:
-        merge = cds.join_ranges(sec, suffix="_sel")
+        merge = cds.join_overlaps(sec, suffix="_sel")
 
         # Dropping columns
         result_clean = merge.drop(merge.filter(regex="_sel").columns, axis=1)
@@ -342,7 +349,13 @@ def main(args={}):
 
     # Apply groupby + if for good annotations
     final_ann_df = annotation_final.groupby(['transcript_id', "transcript_id_ens"]).apply(
-        lambda x: ass_ann(x,df_sec)
+        lambda x: ass_ann(
+            x.assign(
+                transcript_id=x.name[0],
+                transcript_id_ens=x.name[1]
+            ),
+            df_sec
+        ),
     )
 
     print("\n*******************************")
