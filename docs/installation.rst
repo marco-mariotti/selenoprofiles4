@@ -1,40 +1,26 @@
 Installation
 ============
 
+.. note::
+
+  **Platform compatibility:**
+
+  Selenoprofiles4 is officially supported on **Linux** and **macOS** systems.
+  It is not compatible with Windows.
+  Windows users are advised to run selenoprofiles4 using Docker or Windows Subsystem for Linux (WSL2).
+
 Docker installation
 -------------------
 The docker image of selenoprofiles contains a complete installation, including all optional dependencies (see below).
 To use Docker for running Selenoprofiles, you should follow the next steps:
 
-1. **Pull the Docker image**:
+**Pull the Docker image**:
 
    You can find the Docker image for Selenoprofiles on Docker Hub. To pull the image, run the following command:
 
    .. code-block:: bash
 
       docker pull maxtico/selenoprofiles_container:latest
-
-2. **Running Selenoprofiles on the Docker container**
-
-  Once you've pulled the Docker image, you can run the Selenoprofiles package inside the Docker container.
-  In most cases, you’ll want to mount your working directory so results and input files can be accessed outside of the container. Here’s a complete example command:
-
-  .. code-block:: bash
-
-    docker run --rm -v $(pwd):/mnt maxtico/selenoprofiles_container:latest \
-      selenoprofiles \
-      -o /mnt/{selenoprofiles_output_folder} \
-      -t /mnt/{species_genome} \
-      -s {species} \
-      -p {profile} \
-      -temp /mnt/{temp_folder}
-
-  So, for example if your target "genome.fa" is in your current working directory, your command line may look like:
-
-  .. code-block:: bash
-  
-    docker run --rm -v $(pwd):/mnt maxtico/selenoprofiles_container:latest \
-        selenoprofiles -o /mnt/selenoprofiles_out -t /mnt/genome.fa -s Homo_sapiens -p metazoa -temp /mnt/temp
 
 For more information on using selenoprofiles Docker, refer to the documentation: 
 https://hub.docker.com/r/maxtico/selenoprofiles_container/
@@ -78,14 +64,34 @@ At any time, run this to access the help page::
 
 Check the :doc:`get_started` page to start using selenoprofiles.
 
+.. warning::
 
-Optional dependencies for selenoprofiles utilities
---------------------------------------------------
+  **Note for Mac users (Apple Silicon, M1/M2/M3/M4):**
 
-Selenoprofiles comes with some utilities: join, build, assess, orthology, lineage, drawer, database.
-Some of them have additional dependencies which are not strictly required for selenoprofiles and are not automatically installed:
+  Some bioconda packages required by *selenoprofiles4* (such as *mafft*) are not yet available for the ARM64 (Apple Silicon) architecture.
+  If you see an error such as::
 
-   .. code-block::
+      LibMambaUnsatisfiableError: Encountered problems while solving:
+        - nothing provides mafft needed by selenoprofiles4-4.x.x-py_0
 
-     pip install selenoprofiles4[addons]
+  This happens because Conda is searching only for ARM64 builds.
+  To solve this, use **Rosetta**, which allows Conda to run Intel (x86_64) packages on your Mac:
+
+  1. Make sure Rosetta is installed (only once per system). See: https://support.apple.com/en-us/102527
+
+
+  2. Create and activate the environment as Intel (osx-64)
+
+    .. code-block:: bash
+
+        CONDA_SUBDIR=osx-64 conda create -n sp4
+        conda activate sp4
+
+  3. Install selenoprofiles4 using Intel packages
+
+    .. code-block:: bash
+
+        CONDA_SUBDIR=osx-64 conda install -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4
+
+  After this, installation should succeed and *selenoprofiles4* will work normally on Apple Silicon.
 
