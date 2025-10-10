@@ -1676,6 +1676,28 @@ def main():
         write("\nselenoprofiles assess completed.   Date: " + bbash("date"), 1)
         sys.exit()
 
+    # Testing selenoprofiles
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        from .selenoprofiles_test import (
+            main as run_test,
+            def_opt as def_opt_test,
+            help_msg as help_msg_test,
+        )
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles test", 1)
+
+        test_opt = easyterm.command_line_options(
+            def_opt_test,
+            help_msg_test,
+            ["cmd"],  # just to accept "drawer"
+            # advanced_help_msg={"full": help_msg_full_..., None: ""},
+        )
+
+        run_test(test_opt)
+
+        write("\nselenoprofiles test completed.   Date: " + bbash("date"), 1)
+        sys.exit()
+
     ######
     if len(sys.argv) > 1 and sys.argv[1] == "join":
         from .selenoprofiles_join_alignments import (
