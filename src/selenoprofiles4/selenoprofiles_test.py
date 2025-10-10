@@ -2,6 +2,9 @@
 from string import *
 import os, sys, traceback, subprocess
 from easyterm import command_line_options, write
+import importlib.resources
+import tempfile
+import shutil
 
 help_msg="""selenoprofiles test: utility to verify that the installation works correctly.
 
@@ -20,10 +23,17 @@ Options:
     -h, --help     Show this help message and exit
 """
 
+def get_default_test_fasta():
+    try:
+        # Use importlib to safely find the installed data file
+        return importlib.resources.files("selenoprofiles4.tests") / "test_sequences.fa"
+    except Exception:
+        return "test_sequences.fa"
+
 # Default options
 def_opt = {
     "b": "",
-    "i": "",
+    "i": str(get_default_test_fasta()),
     "o": "",
     "cmd": "test"
 }
@@ -90,8 +100,6 @@ def main(opt={}):
             raise NotracebackException("ERROR: selenoprofiles executable not found. Use -b to specify it manually.")
 
     # Paths
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    tests_dir = os.path.join(base_dir, "tests")
     results_folder = opt["o"]
     sequence_file = opt["i"]
 
@@ -99,16 +107,31 @@ def main(opt={}):
         raise NotracebackException(
             "ERROR: cannot run tests. test_sequences.fa not found! Run this in the selenoprofiles installation directory."
         )
+    
+    # Create temporary folder if no output folder is given
+    temp_folder = None
+    if not opt["o"]:
+        temp_folder = tempfile.mkdtemp(prefix="selenoprofiles_test_")
+        results_folder = temp_folder
+    else:
+        results_folder = opt["o"]
+        os.makedirs(results_folder, exist_ok=True)
 
     write("Starting tests...\n", end="\n")
 
-    # Run all four tests
-    run_single_test("MSRB", selenoprofiles_bin, results_folder, sequence_file, "log_test1", "cysteine")
-    run_single_test("DIO", selenoprofiles_bin, results_folder, sequence_file, "log_test2", "selenocysteine")
-    run_single_test("SEPHS2", selenoprofiles_bin, results_folder, sequence_file, "log_test3", "threonine")
-    run_single_test("GPX", selenoprofiles_bin, results_folder, sequence_file, "log_test4", "cysteine")
+    try:
+        # Run all four tests
+        run_single_test("MSRB", selenoprofiles_bin, results_folder, sequence_file, "log_test1", "cysteine")
+        run_single_test("DIO", selenoprofiles_bin, results_folder, sequence_file, "log_test2", "selenocysteine")
+        run_single_test("SEPHS2", selenoprofiles_bin, results_folder, sequence_file, "log_test3", "threonine")
+        run_single_test("GPX", selenoprofiles_bin, results_folder, sequence_file, "log_test4", "cysteine")
 
-    write("\nAll tests completed successfully.\n", end="\n")
+        write("\nAll tests completed successfully.\n", end="\n")
+    finally:
+        # Clean up temporary folder if created
+        if temp_folder:
+            shutil.rmtree(temp_folder)
+            write(f"Temporary folder {temp_folder} removed.\n", end="\n")
 
 
 """
