@@ -1,5 +1,7 @@
-Docker
-======
+.. _docker_usage:
+
+Using selenoprofiles in Docker
+==============================
 
 Pull the image
 --------------

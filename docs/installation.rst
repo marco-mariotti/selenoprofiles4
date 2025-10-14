@@ -7,7 +7,6 @@ Installation
 
   Selenoprofiles4 is officially supported on **Linux** and **macOS** systems.
   It is not compatible with Windows.
-  Windows users are advised to run selenoprofiles4 using Docker or Windows Subsystem for Linux (WSL2).
 
 Docker installation
 -------------------
@@ -24,6 +23,11 @@ To use Docker for running Selenoprofiles, you should follow the next steps:
 
 For more information on using selenoprofiles Docker, refer to the documentation: 
 https://hub.docker.com/r/maxtico/selenoprofiles_container/
+
+.. note::
+
+  When using Docker, the way you run Selenoprofiles commands differs slightly. 
+  For detailed usage instructions and advanced options, see :ref:`docker_usage`.
 
 Conda installation
 ------------------
