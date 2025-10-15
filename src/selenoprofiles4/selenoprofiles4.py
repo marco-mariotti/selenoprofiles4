@@ -1686,14 +1686,7 @@ def main():
         write("|" + "-" * 119, 1)
         write("|        Running utility: selenoprofiles test", 1)
 
-        test_opt = easyterm.command_line_options(
-            def_opt_test,
-            help_msg_test,
-            ["cmd"],  # just to accept "drawer"
-            # advanced_help_msg={"full": help_msg_full_..., None: ""},
-        )
-
-        run_test(test_opt)
+        run_test()
 
         write("\nselenoprofiles test completed.   Date: " + bbash("date"), 1)
         sys.exit()

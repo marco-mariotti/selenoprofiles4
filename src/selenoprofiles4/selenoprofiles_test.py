@@ -32,9 +32,6 @@ def get_default_test_fasta():
 
 # Default options
 def_opt = {
-    "b": "",
-    "i": str(get_default_test_fasta()),
-    "o": "",
     "cmd": "test"
 }
 
@@ -75,11 +72,7 @@ def run_single_test(family, selenoprofiles_bin, results_folder, sequence_file, l
         raise NotracebackException(f"-- ERROR! Expected '{success_marker}' not found in output.")
     write("##### OK!\n", end="\n")
 
-def main(opt={}):
-    # If user explicitly asks for help, show it
-    if "-h" in sys.argv or "--help" in sys.argv:
-        print(help_msg)
-        sys.exit(0)
+def main(opt=None):
 
     # If no options were passed, use defaults
     if not opt:
@@ -87,21 +80,17 @@ def main(opt={}):
 
     write("Looking for Selenoprofiles executable...", end="\n")
 
-    if opt["b"]:
-        selenoprofiles_bin = opt["b"]
-    else:
-        # Try autodetect
-        for candidate in ["selenoprofiles", "selenoprofiles4.py"]:
-            status, path = bash(f"which {candidate}")
-            if status == 0 and os.path.isfile(path.strip()):
-                selenoprofiles_bin = path.strip()
-                break
-        else:
-            raise NotracebackException("ERROR: selenoprofiles executable not found. Use -b to specify it manually.")
+    # Try autodetect
+    for candidate in ["selenoprofiles", "selenoprofiles4.py"]:
+        status, path = bash(f"which {candidate}")
+        if status == 0 and os.path.isfile(path.strip()):
+            selenoprofiles_bin = path.strip()
+            break
+    if not selenoprofiles_bin:
+        raise NotracebackException("ERROR: selenoprofiles executable not found. Use -b to specify it manually.")
 
     # Paths
-    results_folder = opt["o"]
-    sequence_file = opt["i"]
+    sequence_file = str(get_default_test_fasta())
 
     if not os.path.isfile(sequence_file):
         raise NotracebackException(
@@ -110,12 +99,8 @@ def main(opt={}):
     
     # Create temporary folder if no output folder is given
     temp_folder = None
-    if not opt["o"]:
-        temp_folder = tempfile.mkdtemp(prefix="selenoprofiles_test_")
-        results_folder = temp_folder
-    else:
-        results_folder = opt["o"]
-        os.makedirs(results_folder, exist_ok=True)
+    temp_folder = tempfile.mkdtemp(prefix="selenoprofiles_test_")
+    results_folder = temp_folder
 
     write("Starting tests...\n", end="\n")
 

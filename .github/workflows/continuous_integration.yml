@@ -1,0 +1,31 @@
+name: Test Selenoprofiles with Conda
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-selenoprofiles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: 3.12
+          auto-update-conda: true
+
+      - name: Create Conda environment and install selenoprofiles4
+        shell: bash
+        run: |
+          conda create -n sp4 -y -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4
+          # Activar l'entorn Conda
+          source $HOME/miniconda/etc/profile.d/conda.sh
+          conda activate sp4
+          # Instal·lar el paquet local amb addons
+          pip install -e .[addons]
+          # Executar el test
+          selenoprofiles test
