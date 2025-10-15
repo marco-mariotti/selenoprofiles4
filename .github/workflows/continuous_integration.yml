@@ -7,24 +7,28 @@ on:
 jobs:
   test-selenoprofiles:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Conda
+      - name: Setup Conda and create environment
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: 3.12
           auto-update-conda: true
-
-      - name: Create Conda environment and install selenoprofiles4
-        shell: bash
+          activate-environment: sp4
+          # Indiquem un environment file opcional si vols predefinir-lo
+          # environment-file: environment.yml
+          
+      - name: Install selenoprofiles4 in Conda environment
         run: |
-          conda create -n sp4 -y -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4
-          # Activar l'entorn Conda
-          conda init
-          conda activate sp4
-          # Instal·lar el paquet local amb addons
+          conda install -n sp4 -y -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4
           pip install -e .[addons]
-          # Executar el test
+
+      - name: Run selenoprofiles test
+        run: |
+          echo "Running selenoprofiles test..."
           selenoprofiles test
