@@ -31,4 +31,6 @@ jobs:
       - name: Run selenoprofiles test
         run: |
           echo "Running selenoprofiles test..."
+          selenoprofiles -setup
+          selenoprofiles -download
           selenoprofiles test
