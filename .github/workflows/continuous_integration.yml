@@ -1,9 +1,8 @@
 name: Test Selenoprofiles with Conda
 
 on:
-  push:
-    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test-selenoprofiles:
@@ -23,6 +22,7 @@ jobs:
         run: |
           conda create -n sp4 -y -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4
           # Activar l'entorn Conda
+          conda init
           conda activate sp4
           # Instal·lar el paquet local amb addons
           pip install -e .[addons]
