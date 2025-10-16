@@ -22,13 +22,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      # --- Obtenir versió de selenoprofiles/_version.py ---
-      - name: Extract selenoprofiles version
-        id: get_version
+      - name: Set variables
         run: |
-          VERSION=$(grep "__version__" selenoprofiles/_version.py | sed -E 's/.*"([^"]+)".*/\1/')
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Detected version: $VERSION"
+          VER=$(cat VERSION)
+          echo "VERSION=$VER" >> $GITHUB_ENV
       - name: Build and push (linux/amd64)
         uses: docker/build-push-action@v6
         with:
@@ -37,6 +34,6 @@ jobs:
           platforms: linux/amd64
           push: true
           # Tag exactly as requested: v{version of selenoprofiles}
-          tags: ${{ env.IMAGE_NAME }}:${{ steps.get_version.outputs.VERSION }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
