@@ -1,4 +1,4 @@
-name: Build & Push selenoprofiles container
+name: Build & Push Selenoprofiles docker
 
 on:
   workflow_dispatch:      # manual trigger
