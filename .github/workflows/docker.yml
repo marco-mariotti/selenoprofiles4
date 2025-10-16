@@ -7,8 +7,8 @@ permissions:
   contents: read
 env:
   IMAGE_NAME: maxtico/selenoprofiles_container
-  global:
-    - VERSION=$(cat VERSION)
+  VERSION : $(cat VERSION)
+  
 jobs:
   build:
     runs-on: ubuntu-latest
