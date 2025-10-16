@@ -1,3 +1,4 @@
 include src/selenoprofiles4/exoneratecfg/*
 include src/selenoprofiles4/wisecfg/*
 include src/selenoprofiles4/blaster_parser.awk
+include tests/*

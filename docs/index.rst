@@ -33,3 +33,4 @@ To install selenoprofiles, get started or learn advanced usage, check the docume
    pipeline_detailed
    advanced
    troubleshooting
+   docker

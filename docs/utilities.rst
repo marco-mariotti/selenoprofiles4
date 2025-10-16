@@ -172,3 +172,21 @@ Optional arguments:
       - **'all'** The last three positions from each genome transcript are removed, without performing any search.
       - **'no'** Assumes there are no stop codons in genome transcripts, so they aren't removed.
 
+Validating selenoprofiles: selenoprofiles test
+++++++++++++++++++++++++++++++++++++++++++++++
+The *selenoprofiles test* utility verifies that a selenoprofiles is working correctly.
+It performs several automated test runs across multiple selenoprotein families using a small FASTA dataset to ensure that the 
+main executable and dependencies (such as BLAST, Exonerate, and Wise2) function as expected.
+
+The tool executes a set of functional tests on predefined selenoprotein families — MSRB, DIO, SEPHS2, and GPX — and checks for expected annotation 
+markers in the output.
+
+See its usage with::
+
+  selenoprofiles test [-b path_to_selenoprofiles] [-i input_fasta] [-o output_folder]
+
+Arguments
+  * **\-b**	(Optional) Path to the selenoprofiles executable. If not provided, the tool auto-detects it using which selenoprofiles or which selenoprofiles4.py.
+  * **\-i**	(Required) Input FASTA file containing the test sequences.
+  * **\-o**	(Required) Output folder where the test results will be written.
+  * **\-h, --help**	Show this help message and exit.

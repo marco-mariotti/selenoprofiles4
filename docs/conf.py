@@ -19,7 +19,7 @@
 
 project = 'selenoprofiles4'
 copyright = '2023, Marco Mariotti'
-author = 'Marco Mariotti'
+author = 'Max Ticó, Marco Mariotti'
 
 
 # -- General configuration ---------------------------------------------------

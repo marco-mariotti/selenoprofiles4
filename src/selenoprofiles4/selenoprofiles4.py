@@ -1676,6 +1676,21 @@ def main():
         write("\nselenoprofiles assess completed.   Date: " + bbash("date"), 1)
         sys.exit()
 
+    # Testing selenoprofiles
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        from .selenoprofiles_test import (
+            main as run_test,
+            def_opt as def_opt_test,
+            help_msg as help_msg_test,
+        )
+        write("|" + "-" * 119, 1)
+        write("|        Running utility: selenoprofiles test", 1)
+
+        run_test()
+
+        write("\nselenoprofiles test completed.   Date: " + bbash("date"), 1)
+        sys.exit()
+
     ######
     if len(sys.argv) > 1 and sys.argv[1] == "join":
         from .selenoprofiles_join_alignments import (
