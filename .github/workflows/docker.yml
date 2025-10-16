@@ -24,10 +24,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Set variables
-        run: |
-          VER=$(cat VERSION)
-          echo "VERSION=$VER" >> $GITHUB_ENV
+      - name: Set VERSION from file
+        run: echo "VERSION=$(cat VERSION | tr -d '[:space:]')" >> $GITHUB_ENV
       - name: Build and push (linux/amd64)
         uses: docker/build-push-action@v6
         with:
