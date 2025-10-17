@@ -1,3 +1,6 @@
+{% set name = "selenoprofiles4" %}
+{% set version = environ.get("PKG_VERSION") %}
+
 package:
   name:    {{ name }}
   version: {{ version }}
@@ -49,3 +52,4 @@ about:
 extra:
   recipe-maintainers:
     - marco-mariotti
+    - maxtico
