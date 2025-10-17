@@ -7,7 +7,6 @@ permissions:
   contents: read
 env:
   IMAGE_NAME: maxtico/selenoprofiles_container
-  VERSION : $(cat VERSION)
   
 jobs:
   build:
