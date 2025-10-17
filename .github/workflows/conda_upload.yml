@@ -2,6 +2,10 @@ name: Build & Upload to Conda
 
 on:
   workflow_dispatch:      # manual trigger
+    inputs:
+        tag:
+          description: 'Git tag for this release'
+          required: true
 
 jobs:
   conda_deployment:
