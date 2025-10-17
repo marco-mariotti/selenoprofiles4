@@ -24,7 +24,7 @@ jobs:
         run: |
           VERSION=$(python - <<'PY'
           import re, io
-          src = io.open("selenoprofiles4/_version.py","r",encoding="utf-8").read()
+          src = io.open("src/selenoprofiles4/_version.py","r",encoding="utf-8").read()
           m = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', src)
           assert m, "No __version__ found"
           print(m.group(1))
