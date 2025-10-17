@@ -58,7 +58,6 @@ jobs:
           mkdir -p "$CONDA_BLD_DIR"
           conda build .\
             -c mmariotti -c anaconda -c bioconda -c biobuilds \
-            --output-folder "$CONDA_BLD_DIR" \
             --no-anaconda-upload
             PKG_PATH=$(conda build . --output)
             echo "pkg=$PKG_PATH" >> "$GITHUB_OUTPUT" 
