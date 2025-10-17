@@ -31,9 +31,13 @@ jobs:
       - name: Set VERSION from file
         id: ver
         run: |
-          ver="$(tr -d '[:space:]' < VERSION)"
-          echo "version=$ver" >> $GITHUB_OUTPUT
-          echo "Resolved VERSION: $ver"
+          VERSION=$(python - <<'PY'
+          import json, urllib.request
+          print(json.load(urllib.request.urlopen("https://pypi.org/pypi/selenoprofiles4/json"))["info"]["version"])
+          PY
+          )
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
 
       - name: Build and push (linux/amd64)
         uses: docker/build-push-action@v6
