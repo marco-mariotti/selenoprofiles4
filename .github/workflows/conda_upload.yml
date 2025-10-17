@@ -8,7 +8,7 @@ jobs:
     name: Conda deployment
     runs-on: ubuntu-latest
     env:
-      ANACONDA_USER: maxtico
+      ANACONDA_USER: mmariotti
       ANACONDA_LABEL: main
       CONDA_BLD_DIR: ${{ github.workspace }}/conda-bld
 
