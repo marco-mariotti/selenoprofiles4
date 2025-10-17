@@ -1,3 +1,6 @@
+{% set name = "selenoprofiles4" %}
+{% set version = environ.get("PKG_VERSION") %}
+
 package:
   name:    {{ name }}
   version: {{ version }}
@@ -35,6 +38,8 @@ test:
     - {{ name }}
 
   commands:
+    - selenoprofiles -setup
+    - yes "" | selenoprofiles -download || true 
     - selenoprofiles -h
 
 about:
@@ -49,3 +54,4 @@ about:
 extra:
   recipe-maintainers:
     - marco-mariotti
+    - maxtico

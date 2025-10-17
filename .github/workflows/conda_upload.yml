@@ -1,0 +1,76 @@
+name: Build & Upload to Conda
+
+on:
+  workflow_dispatch:      # manual trigger
+
+jobs:
+  conda_deployment:
+    name: Conda deployment
+    runs-on: ubuntu-latest
+    env:
+      ANACONDA_USER: mmariotti
+      ANACONDA_LABEL: main
+      CONDA_BLD_DIR: ${{ github.workspace }}/conda-bld
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Extract version from _version.py
+        id: ver
+        run: |
+          VERSION=$(python - <<'PY'
+          import re, io
+          src = io.open("src/selenoprofiles4/_version.py","r",encoding="utf-8").read()
+          m = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', src)
+          assert m, "No __version__ found"
+          print(m.group(1))
+          PY
+          )
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+      - name: Conda environment creation and activation
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: 3.12
+          auto-activate-base: true
+          channels: mmariotti,anaconda,bioconda,biobuilds
+          show-channel-urls: true
+
+      - name: Install conda-build
+        shell: bash -el {0}
+        run: |
+          conda install -y conda-build anaconda-client
+
+      - name: Inject version into meta.yaml
+        run: |
+          VERSION=${{ steps.ver.outputs.version }}
+          echo "Injecting version $VERSION into meta.yaml"
+          sed -i "s/environ.get(\"PKG_VERSION\")/\"$VERSION\"/" meta.yaml
+
+      - name: Build conda package
+        id: build
+        shell: bash -l {0}
+        env:
+          PKG_VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          mkdir -p "$CONDA_BLD_DIR"
+          conda build .\
+            -c mmariotti -c anaconda -c bioconda -c biobuilds \
+            --no-anaconda-upload
+            PKG_PATH=$(conda build . --output)
+            echo "pkg=$PKG_PATH" >> "$GITHUB_OUTPUT" 
+            echo "Built package at: $PKG_PATH"
+      
+      - name: Upload to Anaconda
+        shell: bash -l {0}
+        env:
+          ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+        run: |
+          anaconda -t "$ANACONDA_TOKEN" upload \
+            --user $ANACONDA_USER \
+            --label $ANACONDA_LABEL \
+            --skip-existing \
+            "${{ steps.build.outputs.pkg }}"
+            echo "Uploaded to anaconda.org/$ANACONDA_USER (label: $ANACONDA_LABEL)"
