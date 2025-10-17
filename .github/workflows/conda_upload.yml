@@ -41,9 +41,9 @@ jobs:
       - name: Build and upload the conda packages
         uses: uibcdf/action-build-and-upload-conda-packages@v1.4.0
         env:
-          PKG_VERSION: ${{ steps.ver.outputs.version }}
-          PYTHON_VERSION: "3.12"  
+          PKG_VERSION: ${{ steps.ver.outputs.version }} 
         with:
+          python-version: 3.12
           meta_yaml_dir: . # Replace with the path to your meta.yaml directory
           user: maxtico # Replace with your Anaconda username (or an Anaconda organization username)
           token: ${{ secrets.ANACONDA_TOKEN }} # Replace with the name of your Anaconda Token secret
