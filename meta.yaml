@@ -38,6 +38,8 @@ test:
     - {{ name }}
 
   commands:
+    - selenoprofiles -setup
+    - yes "" | selenoprofiles -download || true 
     - selenoprofiles -h
 
 about:
