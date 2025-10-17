@@ -33,6 +33,11 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION"
 
+      - name: Install conda-build
+        shell: bash -el {0}
+        run: |
+          conda install -y conda-build anaconda-client
+
       - name: Build and upload the conda packages
         uses: uibcdf/action-build-and-upload-conda-packages@v1.4.0
         env:
