@@ -10,7 +10,7 @@ jobs:
     env:
       ANACONDA_USER: maxtico
       ANACONDA_LABEL: main
-      CONDA_BLD_DIR: ${{ runner.temp }}/conda-bld
+      CONDA_BLD_DIR: ${{ github.workspace }}/conda-bld
 
     steps:
       - name: Checkout repo
