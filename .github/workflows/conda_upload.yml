@@ -34,7 +34,7 @@ jobs:
           echo "Resolved version: $VERSION"
 
       - name: Build and upload the conda packages
-        uses: uibcdf/action-build-and-upload-conda-packages@v2.0.0
+        uses: uibcdf/action-build-and-upload-conda-packages@v1.2.3
         env:
           PKG_VERSION: ${{ steps.ver.outputs.version }} 
         with:
