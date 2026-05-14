@@ -167,6 +167,7 @@ selenoprofiles assess   : compare an input gene annotation with selenoprofiles o
 -genewise_to_be_sure    active by default. When exonerate produce no output or its prediction does not overlap the seed blast hit, genewise is run, seeded using the blast hits coordinates. Turn off this option not to run genewise in these cases, to reduce the time required for computation
 -no_blast               do not allow choosing a blast prediction (over a genewise or exonerate prediction). Use this if an accurate splice site prediction is crucial for you
 -tblastn                use simple tblastn (single query) instead of the default psitblastn (profile-based PSSM)
+-blast_backend          +   legacy|blastplus|auto. legacy uses blastall psitblastn; blastplus uses tblastn -in_pssm with BLAST+ checkpoints while preserving pairwise output parsing
 -exonerate_extension      +    nt lenght of extension used on both sides by the cyclic exonerate procedure (see paper or manual)
 -genewise_extension       +    nt length of extension used on both sides when running genewise on gene boundaries defined by exonerate 
 -genewise_tbs_extension   +    same as -genewise_extension, but used for genewise on blast hits for which exonerate produced no output (only if option -genewise_to_be_sure is active)
@@ -313,6 +314,7 @@ def load(config_filename, args={}, partial=False, override_args={}):
         "no_splice",
         "genetic_code",
         "tblastn",
+        "blast_backend",
         "download",
         "setup",
         "y",
@@ -425,6 +427,13 @@ def load(config_filename, args={}, partial=False, override_args={}):
 
         ## allowing ~
         opt = opt_expand_tilde(opt)
+
+        if not opt["blast_backend"]:
+            opt["blast_backend"] = "legacy"
+        if opt["blast_backend"] not in ["legacy", "blastplus", "auto"]:
+            raise notracebackException(
+                "ERROR -blast_backend must be one of: legacy, blastplus, auto"
+            )
 
         ## allowing variables (one option used in the value of another one)
         to_interpret = [k for k in opt if type(opt[k]) is str and "{" in opt[k]]
@@ -3191,10 +3200,173 @@ def main():
 
 
 ### main routines functions! They are used later on.
+def blastplus_available():
+    """Return True when the BLAST+ programs needed by the psitblastn replacement are on PATH."""
+    for program in ["makeblastdb", "psiblast", "tblastn"]:
+        if bash("which " + program)[0]:
+            return False
+    return True
+
+
+def should_use_blastplus():
+    backend = opt.get("blast_backend", "legacy") if "opt" in globals() else "legacy"
+    if backend == "legacy":
+        return False
+    if backend == "blastplus":
+        if not blastplus_available():
+            raise notracebackException(
+                "ERROR -blast_backend blastplus requires makeblastdb, psiblast and tblastn in PATH"
+            )
+        return True
+    return blastplus_available()
+
+
+def blastplus_option_name_value(option_name, option_value):
+    """Map legacy blastall options used by Selenoprofiles profiles to BLAST+ tblastn options."""
+    if option_value is None or option_value == "":
+        return []
+    option_name = str(option_name)
+    option_value = str(option_value)
+    if option_name == "b":
+        return ["-max_target_seqs", option_value]
+    if option_name == "e":
+        return ["-evalue", option_value]
+    if option_name == "F":
+        if option_value.upper() == "F":
+            return ["-seg", "no"]
+        return ["-seg", option_value]
+    if option_name == "a":
+        return ["-num_threads", option_value]
+    if option_name == "M":
+        return ["-matrix", option_value]
+    if option_name == "G":
+        return ["-gapopen", option_value]
+    if option_name == "E":
+        return ["-gapextend", option_value]
+    if option_name == "D":
+        return ["-db_gencode", option_value]
+    if option_name in ["I", "p", "d", "i", "R", "o"]:
+        return []
+    return ["-" + option_name, option_value]
+
+
+def blastplus_options_string(blast_options_used):
+    tokens = []
+    for k in blast_options_used:
+        tokens += blastplus_option_name_value(k, blast_options_used[k])
+    return join(tokens, " ")
+
+
+def ensure_blastplus_nucl_db(target_file):
+    """Create a BLAST+ nucleotide database next to target_file if needed; return the db prefix."""
+    if bash("ls " + target_file + ".*nsq " + target_file + ".*ndb >/dev/null 2>&1")[0]:
+        b = bash("which makeblastdb")
+        if b[0]:
+            raise notracebackException("ERROR makeblastdb not found! Please install BLAST+")
+        makeblastdb_bin = dereference(b[1])
+        cmnd = makeblastdb_bin + " -in " + target_file + " -dbtype nucl -out " + target_file
+        b = bash(cmnd)
+        if b[0]:
+            raise Exception('COMMAND: ' + cmnd + ' ERROR: "' + b[1] + ' "')
+    return target_file
+
+
+
+def normalize_blastplus_pairwise_output(blast_file, query_name="BLAST_QUERY_1"):
+    """Rewrite BLAST+ outfmt 0 just enough to match legacy blastall pairwise syntax.
+
+    Selenoprofiles' long-standing blaster_parser.awk expects legacy lines such as
+    ``Query: 1 ...`` / ``Sbjct: 1 ...`` and ``Length = N``. BLAST+ emits
+    ``Query  1 ...`` / ``Sbjct  1 ...`` and ``Length=N`` when using
+    ``tblastn -in_pssm``. This normalizer is intentionally scoped to the new
+    BLAST+ backend so the legacy parser and downstream code remain unchanged.
+    """
+    import re
+    file_h = open(blast_file)
+    lines = file_h.readlines()
+    file_h.close()
+    out_lines = []
+    just_saw_query_header = False
+    for line in lines:
+        if line.startswith("Query=") and line.split("=", 1)[1].strip() == "":
+            out_lines.append("Query= " + query_name + "\n")
+            just_saw_query_header = True
+            continue
+        if just_saw_query_header and line.startswith("Length="):
+            out_lines.append("         (" + line.split("=", 1)[1].strip() + " letters)\n")
+            just_saw_query_header = False
+            continue
+        just_saw_query_header = False
+        if line.startswith("Length="):
+            out_lines.append("          Length = " + line.split("=", 1)[1].strip() + "\n")
+            continue
+        alignment_match = re.match(r"^(Query|Sbjct)\s+(\d+)\s+([A-Za-z*\-.]+)\s+(\d+)\s*$", line)
+        if alignment_match:
+            tag, start, seq, end = alignment_match.groups()
+            out_lines.append(tag + ": " + start + "   " + seq + " " + end + "\n")
+            continue
+        out_lines.append(line)
+    file_h = open(blast_file, "w")
+    file_h.writelines(out_lines)
+    file_h.close()
+
+
+def psitblastn_blastplus(profile, target_file, outfile="", blast_options={}):
+    """BLAST+ replacement for legacy blastall -p psitblastn.
+
+    It searches nucleotide targets with tblastn -in_pssm, using a BLAST+ checkpoint
+    generated from the same profile alignment/query machinery as the legacy path.
+    Output is left in classic pairwise format so parse_blast()/blaster_parser.awk and
+    downstream exonerate/genewise code can continue to consume the same structure.
+    """
+    blast_options_used = blast_options.copy()
+    profile_blast_options = profile.blast_options_dict()
+    for option_name in profile_blast_options:
+        blast_options_used[option_name] = profile_blast_options[option_name]
+    if not outfile:
+        outfile = (
+            fileid_for_temp_folder(profile.filename)
+            + "_BLAST_"
+            + fileid_for_temp_folder(target_file)
+        )
+    b = bash("which tblastn")
+    if b[0]:
+        raise notracebackException("ERROR tblastn not found! Please install BLAST+")
+    tblastn_bin = dereference(b[1])
+    db_prefix = ensure_blastplus_nucl_db(target_file)
+    psitblastn_out = temp_folder + "psitblastn_blastplus_out"
+    cmnd = (
+        tblastn_bin
+        + " -db "
+        + db_prefix
+        + " -in_pssm "
+        + profile.pssm_blastplus()
+        + " -outfmt 0 "
+        + blastplus_options_string(blast_options_used)
+        + " > "
+        + psitblastn_out
+    )
+    b = bash(cmnd)
+    if b[0]:
+        raise Exception('COMMAND: ' + cmnd + ' ERROR: "' + b[1] + ' "')
+    normalize_blastplus_pairwise_output(psitblastn_out, profile.blast_query_title())
+    bbash("mv " + psitblastn_out + " " + outfile)
+    if not is_valid_blast_output(outfile):
+        raise notracebackException(
+            "BLAST+ psitblastn ERROR the blast output "
+            + outfile
+            + " doesn't seem complete, although tblastn exit status was not an error! check the options used"
+        )
+    return parse_blast(outfile)
+
+
 def psitblastn(profile, target_file, outfile="", blast_options={}):
     """This function runs psitblastn on the target and store results on outfile (if indicated) or in a temporary file, and returns a blast_parser to the results.
     Blast options are read first from blast_options and then from the profile alignment (latter overriding the former).
     """
+    if should_use_blastplus():
+        return psitblastn_blastplus(profile, target_file, outfile=outfile, blast_options=blast_options)
+
     blast_options_used = blast_options.copy()
     profile_blast_options = profile.blast_options_dict()
     for option_name in profile_blast_options:
@@ -3210,24 +3382,32 @@ def psitblastn(profile, target_file, outfile="", blast_options={}):
     if b[0]:
         raise notracebackException("ERROR blastall not found! Please install it")
     blastall_bin = dereference(b[1])
-    bbash(
+    psitblastn_out = temp_folder + "psitblastn_out"
+    psitblastn_cmnd = (
         blastall_bin
         + " -p psitblastn  -d "
         + target_file
         + " -R "
         + profile.pssm()
         + " -i "
-        + profile.blast_query_file()
+        + profile.blast_query_file(sec_char="X")
         + " -I  "
         + join(
             ["-" + k + " " + str(blast_options_used[k]) for k in blast_options_used],
             " ",
         )
         + " > "
-        + temp_folder
-        + "psitblastn_out"
+        + psitblastn_out
     )
-    bbash("mv " + temp_folder + "psitblastn_out " + outfile)
+    b = bash(psitblastn_cmnd)
+    if b[0]:
+        tolerated_stored_query_warning = (
+            "WARNING: Stored query has a X at position" in b[1]
+            and "while new query has a U there" in b[1]
+        )
+        if not (tolerated_stored_query_warning and is_valid_blast_output(psitblastn_out)):
+            raise Exception('COMMAND: ' + psitblastn_cmnd + ' ERROR: "' + b[1] + ' "')
+    bbash("mv " + psitblastn_out + " " + outfile)
     if not is_valid_blast_output(outfile):
         raise notracebackException(
             "psitblastn ERROR the blast output "
@@ -5020,9 +5200,83 @@ class profile_alignment(alignment):
                 + "\n"
             )
         elif b[0]:
-            raise Exception(
-                "unknown ERROR with blastpgp, cmnd:  " + cmnd + " ERROR: " + b[1]
-            )
+            # Legacy blastpgp can exit non-zero while still writing usable PSSM
+            # files; on macOS this shows up as only the normal BLASTP banner in
+            # stderr/stdout.  Treat it as fatal only when the expected outputs
+            # are missing.
+            if not (is_file(pssm_filename) and is_file(pssm_ascii_filename)):
+                raise Exception(
+                    "unknown ERROR with blastpgp, cmnd:  " + cmnd + " ERROR: " + b[1]
+                )
+        return pssm_filename
+
+    def blastplus_format_alignment(self, fileout=""):
+        """Write a FASTA MSA suitable for BLAST+ psiblast -in_msa.
+
+        BLAST+ checkpoint files are not binary-compatible with legacy blastpgp
+        checkpoints. This keeps the old pssm() untouched and creates a separate
+        on-the-fly BLAST+ PSSM input from the profile alignment, putting the current
+        cluster/query sequence first as the MSA master and converting Sec/U columns
+        to X for BLAST compatibility.
+        """
+        if not fileout:
+            fileout = temp_folder + self.name + ".blastplus_msa.fa"
+        fileout_h = open(fileout, "w")
+        query_seq = self.blast_query_seq(sec_char="X")
+        keep_columns = [i for i, aa in enumerate(query_seq) if aa != "-"]
+        print(">pssm_master", file=fileout_h)
+        print(join([query_seq[i] for i in keep_columns], ""), file=fileout_h)
+        for seq_index, title in enumerate(self.titles()):
+            seq = replace(self.seq_of(title, sec_columns="X"), "U", "X")
+            seq = join([seq[i] for i in keep_columns], "")
+            print(">profile_seq_" + str(seq_index + 1), file=fileout_h)
+            print(seq, file=fileout_h)
+        fileout_h.close()
+        return fileout
+
+    def pssm_blastplus(self, fileout=""):
+        """Build a BLAST+ checkpoint PSSM for tblastn -in_pssm.
+
+        This is intentionally separate from legacy pssm(), so old blastpgp/blastall
+        behavior remains available with -blast_backend legacy.
+        """
+        if fileout:
+            pssm_filename = fileout
+        else:
+            pssm_filename = temp_folder + self.name + ".blastplus.pssm.chk"
+        pssm_ascii_filename = pssm_filename[:-4] + ".ascii"
+        msa_file = self.blastplus_format_alignment()
+        write_to_file(">noseq\nXXXX", temp_folder + "tiny_db_blastplus.fa")
+        b = bash("which makeblastdb")
+        if b[0]:
+            raise notracebackException("ERROR makeblastdb not found! Please install BLAST+")
+        makeblastdb_bin = dereference(b[1])
+        cmnd = makeblastdb_bin + " -in " + temp_folder + "tiny_db_blastplus.fa -dbtype prot -out " + temp_folder + "tiny_db_blastplus"
+        b = bash(cmnd)
+        if b[0]:
+            raise Exception("unknown ERROR with makeblastdb, cmnd:  " + cmnd + " ERROR: " + b[1])
+        b = bash("which psiblast")
+        if b[0]:
+            raise notracebackException("ERROR psiblast not found! Please install BLAST+")
+        psiblast_bin = dereference(b[1])
+        cmnd = (
+            psiblast_bin
+            + " -in_msa "
+            + msa_file
+            + " -msa_master_idx 1 -db "
+            + temp_folder
+            + "tiny_db_blastplus -num_iterations 1 -out_pssm "
+            + pssm_filename
+            + " -out_ascii_pssm "
+            + pssm_ascii_filename
+            + " -out "
+            + temp_folder
+            + self.name
+            + ".psiblast.out"
+        )
+        b = bash(cmnd)
+        if b[0] or not (is_file(pssm_filename) and is_file(pssm_ascii_filename)):
+            raise Exception("unknown ERROR with psiblast, cmnd:  " + cmnd + " ERROR: " + b[1])
         return pssm_filename
 
     def pssm_matrix(self, modify_sec=False):
@@ -8645,7 +8899,21 @@ class superblasthit(blasthit):
 
 
 class parse_blast_tab(parser):
-    """Read blast hits (without .alignment)"""
+    """Read BLAST tabular hits.
+
+    The historical 12-column BLAST tabular format (-m 8 / outfmt 6 std)
+    does not contain aligned query/subject strings.  Selenoprofiles normally
+    needs these strings for Sec-aware filtering and for remapping clustered
+    queries to BLAST_QUERY_MASTER, so callers should prefer an extended table
+    with qseq and sseq columns appended after the standard fields:
+
+        qseqid sseqid pident length mismatch gapopen qstart qend sstart send
+        evalue bitscore qseq sseq
+
+    Legacy blastall cannot emit qseq/sseq in tabular output; those rows are
+    still parsed for coordinates/scores, but their alignment is empty and they
+    are not a drop-in replacement for blaster_parser.awk.
+    """
 
     def parse_next(self):
         if not self.last_line:
@@ -8659,8 +8927,12 @@ class parse_blast_tab(parser):
         g = blasthit()
         g.chromosome = splt[1]
         g.strand = strand  ## will return g
-        g.alignment = None
-        # alignment(); g.alignment.add('q', 'X'); g.alignment.add('t', 'X');
+        g.alignment = alignment()
+        if len(splt) >= 14:
+            # extended BLAST+ outfmt 6 with qseq and sseq at columns 13/14.
+            # blaster_parser/blasthit stores alignment rows as q then t.
+            g.alignment.add("q", splt[12])
+            g.alignment.add("t", splt[13])
         g.add_exon(s, e)
         # query
         s, e, strand = int(splt[6]), int(splt[7]), "+"
@@ -8676,6 +8948,37 @@ class parse_blast_tab(parser):
 
         self.last_line = self.file.readline()
         return g
+
+
+def blast_tab_to_blaster_line(line):
+    """Convert one BLAST tabular row to the internal blaster_parser line.
+
+    Accepts standard 12-column rows plus optional qseq/sseq columns at indexes
+    12/13.  The returned format is:
+    target start end strand query qstart qend target_alignment query_alignment evalue bits
+
+    Raises on standard-only rows because their alignment strings cannot be
+    reconstructed without re-reading pairwise/XML/SAM/etc. output.
+    """
+    splt = line.rstrip("\n").split("\t")
+    if len(splt) < 14:
+        raise notracebackException(
+            "BLAST tabular row lacks qseq/sseq columns; legacy -m 8/-m 9 "
+            "cannot replace blaster_parser output for Sec-aware filtering"
+        )
+    qid, sid = splt[0], splt[1]
+    qstart, qend = splt[6], splt[7]
+    sstart, send = int(splt[8]), int(splt[9])
+    strand = "+"
+    if sstart > send:
+        strand = "-"
+        sstart, send = send, sstart
+    evalue, bits = splt[10], splt[11]
+    qseq, sseq = splt[12], splt[13]
+    return join(
+        [sid, str(sstart), str(send), strand, qid, qstart, qend, sseq, qseq, evalue, bits],
+        " ",
+    )
 
 
 class parse_blaster(parser):

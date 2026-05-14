@@ -5,6 +5,7 @@ selenoprofiles_config_content="""##### selenoprofiles_4 configuration file. For 
 selenoprofiles_data_dir = ~/selenoprofiles_data/
 ncpus = 1
 temp = /tmp/
+blast_backend = legacy
 
 profiles_folder = {selenoprofiles_data_dir}/selenoprotein_profiles
 bin_folder =  
