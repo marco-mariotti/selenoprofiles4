@@ -32,7 +32,9 @@ jobs:
         run: |
           which blastall
           which blastpgp
-          which psitblastn
+          # Legacy psitblastn is invoked through blastall (-p psitblastn), not as
+          # a separate executable in the bioconda blast-legacy package.
+          blastall 2>&1 | head -5
           which makeblastdb
           which psiblast
           which tblastn
