@@ -44,6 +44,17 @@ Then **install selenoprofiles4** and its dependencies in the sp4 environment::
 
     conda install -c mmariotti -c anaconda  -c bioconda -c biobuilds selenoprofiles4
 
+During the Selenoprofiles 4.6 transition, both BLAST backends are supported:
+the legacy backend uses ``blastall``/``psitblastn``/``blastpgp`` from
+``blast-legacy``, while the new backend uses BLAST+ tools such as
+``makeblastdb``, ``psiblast`` and ``tblastn`` from ``blast``. If you install
+from source or maintain your own environment, make sure both BLAST packages are
+present for now::
+
+    conda install -c bioconda blast-legacy blast
+
+Once the legacy backend is retired, only the BLAST+ package will be required.
+
 If everything worked correctly, the selenoprofiles command is now available, but it is still not setup.
 Run this and follow instructions::
   
@@ -97,5 +108,9 @@ Check the :doc:`get_started` page to start using selenoprofiles.
 
         CONDA_SUBDIR=osx-64 conda install -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4
 
-  After this, installation should succeed and *selenoprofiles4* will work normally on Apple Silicon.
+     For source/development installs during the 4.6 transition, also ensure
+     both BLAST backends are installed in the osx-64 environment::
 
+        CONDA_SUBDIR=osx-64 conda install -c bioconda blast-legacy blast
+
+  After this, installation should succeed and *selenoprofiles4* will work normally on Apple Silicon.

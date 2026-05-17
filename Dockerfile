@@ -38,4 +38,9 @@ RUN conda install -c anaconda gawk
 
 RUN conda install bioconda::wise2
 
+# BLAST backend transition: keep legacy BLAST for the current default backend
+# and install BLAST+ for the new backend. The legacy package can be removed
+# after the old blastall/psitblastn path is retired.
+RUN conda install bioconda::blast-legacy bioconda::blast
+
 RUN conda install -c mmariotti -c conda-forge -c etetoolkit ncbi_db

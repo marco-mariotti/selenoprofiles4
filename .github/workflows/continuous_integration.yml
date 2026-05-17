@@ -25,8 +25,17 @@ jobs:
           
       - name: Install selenoprofiles4 in Conda environment
         run: |
-          conda install -n sp4 -y -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4
+          conda install -n sp4 -y -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4 blast-legacy blast
           pip install -e .[addons]
+
+      - name: Check BLAST backends are available
+        run: |
+          which blastall
+          which blastpgp
+          which psitblastn
+          which makeblastdb
+          which psiblast
+          which tblastn
 
       - name: Run selenoprofiles test
         run: |
