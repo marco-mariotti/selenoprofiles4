@@ -167,7 +167,8 @@ selenoprofiles assess   : compare an input gene annotation with selenoprofiles o
 -genewise_to_be_sure    active by default. When exonerate produce no output or its prediction does not overlap the seed blast hit, genewise is run, seeded using the blast hits coordinates. Turn off this option not to run genewise in these cases, to reduce the time required for computation
 -no_blast               do not allow choosing a blast prediction (over a genewise or exonerate prediction). Use this if an accurate splice site prediction is crucial for you
 -tblastn                use simple tblastn (single query) instead of the default psitblastn (profile-based PSSM)
--blast_backend          +   legacy|blastplus|auto. legacy uses blastall psitblastn; blastplus uses tblastn -in_pssm with BLAST+ checkpoints while preserving pairwise output parsing
+-blast_backend          +   blastplus|legacy|auto. blastplus is the default and uses tblastn -in_pssm with BLAST+ checkpoints while preserving pairwise output parsing; legacy uses blastall psitblastn
+-legacy                    shortcut for -blast_backend legacy, to run the old blastall/blastpgp backend during the transition
 -exonerate_extension      +    nt lenght of extension used on both sides by the cyclic exonerate procedure (see paper or manual)
 -genewise_extension       +    nt length of extension used on both sides when running genewise on gene boundaries defined by exonerate 
 -genewise_tbs_extension   +    same as -genewise_extension, but used for genewise on blast hits for which exonerate produced no output (only if option -genewise_to_be_sure is active)
@@ -404,6 +405,10 @@ def load(config_filename, args={}, partial=False, override_args={}):
         if len(sys.argv) < 2:
             sys.argv.append("-h")
 
+        if "-legacy" in sys.argv:
+            legacy_i = sys.argv.index("-legacy")
+            sys.argv[legacy_i : legacy_i + 1] = ["-blast_backend", "legacy"]
+
         opt = command_line(
             def_opt,
             help_msg,
@@ -429,7 +434,7 @@ def load(config_filename, args={}, partial=False, override_args={}):
         opt = opt_expand_tilde(opt)
 
         if not opt["blast_backend"]:
-            opt["blast_backend"] = "legacy"
+            opt["blast_backend"] = "blastplus"
         if opt["blast_backend"] not in ["legacy", "blastplus", "auto"]:
             raise notracebackException(
                 "ERROR -blast_backend must be one of: legacy, blastplus, auto"
@@ -3209,7 +3214,7 @@ def blastplus_available():
 
 
 def should_use_blastplus():
-    backend = opt.get("blast_backend", "legacy") if "opt" in globals() else "legacy"
+    backend = opt.get("blast_backend", "blastplus") if "opt" in globals() else "blastplus"
     if backend == "legacy":
         return False
     if backend == "blastplus":

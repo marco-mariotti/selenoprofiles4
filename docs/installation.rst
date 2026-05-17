@@ -45,11 +45,12 @@ Then **install selenoprofiles4** and its dependencies in the sp4 environment::
     conda install -c mmariotti -c anaconda  -c bioconda -c biobuilds selenoprofiles4
 
 During the Selenoprofiles 4.6 transition, both BLAST backends are supported:
-the legacy backend uses ``blastall``/``psitblastn``/``blastpgp`` from
-``blast-legacy``, while the new backend uses BLAST+ tools such as
-``makeblastdb``, ``psiblast`` and ``tblastn`` from ``blast``. If you install
-from source or maintain your own environment, make sure both BLAST packages are
-present for now::
+the default backend uses BLAST+ tools such as ``makeblastdb``, ``psiblast``
+and ``tblastn`` from ``blast``, while the legacy backend uses
+``blastall``/``psitblastn``/``blastpgp`` from ``blast-legacy``. To run the old
+backend explicitly, pass ``-legacy`` or ``-blast_backend legacy``. If you
+install from source or maintain your own environment, make sure both BLAST
+packages are present for now::
 
     conda install -c bioconda blast-legacy blast
 
