@@ -16,11 +16,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install selenoprofiles4[addons]
 
-ENV PATH=$PATH:/blast-2.2.26/bin
-
-RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/blast-2.2.26-x64-linux.tar.gz && \
-    tar -xzvf blast-2.2.26-x64-linux.tar.gz    
-
 # Run selenoprofiles setup and download commands
 RUN selenoprofiles -setup && \
     yes "" | selenoprofiles -download 
@@ -38,9 +33,7 @@ RUN conda install -c anaconda gawk
 
 RUN conda install bioconda::wise2
 
-# BLAST backend transition: keep legacy BLAST for the current default backend
-# and install BLAST+ for the new backend. The legacy package can be removed
-# after the old blastall/psitblastn path is retired.
-RUN conda install bioconda::blast-legacy bioconda::blast
+# BLAST+ backend: provides makeblastdb, psiblast and tblastn.
+RUN conda install bioconda::blast
 
 RUN conda install -c mmariotti -c conda-forge -c etetoolkit ncbi_db

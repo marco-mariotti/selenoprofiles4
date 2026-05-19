@@ -25,16 +25,11 @@ jobs:
           
       - name: Install selenoprofiles4 in Conda environment
         run: |
-          conda install -n sp4 -y -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4 blast-legacy blast
+          conda install -n sp4 -y -c mmariotti -c anaconda -c bioconda -c biobuilds selenoprofiles4 blast
           pip install -e .[addons]
 
-      - name: Check BLAST backends are available
+      - name: Check BLAST+ backend is available
         run: |
-          which blastall
-          which blastpgp
-          # Legacy psitblastn is invoked through blastall (-p psitblastn), not as
-          # a separate executable in the bioconda blast-legacy package.
-          blastall 2>&1 | head -5 || true
           which makeblastdb
           which psiblast
           which tblastn

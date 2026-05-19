@@ -23,11 +23,7 @@ requirements:
   run:
     - python >=3.12, <3.13
     - requests 
-    # During the 4.6 transition Selenoprofiles supports both BLAST backends:
-    # - blast-legacy provides blastall/psitblastn/blastpgp for the legacy path
-    # - blast provides BLAST+ binaries (makeblastdb, psiblast, tblastn)
-    # The legacy dependency can be removed when the old backend is retired.
-    - bioconda::blast-legacy
+    # BLAST+ binaries: makeblastdb, psiblast and tblastn.
     - bioconda::blast
     - bioconda::wise2
     - bioconda::exonerate
