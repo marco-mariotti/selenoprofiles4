@@ -33,10 +33,33 @@ jobs:
           which makeblastdb
           which psiblast
           which tblastn
+          makeblastdb -version
+          psiblast -version
+          tblastn -version
+          conda list -n sp4 | grep -E '^(blast|blast-legacy|selenoprofiles4)\s'
 
       - name: Run selenoprofiles test
         run: |
           echo "Running selenoprofiles test..."
           selenoprofiles -setup
           yes "" | selenoprofiles -download || true
-          selenoprofiles test
+          selenoprofiles test || {
+            status=$?
+            echo "::group::selenoprofiles test logs"
+            for log in log_test*; do
+              if [ -f "$log" ]; then
+                echo "===== $log ====="
+                tail -n 300 "$log"
+              fi
+            done
+            echo "::endgroup::"
+            exit "$status"
+          }
+
+      - name: Upload selenoprofiles test logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenoprofiles-test-logs
+          path: log_test*
+          if-no-files-found: ignore
