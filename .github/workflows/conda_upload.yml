@@ -51,20 +51,22 @@ jobs:
 
       - name: Build conda package
         id: build
-        shell: bash -l {0}
+        shell: bash -el {0}
         env:
           PKG_VERSION: ${{ steps.ver.outputs.version }}
         run: |
           mkdir -p "$CONDA_BLD_DIR"
-          conda build .\
+          conda build . \
             -c mmariotti -c anaconda -c bioconda -c biobuilds \
             --no-anaconda-upload
-            PKG_PATH=$(conda build . --output)
-            echo "pkg=$PKG_PATH" >> "$GITHUB_OUTPUT" 
-            echo "Built package at: $PKG_PATH"
+          PKG_PATH=$(conda build . \
+            -c mmariotti -c anaconda -c bioconda -c biobuilds \
+            --output)
+          echo "pkg=$PKG_PATH" >> "$GITHUB_OUTPUT"
+          echo "Built package at: $PKG_PATH"
       
       - name: Upload to Anaconda
-        shell: bash -l {0}
+        shell: bash -el {0}
         env:
           ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
         run: |

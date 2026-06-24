@@ -25,9 +25,10 @@ RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.
 RUN selenoprofiles -setup && \
     yes "" | selenoprofiles -download 
 
-# Accept Anaconda Terms of Service
-RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
-    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+# Accept Anaconda Terms of Service when supported by this conda version.
+# Older/current container images may not provide the `conda tos` subcommand.
+RUN (conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main || true) && \
+    (conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r || true)
 
 RUN conda config --add channels defaults && \
     conda config --add channels bioconda && \
