@@ -56,12 +56,12 @@ if ( /^Sbjct:/ )
 	if (ALI){
 		tline=$0
 		sub(/Sbjct:/, "")
-		while (sub(/[0-9 +]/, "")) {}
+		while (sub(/[0-9 ]/, "")) {}
 		subj_seq = subj_seq $0
 		$0=tline 
 	}
 
-	while  ( sub(/[A-Z]|[a-z]|\*|\-|:|\.|\+/, " ") )	#    sub(/[:alpha:]|[:upper:]|:/, " ")   )
+	while  ( sub(/[A-Z]|[a-z]|\*|\-|:|\./, " ") )	#    sub(/[:alpha:]|[:upper:]|:/, " ")   )
 	{ 	 }
 	if ( start_pos==-1 ){	start_pos=$1	}
 	end_pos=$2
@@ -72,12 +72,12 @@ if ( /^Query:/ )    #:[:blank:]*[:digit:]+[:blank:]*[:alpha:]/)
 	if (ALI){
 		tline=$0
 		sub(/Query:/, "")
-		while (sub(/[0-9 +]/, "")) {}
+		while (sub(/[0-9 ]/, "")) {}
 		query_seq = query_seq $0
 		$0=tline 
 	}
 
-	while  ( sub(/[A-Z]|[a-z]|\*|\-|:|\.|\+/, " ") )	#    sub(/[:alpha:]|[:upper:]|:/, " ")   )
+	while  ( sub(/[A-Z]|[a-z]|\*|\-|:|\./, " ") )	#    sub(/[:alpha:]|[:upper:]|:/, " ")   )
 	{ 	 }
 	if ( q_start_pos==-1 ){	q_start_pos=$1	}
 	q_end_pos=$2
@@ -220,3 +220,4 @@ if (start_pos!=-1){
 
 	}
 }
+
