@@ -23,7 +23,8 @@ requirements:
   run:
     - python >=3.12, <3.13
     - requests 
-    - bioconda::blast-legacy
+    # BLAST+ binaries: makeblastdb, psiblast and tblastn.
+    - bioconda::blast
     - bioconda::wise2
     - bioconda::exonerate
     - bioconda::mafft

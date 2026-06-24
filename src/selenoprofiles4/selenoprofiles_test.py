@@ -46,6 +46,27 @@ def bash(cmd, print_it=False):
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     return result.returncode, result.stdout + result.stderr
 
+
+def log_excerpt(logname, max_lines=200):
+    """Return the tail of a test log so CI failures include the real inner error."""
+    if not os.path.isfile(logname):
+        return f"{logname} was not created."
+    try:
+        with open(logname, encoding="utf-8", errors="replace") as log_h:
+            lines = log_h.readlines()
+    except Exception as exc:
+        return f"Could not read {logname}: {exc}"
+    if len(lines) > max_lines:
+        prefix = f"[showing last {max_lines} of {len(lines)} lines]\n"
+        lines = lines[-max_lines:]
+    else:
+        prefix = f"[showing all {len(lines)} lines]\n"
+    return prefix + "".join(lines)
+
+
+def test_failure_message(message, logname):
+    return f"{message}\n\n--- {logname} ---\n{log_excerpt(logname)}"
+
 #########################################################
 ###### start main program function
 
@@ -58,18 +79,25 @@ def run_single_test(family, selenoprofiles_bin, results_folder, sequence_file, l
     )
     status, output = bash(cmd, print_it=True)
     if status != 0:
-        raise NotracebackException(f"ERROR: test {family} failed. See {logname}\n\n{output}")
+        raise NotracebackException(
+            test_failure_message(
+                f"ERROR: test {family} failed with exit status {status}. See {logname}\n\n{output}",
+                logname,
+            )
+        )
 
     # Check for errors or expected outputs
     e, _ = bash(f"grep ERROR {logname}")
     if e == 0:
-        raise NotracebackException(f"ERROR found in log: {logname}")
+        raise NotracebackException(test_failure_message(f"ERROR found in log: {logname}", logname))
     _, warn = bash(f"grep WARNING {logname}")
     if warn.strip():
         write(f"-- WARNING:\n{warn}", end="\n")
     s, _ = bash(f'grep P2G {logname} | grep "{success_marker}"')
     if s != 0:
-        raise NotracebackException(f"-- ERROR! Expected '{success_marker}' not found in output.")
+        raise NotracebackException(
+            test_failure_message(f"-- ERROR! Expected '{success_marker}' not found in output.", logname)
+        )
     write("##### OK!\n", end="\n")
 
 def main(opt=None):
@@ -81,6 +109,7 @@ def main(opt=None):
     write("Looking for Selenoprofiles executable...", end="\n")
 
     # Try autodetect
+    selenoprofiles_bin = None
     for candidate in ["selenoprofiles", "selenoprofiles4.py"]:
         status, path = bash(f"which {candidate}")
         if status == 0 and os.path.isfile(path.strip()):
