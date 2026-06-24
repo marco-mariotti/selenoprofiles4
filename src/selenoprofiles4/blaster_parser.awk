@@ -168,8 +168,11 @@ if (in_target_line){
 
 
 if ( /^>/)   {
-	if (FULL_TARGET){  subject = substr($0, 2)  }
-	else{ 	           subject = substr($1, 2) }
+	# BLAST+ may print subject lines as "> subject" (space after >),
+	# for which $1 is just ">". Parse from the full line first.
+	subject = substr($0, 2)
+	gsub(/^ +/, "", subject)
+	if (!FULL_TARGET){ split(subject, SUBJECT_SPLIT, " "); subject = SUBJECT_SPLIT[1] }
 
 	if (line_start==-1)
 	{line_start = NR }
