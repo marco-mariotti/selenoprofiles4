@@ -34,7 +34,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: 3.12
-          auto-activate-base: true
+          activate-environment: base
+          auto-activate: true
           channels: mmariotti,anaconda,bioconda,biobuilds
           show-channel-urls: true
 
